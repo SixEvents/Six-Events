@@ -58,11 +58,18 @@ export default function QRScannerNew() {
   };
 
   const startScanning = async () => {
-    if (!videoRef.current || !codeReaderRef.current) return;
-    
     try {
       setResult(null);
       setScanning(true);
+
+      // Aguardar o vídeo ser renderizado
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!videoRef.current || !codeReaderRef.current) {
+        toast.error("Erreur d'initialisation de la caméra");
+        setScanning(false);
+        return;
+      }
 
       // Iniciar scan contínuo
       await codeReaderRef.current.decodeFromVideoDevice(
