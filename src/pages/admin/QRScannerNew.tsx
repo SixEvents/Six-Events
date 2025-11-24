@@ -93,11 +93,10 @@ export default function QRScannerNew() {
 
       // Iniciar scanner diretamente (ele pede permissão automaticamente)
       await html5QrCode.start(
-        { facingMode: { ideal: "environment" } },
+        { facingMode: "environment" },
         { 
           fps: 10, 
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
+          qrbox: { width: 250, height: 250 }
         },
         (decodedText) => {
           handleScan(decodedText);
