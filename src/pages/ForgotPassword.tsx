@@ -1,38 +1,90 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { toast } from 'sonner';
 
-export default function Login() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Veuillez entrer un email valide');
+      return;
+    }
+
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-    if (error) {
-      setError('Email ou mot de passe incorrect');
+      if (error) throw error;
+
+      setSuccess(true);
+      toast.success('Email de réinitialisation envoyé!');
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast.error('Erreur lors de l\'envoi. Vérifiez votre email.');
+    } finally {
       setLoading(false);
-    } else {
-      navigate('/');
     }
   };
 
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-purple-50 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center"
+        >
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          </div>
+          
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Email envoyé ! ✅
+          </h2>
+          
+          <p className="text-gray-600 mb-6">
+            Nous avons envoyé un lien de réinitialisation à <strong>{email}</strong>
+          </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+            <p className="text-sm text-blue-800 font-medium mb-2">
+              📧 Vérifiez votre boîte email
+            </p>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li>• Cliquez sur le lien dans l'email</li>
+              <li>• Le lien expire dans 1 heure</li>
+              <li>• Vérifiez aussi vos spams/courrier indésirable</li>
+            </ul>
+          </div>
+
+          <Link to="/login">
+            <Button variant="outline" className="w-full">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à la connexion
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-pink-50 via-white to-purple-50">
-      {/* Left Side - Image/Branding */}
+      {/* Left Side - Branding */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -49,10 +101,10 @@ export default function Login() {
 
         <div className="relative z-10 text-white">
           <h2 className="text-4xl font-bold mb-4">
-            Créez des moments magiques pour vos enfants 🎉
+            Mot de passe oublié? Pas de souci! 🔑
           </h2>
           <p className="text-xl opacity-90">
-            Réservez des événements inoubliables et personnalisez chaque détail de leur fête d'anniversaire.
+            Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
           </p>
         </div>
 
@@ -61,7 +113,7 @@ export default function Login() {
         </div>
       </motion.div>
 
-      {/* Right Side - Login Form */}
+      {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -70,21 +122,15 @@ export default function Login() {
           className="w-full max-w-md"
         >
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bon retour ! 👋</h1>
-            <p className="text-gray-600">Connectez-vous à votre compte</p>
+            <Link to="/login" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à la connexion
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Réinitialiser le mot de passe 🔒</h1>
+            <p className="text-gray-600">Entrez votre email pour recevoir un lien de réinitialisation</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
-              >
-                {error}
-              </motion.div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-700">Email</Label>
               <div className="relative">
@@ -97,34 +143,9 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500"
                   required
+                  autoFocus
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700">Mot de passe</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-pink-500 focus:ring-pink-500" />
-                <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
-              </label>
-              <Link to="/forgot-password" className="text-sm text-pink-600 hover:text-pink-700">
-                Mot de passe oublié ?
-              </Link>
             </div>
 
             <Button
@@ -137,19 +158,16 @@ export default function Login() {
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 </div>
               ) : (
-                <span className="flex items-center justify-center">
-                  Se connecter
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </span>
+                'Envoyer le lien de réinitialisation'
               )}
             </Button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-gray-600">
-              Pas encore de compte ?{' '}
-              <Link to="/signup" className="text-pink-600 hover:text-pink-700 font-semibold">
-                Créer un compte
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>
+              Vous vous souvenez de votre mot de passe ?{' '}
+              <Link to="/login" className="text-pink-600 hover:text-pink-700 font-semibold">
+                Se connecter
               </Link>
             </p>
           </div>

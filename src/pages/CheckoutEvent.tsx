@@ -34,7 +34,7 @@ export default function CheckoutEvent() {
     buyerEmail: user?.email || '',
     buyerPhone: '',
     participants: Array(Math.max(0, quantity - 1)).fill(''),
-    paymentMethod: 'card',
+    paymentMethod: 'transfer',
     cardNumber: '',
     cardExpiry: '',
     cardCVC: '',
@@ -86,24 +86,7 @@ export default function CheckoutEvent() {
   };
 
   const validateStep3 = () => {
-    if (formData.paymentMethod === 'card') {
-      if (!formData.cardNumber || formData.cardNumber.length < 16) {
-        toast.error('Numéro de carte invalide');
-        return false;
-      }
-      if (!formData.cardExpiry || !/^\d{2}\/\d{2}$/.test(formData.cardExpiry)) {
-        toast.error('Date d\'expiration invalide (MM/AA)');
-        return false;
-      }
-      if (!formData.cardCVC || formData.cardCVC.length < 3) {
-        toast.error('Code CVC invalide');
-        return false;
-      }
-      if (!formData.cardName || formData.cardName.trim().length < 3) {
-        toast.error('Nom sur la carte invalide');
-        return false;
-      }
-    }
+    // Transferência bancária não precisa de validação extra
     return true;
   };
 
@@ -140,8 +123,8 @@ export default function CheckoutEvent() {
           number_of_places: quantity,
           total_price: totalPrice,
           payment_method: formData.paymentMethod,
-          payment_status: formData.paymentMethod === 'card' ? 'confirmed' : 'pending',
-          status: 'confirmed'
+          payment_status: 'pending', // Sempre pendente para transferência bancária
+          status: 'pending' // Aguardando confirmação de pagamento
         })
         .select()
         .single();
@@ -208,19 +191,27 @@ export default function CheckoutEvent() {
           <div className="w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-3xl font-bold mb-4 dark:text-white">Réservation Confirmée!</h2>
+          <h2 className="text-3xl font-bold mb-4 dark:text-white">Réservation Enregistrée!</h2>
           <p className="text-muted-foreground mb-4">
-            Votre réservation pour <strong>{event.title}</strong> a été confirmée.
-          </p>
-          <p className="text-muted-foreground mb-8">
-            Un email avec {quantity} QR code{quantity > 1 ? 's' : ''} a été envoyé à <strong>{formData.buyerEmail}</strong>
+            Votre réservation pour <strong>{event.title}</strong> a été enregistrée.
           </p>
           
-          {formData.paymentMethod === 'cash' && (
-            <Badge variant="secondary" className="mb-6">
-              💵 Paiement à effectuer sur place: {totalPrice.toFixed(2)}€
-            </Badge>
-          )}
+          <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-6 text-left">
+            <p className="text-sm font-bold text-yellow-900 dark:text-yellow-100 mb-2">
+              ⏳ En attente de validation de paiement
+            </p>
+            <p className="text-xs text-yellow-800 dark:text-yellow-200">
+              Votre réservation sera confirmée dès réception du virement bancaire (24-48h ouvrées)
+            </p>
+          </div>
+
+          <Badge variant="secondary" className="mb-6 text-base px-4 py-2">
+            💳 Virement bancaire: {totalPrice.toFixed(2)}€
+          </Badge>
+
+          <p className="text-sm text-muted-foreground mb-8">
+            Vous recevrez vos {quantity} QR code{quantity > 1 ? 's' : ''} par email (<strong>{formData.buyerEmail}</strong>) après confirmation du paiement.
+          </p>
 
           <div className="space-y-3">
             <Button onClick={() => navigate('/profile/reservations')} variant="hero" size="lg" className="w-full">
@@ -387,134 +378,67 @@ export default function CheckoutEvent() {
                   {/* Step 3: Payment */}
                   {currentStep === 3 && (
                     <div className="space-y-6">
-                      <div>
-                        <Label className="mb-3 block">Méthode de paiement *</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleInputChange('paymentMethod', 'card')}
-                            className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-colors ${
-                              formData.paymentMethod === 'card'
-                                ? 'border-primary bg-primary/10'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
-                            }`}
-                          >
-                            <CreditCard className="w-8 h-8" />
-                            <span className="font-semibold">Carte</span>
-                          </button>
+                      <h3 className="text-xl font-bold">Informations de paiement</h3>
+                      
+                      <div className="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border-2 border-pink-200 dark:border-pink-800 rounded-lg p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <Banknote className="w-6 h-6 text-pink-600 flex-shrink-0 mt-1" />
+                          <div>
+                            <h4 className="font-bold text-lg text-pink-900 dark:text-pink-100 mb-2">
+                              💳 Paiement par Virement Bancaire
+                            </h4>
+                            <p className="text-sm text-pink-800 dark:text-pink-200 mb-3">
+                              Effectuez votre paiement sur le compte suivant:
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3 border border-pink-200 dark:border-pink-700">
+                          <div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Titulaire du compte</p>
+                            <p className="font-bold text-gray-900 dark:text-gray-100">Six Events - Gestão de Eventos</p>
+                          </div>
                           
-                          <button
-                            type="button"
-                            onClick={() => handleInputChange('paymentMethod', 'cash')}
-                            className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-colors ${
-                              formData.paymentMethod === 'cash'
-                                ? 'border-primary bg-primary/10'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
-                            }`}
-                          >
-                            <Banknote className="w-8 h-8" />
-                            <span className="font-semibold">Espèces</span>
-                          </button>
+                          <Separator />
+                          
+                          <div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">RIB (Relevé d'Identité Bancaire)</p>
+                            <p className="font-mono font-bold text-lg text-gray-900 dark:text-gray-100 tracking-wider">
+                              FR76 1234 5678 9012 3456 7890 123
+                            </p>
+                          </div>
+
+                          <Separator />
+
+                          <div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Montant à virer</p>
+                            <p className="font-bold text-2xl text-pink-600">{totalPrice.toFixed(2)}€</p>
+                          </div>
+
+                          <Separator />
+
+                          <div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Référence (à mentionner obligatoirement)</p>
+                            <p className="font-mono font-bold text-gray-900 dark:text-gray-100">
+                              EVENT-{event.id.substring(0, 8).toUpperCase()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+                          <p className="text-sm font-bold text-yellow-900 dark:text-yellow-100 flex items-center gap-2 mb-2">
+                            <CheckCircle2 className="w-5 h-5" />
+                            ⚠️ IMPORTANT - Sécurité et Confirmation
+                          </p>
+                          <ul className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1 ml-7">
+                            <li>• Vous recevrez un <strong>email de confirmation</strong> après validation du virement</li>
+                            <li>• <strong>Conservez votre reçu bancaire</strong> (email ou SMS de votre banque)</li>
+                            <li>• Le staff pourra vous demander le <strong>reçu de virement</strong> à l'entrée de l'événement</li>
+                            <li>• Délai de validation: <strong>24-48h ouvrées</strong></li>
+                            <li>• N'oubliez pas d'indiquer la <strong>référence</strong> lors du virement</li>
+                          </ul>
                         </div>
                       </div>
-
-                      {formData.paymentMethod === 'card' ? (
-                        <div className="space-y-4">
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-                            <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-                              💳 Cartes acceptées: Visa, Mastercard, American Express
-                            </p>
-                            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                              Vous pouvez aussi payer avec PayPal ou Stripe si configuré
-                            </p>
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="cardNumber">Numéro de carte *</Label>
-                            <Input
-                              id="cardNumber"
-                              value={formData.cardNumber}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\s/g, '');
-                                if (/^\d*$/.test(value) && value.length <= 16) {
-                                  handleInputChange('cardNumber', value);
-                                }
-                              }}
-                              placeholder="1234 5678 9012 3456"
-                              maxLength={16}
-                              required
-                              className="transition-colors dark:bg-gray-700 dark:border-gray-600"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="cardExpiry">Expiration *</Label>
-                              <Input
-                                id="cardExpiry"
-                                value={formData.cardExpiry}
-                                onChange={(e) => {
-                                  let value = e.target.value.replace(/\D/g, '');
-                                  if (value.length >= 2) {
-                                    value = value.slice(0, 2) + '/' + value.slice(2, 4);
-                                  }
-                                  if (value.length <= 5) {
-                                    handleInputChange('cardExpiry', value);
-                                  }
-                                }}
-                                placeholder="MM/AA"
-                                maxLength={5}
-                                required
-                                className="transition-colors dark:bg-gray-700 dark:border-gray-600"
-                              />
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor="cardCVC">CVC *</Label>
-                              <Input
-                                id="cardCVC"
-                                value={formData.cardCVC}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(/\D/g, '');
-                                  if (value.length <= 4) {
-                                    handleInputChange('cardCVC', value);
-                                  }
-                                }}
-                                placeholder="123"
-                                maxLength={4}
-                                required
-                                className="transition-colors dark:bg-gray-700 dark:border-gray-600"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="cardName">Nom sur la carte *</Label>
-                            <Input
-                              id="cardName"
-                              value={formData.cardName}
-                              onChange={(e) => handleInputChange('cardName', e.target.value)}
-                              placeholder="JEAN DUPONT"
-                              required
-                              className="transition-colors dark:bg-gray-700 dark:border-gray-600"
-                            />
-                          </div>
-
-                          <p className="text-xs text-muted-foreground flex items-center gap-2">
-                            <span className="text-green-600">🔒</span>
-                            Paiement 100% sécurisé • Chiffrement SSL • Données protégées
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                            <strong>💵 Paiement en espèces sur place</strong>
-                          </p>
-                          <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
-                            Vous devrez payer <strong>{totalPrice.toFixed(2)}€</strong> en espèces à l'entrée de l'événement. Votre réservation sera confirmée mais le paiement restera en attente.
-                          </p>
-                        </div>
-                      )}
 
                       <div className="flex gap-3">
                         <Button
