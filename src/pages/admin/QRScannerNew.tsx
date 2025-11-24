@@ -61,42 +61,20 @@ export default function QRScannerNew() {
     setStats({ inside: inside || 0, total: total || 0 });
   };
 
-  const requestCameraPermission = async () => {
-    try {
-      // Pedir permissão e guardar stream
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } 
-      });
-      setCameraStream(stream);
-      toast.success("Autorisation caméra accordée");
-      return true;
-    } catch (err: any) {
-      console.error("Camera permission error:", err);
-      if (err.name === 'NotAllowedError') {
-        toast.error("Permission refusée. Autorisez l'accès dans les paramètres du navigateur");
-      } else if (err.name === 'NotFoundError') {
-        toast.error("Aucune caméra trouvée");
-      } else {
-        toast.error("Erreur: " + (err.message || "Accès caméra impossible"));
-      }
-      return false;
-    }
-  };
-
   const startScanning = async () => {
     try {
+      setScanning(true);
+      setResult(null);
+      
       // Parar stream anterior se existir
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
+        setCameraStream(null);
       }
-
-      // Pedir permissão
-      const hasPermission = await requestCameraPermission();
-      if (!hasPermission) return;
 
       const html5QrCode = new Html5Qrcode("qr-reader");
 
-      // Usar câmera traseira se disponível
+      // Iniciar scanner diretamente (ele pede permissão automaticamente)
       await html5QrCode.start(
         { facingMode: { ideal: "environment" } },
         { 
@@ -108,21 +86,23 @@ export default function QRScannerNew() {
           handleScan(decodedText);
           html5QrCode.stop().catch(console.error);
         },
-        undefined
+        (errorMessage) => {
+          // Ignorar erros de scan contínuo
+        }
       );
       
       setScanner(html5QrCode);
-      setScanning(true);
-      setResult(null);
+      toast.success("Caméra activée");
     } catch (err: any) {
       console.error("Scanner start error:", err);
-      toast.error(err?.message || "Erreur d'accès à la caméra");
       setScanning(false);
       
-      // Parar stream em caso de erro
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        setCameraStream(null);
+      if (err.name === 'NotAllowedError' || err.message?.includes('Permission')) {
+        toast.error("Permission refusée. Autorisez l'accès à la caméra");
+      } else if (err.name === 'NotFoundError') {
+        toast.error("Aucune caméra trouvée");
+      } else {
+        toast.error("Erreur: " + (err.message || "Impossible d'accéder à la caméra"));
       }
     }
   };
