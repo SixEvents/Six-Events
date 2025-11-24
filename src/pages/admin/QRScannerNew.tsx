@@ -69,14 +69,7 @@ export default function QRScannerNew() {
         return;
       }
 
-      // Limpar resultado anterior e parar scanner se existir
       setResult(null);
-      if (scanner) {
-        await scanner.stop().catch(console.error);
-        setScanner(null);
-        // Aguardar mais tempo para câmera ser liberada
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
       
       // Parar stream anterior se existir
       if (cameraStream) {
@@ -105,7 +98,12 @@ export default function QRScannerNew() {
           fps: 10, 
           qrbox: { width: 250, height: 250 }
         },
-        (decodedText) => {
+        async (decodedText) => {
+          // Parar scanner imediatamente após scan
+          await html5QrCode.stop().catch(console.error);
+          setScanning(false);
+          setScanner(null);
+          // Processar o scan
           handleScan(decodedText);
         },
         (errorMessage) => {
@@ -153,13 +151,6 @@ export default function QRScannerNew() {
   };
 
   const handleScan = async (qrData: string) => {
-    // Parar scanner IMEDIATAMENTE para evitar tela branca
-    if (scanner) {
-      await scanner.stop().catch(console.error);
-      setScanner(null);
-    }
-    setScanning(false);
-    
     try {
       const decoded = decodeQRCodeData(qrData);
       const { data: ticket } = await supabase
