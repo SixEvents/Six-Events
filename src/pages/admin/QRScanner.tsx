@@ -5,10 +5,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { decodeQRCodeData } from '../../lib/qrcode';
 import { Ticket, Reservation, ValidationResult } from '../../types';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { 
   Camera, 
   CheckCircle, 
@@ -21,7 +22,8 @@ import {
   Mail,
   Phone,
   Calendar,
-  Hash
+  Hash,
+  Scan
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,11 +41,13 @@ export default function QRScanner() {
   const [pendingQRData, setPendingQRData] = useState<string | null>(null);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const [scannerReady, setScannerReady] = useState(false);
+  const [stats, setStats] = useState({ total: 0, validated: 0, inside: 0 });
 
   useEffect(() => {
     if (scanning && !scannerReady) {
       initScanner();
     }
+    loadStats();
 
     return () => {
       if (scannerRef.current) {
@@ -51,6 +55,32 @@ export default function QRScanner() {
       }
     };
   }, [scanning]);
+
+  const loadStats = async () => {
+    try {
+      const { count: total } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact', head: true });
+      
+      const { count: validated } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'validated');
+      
+      const { count: inside } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'temporarily_valid');
+
+      setStats({ 
+        total: total || 0, 
+        validated: validated || 0, 
+        inside: inside || 0 
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const initScanner = () => {
     const scanner = new Html5QrcodeScanner(

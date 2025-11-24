@@ -25,7 +25,7 @@ import AdminEvents from './pages/admin/Events';
 import AdminReservations from './pages/admin/Reservations';
 import AdminPartyBuilder from './pages/admin/PartyBuilder';
 import AdminSettings from './pages/admin/Settings';
-import QRScanner from './pages/admin/QRScanner';
+import QRScannerNew from './pages/admin/QRScannerNew';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -131,7 +131,7 @@ const App = () => (
               path="/admin/qr-scanner"
               element={
                 <AdminRoute>
-                  <QRScanner />
+                  <QRScannerNew />
                 </AdminRoute>
               }
             />
