@@ -147,6 +147,11 @@ export default function QRScannerNew() {
   };
 
   const handleScan = async (qrData: string) => {
+    // Parar scanner IMEDIATAMENTE para evitar tela branca
+    if (scanner) {
+      await scanner.stop().catch(console.error);
+      setScanner(null);
+    }
     setScanning(false);
     
     try {
