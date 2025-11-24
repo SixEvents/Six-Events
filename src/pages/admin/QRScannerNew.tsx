@@ -99,12 +99,17 @@ export default function QRScannerNew() {
           qrbox: { width: 250, height: 250 }
         },
         async (decodedText) => {
-          // Parar scanner imediatamente após scan
-          await html5QrCode.stop().catch(console.error);
+          // Processar o scan primeiro
+          handleScan(decodedText);
+          // Parar scanner e limpar estado
+          try {
+            await html5QrCode.stop();
+            await html5QrCode.clear();
+          } catch (e) {
+            console.error("Error stopping scanner:", e);
+          }
           setScanning(false);
           setScanner(null);
-          // Processar o scan
-          handleScan(decodedText);
         },
         (errorMessage) => {
           // Ignorar erros de scan contínuo
@@ -129,18 +134,18 @@ export default function QRScannerNew() {
     }
   };
 
-  const stopScanning = () => {
+  const stopScanning = async () => {
     if (scanner) {
-      scanner.stop()
-        .then(() => {
-          setScanning(false);
-          setScanner(null);
-        })
-        .catch((err) => {
-          console.error("Erro ao parar scanner:", err);
-          setScanning(false);
-          setScanner(null);
-        });
+      try {
+        await scanner.stop();
+        await scanner.clear();
+        setScanning(false);
+        setScanner(null);
+      } catch (err) {
+        console.error("Erro ao parar scanner:", err);
+        setScanning(false);
+        setScanner(null);
+      }
     }
     
     // Parar stream de câmera
