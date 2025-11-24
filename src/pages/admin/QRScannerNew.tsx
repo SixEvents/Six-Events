@@ -69,7 +69,6 @@ export default function QRScannerNew() {
         return;
       }
 
-      setScanning(true);
       setResult(null);
       
       // Parar stream anterior se existir
@@ -81,9 +80,14 @@ export default function QRScannerNew() {
       // Verificar se navigator.mediaDevices existe
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         toast.error("Votre navigateur ne supporte pas l'accès à la caméra");
-        setScanning(false);
         return;
       }
+
+      // IMPORTANTE: Definir scanning=true primeiro para renderizar o div
+      setScanning(true);
+
+      // Aguardar o próximo frame para garantir que o div foi renderizado
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const html5QrCode = new Html5Qrcode("qr-reader");
 
