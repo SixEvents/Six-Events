@@ -28,19 +28,25 @@ export default function QRScannerNew() {
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null);
   const [stats, setStats] = useState({ inside: 0, total: 0 });
 
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
   useEffect(() => {
     loadStats();
   }, []);
 
   useEffect(() => {
     return () => {
+      // Limpar stream de câmera ao desmontar
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
       if (scanner) {
         scanner.stop().catch(console.error);
         setScanner(null);
         setScanning(false);
       }
     };
-  }, [scanner]);
+  }, [scanner, cameraStream]);
 
   const loadStats = async () => {
     const { count: total } = await supabase
@@ -57,48 +63,67 @@ export default function QRScannerNew() {
 
   const requestCameraPermission = async () => {
     try {
-      // Pedir permissão explícita primeiro
-      await navigator.mediaDevices.getUserMedia({ video: true });
+      // Pedir permissão e guardar stream
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" } 
+      });
+      setCameraStream(stream);
       toast.success("Autorisation caméra accordée");
       return true;
-    } catch (err) {
-      toast.error("Veuillez autoriser l'accès à la caméra");
-      console.error(err);
+    } catch (err: any) {
+      console.error("Camera permission error:", err);
+      if (err.name === 'NotAllowedError') {
+        toast.error("Permission refusée. Autorisez l'accès dans les paramètres du navigateur");
+      } else if (err.name === 'NotFoundError') {
+        toast.error("Aucune caméra trouvée");
+      } else {
+        toast.error("Erreur: " + (err.message || "Accès caméra impossible"));
+      }
       return false;
     }
   };
 
   const startScanning = async () => {
     try {
-      // Verificar e pedir permissão
+      // Parar stream anterior se existir
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+
+      // Pedir permissão
       const hasPermission = await requestCameraPermission();
       if (!hasPermission) return;
 
       const html5QrCode = new Html5Qrcode("qr-reader");
-      
-      // Verificar câmeras disponíveis
-      const devices = await Html5Qrcode.getCameras();
-      if (!devices || devices.length === 0) {
-        toast.error("Nenhuma câmera encontrada");
-        return;
-      }
 
+      // Usar câmera traseira se disponível
       await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        { facingMode: { ideal: "environment" } },
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        },
         (decodedText) => {
           handleScan(decodedText);
           html5QrCode.stop().catch(console.error);
         },
         undefined
       );
+      
       setScanner(html5QrCode);
       setScanning(true);
       setResult(null);
     } catch (err: any) {
+      console.error("Scanner start error:", err);
       toast.error(err?.message || "Erreur d'accès à la caméra");
-      console.error(err);
       setScanning(false);
+      
+      // Parar stream em caso de erro
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        setCameraStream(null);
+      }
     }
   };
 
@@ -114,6 +139,12 @@ export default function QRScannerNew() {
           setScanning(false);
           setScanner(null);
         });
+    }
+    
+    // Parar stream de câmera
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
     }
   };
 
