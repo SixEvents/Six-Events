@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { getStripe } from '../lib/stripe';
 import { Event, CheckoutFormData } from '../types';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -34,7 +35,7 @@ export default function CheckoutEvent() {
     buyerEmail: user?.email || '',
     buyerPhone: '',
     participants: Array(Math.max(0, quantity - 1)).fill(''),
-    paymentMethod: 'card',
+    paymentMethod: 'stripe',
     cardNumber: '',
     cardExpiry: '',
     cardCVC: '',
@@ -111,6 +112,13 @@ export default function CheckoutEvent() {
     setLoading(true);
 
     try {
+      // Se o método for Stripe, processar checkout Stripe
+      if (formData.paymentMethod === 'stripe') {
+        await handleStripeCheckout();
+        return;
+      }
+
+      // Se for Cash, criar reserva pendente diretamente
       // 1. Criar reserva
       const { data: reservation, error: reservationError } = await supabase
         .from('reservations')
@@ -123,8 +131,8 @@ export default function CheckoutEvent() {
           number_of_places: quantity,
           total_price: totalPrice,
           payment_method: formData.paymentMethod,
-          payment_status: 'pending', // Sempre pendente para transferência bancária
-          status: 'pending' // Aguardando confirmação de pagamento
+          payment_status: 'pending',
+          status: 'pending'
         })
         .select()
         .single();
@@ -132,7 +140,6 @@ export default function CheckoutEvent() {
       if (reservationError) throw reservationError;
 
       // 2. Criar tickets individuais com QR codes
-      // Comprador é sempre o primeiro participante
       const allParticipants = [formData.buyerName, ...formData.participants];
       
       const tickets = allParticipants.map((participantName, index) => {
@@ -171,27 +178,67 @@ export default function CheckoutEvent() {
       setSuccess(true);
       toast.success('Réservation enregistrée!');
       
-      // Se for transferência bancária, redirecionar para página de upload do comprovante
-      if (formData.paymentMethod === 'transfer') {
-        setTimeout(() => {
-          navigate('/payment-proof', {
-            state: {
-              reservationId: reservation.id,
-              totalPrice,
-              eventTitle: event.title
-            }
-          });
-        }, 1500);
-      } else {
-        // Se for dinheiro, redirecionar para reservas
-        setTimeout(() => {
-          navigate('/profile/reservations');
-        }, 3000);
-      }
+      // Redirecionar para reservas
+      setTimeout(() => {
+        navigate('/profile/reservations');
+      }, 2000);
     } catch (error: any) {
       console.error('Error creating reservation:', error);
       toast.error('Erreur: ' + error.message);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStripeCheckout = async () => {
+    try {
+      const stripe = await getStripe();
+      
+      if (!stripe) {
+        throw new Error('Stripe n\'est pas configuré correctement');
+      }
+
+      // Preparar participantes
+      const allParticipants = [formData.buyerName, ...formData.participants];
+
+      // Criar sessão de checkout via Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          eventId: event.id,
+          eventTitle: event.title,
+          eventDate: event.date,
+          eventLocation: event.location,
+          quantity,
+          totalPrice,
+          buyerName: formData.buyerName,
+          buyerEmail: formData.buyerEmail,
+          buyerPhone: formData.buyerPhone,
+          participants: allParticipants,
+          userId: user?.id
+        }
+      });
+
+      if (error) {
+        console.error('Error creating checkout session:', error);
+        throw new Error('Impossible de créer la session de paiement');
+      }
+
+      if (!data?.sessionId) {
+        throw new Error('Session de paiement invalide');
+      }
+
+      // Redirecionar para Stripe Checkout
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId
+      });
+
+      if (stripeError) {
+        console.error('Stripe redirect error:', stripeError);
+        throw new Error(stripeError.message);
+      }
+    } catch (error: any) {
+      console.error('Stripe checkout error:', error);
+      toast.error(error.message || 'Erreur lors du processus de paiement');
       setLoading(false);
     }
   };
@@ -395,23 +442,28 @@ export default function CheckoutEvent() {
                       <h3 className="text-xl font-bold">Choisir le mode de paiement</h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Transferência Bancária */}
+                        {/* Stripe (Cartão) */}
                         <button
                           type="button"
-                          onClick={() => handleInputChange('paymentMethod', 'transfer')}
+                          onClick={() => handleInputChange('paymentMethod', 'stripe')}
                           className={`p-6 border-2 rounded-lg text-left transition-all ${
-                            formData.paymentMethod === 'transfer'
+                            formData.paymentMethod === 'stripe'
                               ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
                               : 'border-gray-200 dark:border-gray-700 hover:border-pink-300'
                           }`}
                         >
                           <div className="flex items-center gap-3 mb-2">
-                            <Banknote className="w-8 h-8 text-pink-600" />
-                            <h4 className="font-bold text-lg">Virement Bancaire</h4>
+                            <CreditCard className="w-8 h-8 text-pink-600" />
+                            <h4 className="font-bold text-lg">💳 Carte Bancaire (Stripe)</h4>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Payez par transfert et téléchargez votre reçu
+                            Paiement en ligne sécurisé instantané
                           </p>
+                          <div className="mt-2 flex items-center gap-1">
+                            <Badge variant="outline" className="text-xs">Visa</Badge>
+                            <Badge variant="outline" className="text-xs">Mastercard</Badge>
+                            <Badge variant="outline" className="text-xs">Amex</Badge>
+                          </div>
                         </button>
 
                         {/* Dinheiro */}
@@ -434,60 +486,50 @@ export default function CheckoutEvent() {
                         </button>
                       </div>
 
-                      {/* Detalhes da transferência */}
-                      {formData.paymentMethod === 'transfer' && (
-                        <div className="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border-2 border-pink-200 dark:border-pink-800 rounded-lg p-6">
+                      {/* Informações do Stripe */}
+                      {formData.paymentMethod === 'stripe' && (
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6">
                           <div className="flex items-start gap-3 mb-4">
-                            <Banknote className="w-6 h-6 text-pink-600 flex-shrink-0 mt-1" />
+                            <CreditCard className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
                             <div>
-                              <h4 className="font-bold text-lg text-pink-900 dark:text-pink-100 mb-2">
-                                💳 Coordonnées Bancaires
+                              <h4 className="font-bold text-lg text-blue-900 dark:text-blue-100 mb-2">
+                                🔒 Paiement Sécurisé par Stripe
                               </h4>
-                              <p className="text-sm text-pink-800 dark:text-pink-200 mb-3">
-                                Effectuez votre paiement sur le compte suivant:
+                              <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                                Vous serez redirigé vers la page de paiement sécurisée Stripe
                               </p>
                             </div>
                           </div>
 
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3 border border-pink-200 dark:border-pink-700">
-                            <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Titulaire du compte</p>
-                              <p className="font-bold text-gray-900 dark:text-gray-100">Six Events - Gestão de Eventos</p>
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3 border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-5 h-5 text-green-600" />
+                              <p className="text-sm text-gray-700 dark:text-gray-300">Paiement instantané et sécurisé</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-5 h-5 text-green-600" />
+                              <p className="text-sm text-gray-700 dark:text-gray-300">Confirmation immédiate par email</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-5 h-5 text-green-600" />
+                              <p className="text-sm text-gray-700 dark:text-gray-300">QR codes envoyés automatiquement</p>
                             </div>
                             
                             <Separator />
-                            
-                            <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">RIB (Relevé d'Identité Bancaire)</p>
-                              <p className="font-mono font-bold text-lg text-gray-900 dark:text-gray-100 tracking-wider">
-                                FR76 1234 5678 9012 3456 7890 123
-                              </p>
-                            </div>
-
-                            <Separator />
 
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Montant à virer</p>
-                              <p className="font-bold text-2xl text-pink-600">{totalPrice.toFixed(2)}€</p>
-                            </div>
-
-                            <Separator />
-
-                            <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Référence (à mentionner obligatoirement)</p>
-                              <p className="font-mono font-bold text-gray-900 dark:text-gray-100">
-                                EVENT-{event.id.substring(0, 8).toUpperCase()}
-                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Montant total</p>
+                              <p className="font-bold text-2xl text-blue-600">{totalPrice.toFixed(2)}€</p>
                             </div>
                           </div>
 
-                          <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4">
-                            <p className="text-sm font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2 mb-2">
+                          <div className="mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-300 dark:border-indigo-700 rounded-lg p-4">
+                            <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2 mb-2">
                               <CheckCircle2 className="w-5 h-5" />
-                              📸 Prochaine étape
+                              🔄 Prochaine étape
                             </p>
-                            <p className="text-xs text-blue-800 dark:text-blue-200">
-                              Après avoir confirmé, vous serez redirigé vers une page pour télécharger votre <strong>reçu de virement</strong> (photo ou capture d'écran de l'email/SMS de confirmation de votre banque)
+                            <p className="text-xs text-indigo-800 dark:text-indigo-200">
+                              En cliquant sur "Procéder au paiement", vous serez redirigé vers la page de paiement sécurisée <strong>Stripe</strong> pour finaliser votre commande avec votre carte bancaire.
                             </p>
                           </div>
                         </div>
@@ -528,12 +570,21 @@ export default function CheckoutEvent() {
                           {loading ? (
                             <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Traitement...
+                              {formData.paymentMethod === 'stripe' ? 'Redirection vers Stripe...' : 'Traitement...'}
                             </>
                           ) : (
                             <>
-                              <CheckCircle2 className="w-4 h-4 mr-2" />
-                              Confirmer la réservation
+                              {formData.paymentMethod === 'stripe' ? (
+                                <>
+                                  <CreditCard className="w-4 h-4 mr-2" />
+                                  Procéder au paiement Stripe
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                                  Confirmer la réservation
+                                </>
+                              )}
                             </>
                           )}
                         </Button>
