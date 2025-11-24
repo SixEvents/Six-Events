@@ -63,6 +63,12 @@ export default function QRScannerNew() {
 
   const startScanning = async () => {
     try {
+      // Verificar se está em HTTPS
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        toast.error("La caméra nécessite HTTPS. Utilisez https:// dans l'URL");
+        return;
+      }
+
       setScanning(true);
       setResult(null);
       
@@ -70,6 +76,13 @@ export default function QRScannerNew() {
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         setCameraStream(null);
+      }
+
+      // Verificar se navigator.mediaDevices existe
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("Votre navigateur ne supporte pas l'accès à la caméra");
+        setScanning(false);
+        return;
       }
 
       const html5QrCode = new Html5Qrcode("qr-reader");
@@ -98,11 +111,13 @@ export default function QRScannerNew() {
       setScanning(false);
       
       if (err.name === 'NotAllowedError' || err.message?.includes('Permission')) {
-        toast.error("Permission refusée. Autorisez l'accès à la caméra");
+        toast.error("❌ Permission refusée. Cliquez sur l'icône 🔒 à gauche de l'URL et autorisez la caméra");
       } else if (err.name === 'NotFoundError') {
-        toast.error("Aucune caméra trouvée");
+        toast.error("❌ Aucune caméra trouvée sur cet appareil");
+      } else if (err.name === 'NotReadableError') {
+        toast.error("❌ Caméra déjà utilisée par une autre application");
       } else {
-        toast.error("Erreur: " + (err.message || "Impossible d'accéder à la caméra"));
+        toast.error("❌ Erreur: " + (err.message || "Impossible d'accéder à la caméra"));
       }
     }
   };
