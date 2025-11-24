@@ -36,6 +36,8 @@ export default function QRScannerNew() {
     return () => {
       if (scanner) {
         scanner.stop().catch(console.error);
+        setScanner(null);
+        setScanning(false);
       }
     };
   }, [scanner]);
@@ -56,30 +58,45 @@ export default function QRScannerNew() {
   const startScanning = async () => {
     try {
       const html5QrCode = new Html5Qrcode("qr-reader");
+      
+      // Pedir permissão de câmera primeiro
+      const devices = await Html5Qrcode.getCameras();
+      if (!devices || devices.length === 0) {
+        toast.error("Nenhuma câmera encontrada");
+        return;
+      }
+
       await html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
         (decodedText) => {
           handleScan(decodedText);
-          html5QrCode.stop();
+          html5QrCode.stop().catch(console.error);
         },
         undefined
       );
       setScanner(html5QrCode);
       setScanning(true);
       setResult(null);
-    } catch (err) {
-      toast.error("Erreur d'accès à la caméra");
+    } catch (err: any) {
+      toast.error(err?.message || "Erreur d'accès à la caméra");
       console.error(err);
+      setScanning(false);
     }
   };
 
   const stopScanning = () => {
     if (scanner) {
-      scanner.stop().then(() => {
-        setScanning(false);
-        setScanner(null);
-      });
+      scanner.stop()
+        .then(() => {
+          setScanning(false);
+          setScanner(null);
+        })
+        .catch((err) => {
+          console.error("Erro ao parar scanner:", err);
+          setScanning(false);
+          setScanner(null);
+        });
     }
   };
 
