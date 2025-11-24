@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { useState, useEffect, useRef } from 'react';
+import { BrowserQRCodeReader } from '@zxing/browser';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { decodeQRCodeData } from '../../lib/qrcode';
@@ -22,31 +22,27 @@ interface ScanResult {
 
 export default function QRScannerNew() {
   const { user } = useAuth();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const codeReaderRef = useRef<BrowserQRCodeReader | null>(null);
+  
   const [mode, setMode] = useState<ScanMode>('entry');
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [scanner, setScanner] = useState<Html5Qrcode | null>(null);
   const [stats, setStats] = useState({ inside: 0, total: 0 });
-
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     loadStats();
-  }, []);
-
-  useEffect(() => {
+    
+    // Inicializar o leitor QR
+    codeReaderRef.current = new BrowserQRCodeReader();
+    
     return () => {
-      // Limpar stream de câmera ao desmontar
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-      if (scanner) {
-        scanner.stop().catch(console.error);
-        setScanner(null);
-        setScanning(false);
+      // Limpar ao desmontar
+      if (codeReaderRef.current) {
+        codeReaderRef.current.reset();
       }
     };
-  }, [scanner, cameraStream]);
+  }, []);
 
   const loadStats = async () => {
     const { count: total } = await supabase
@@ -62,97 +58,47 @@ export default function QRScannerNew() {
   };
 
   const startScanning = async () => {
+    if (!videoRef.current || !codeReaderRef.current) return;
+    
     try {
-      // Verificar se está em HTTPS
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        toast.error("La caméra nécessite HTTPS. Utilisez https:// dans l'URL");
-        return;
-      }
-
       setResult(null);
-      
-      // Parar stream anterior se existir
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        setCameraStream(null);
-      }
-
-      // Verificar se navigator.mediaDevices existe
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        toast.error("Votre navigateur ne supporte pas l'accès à la caméra");
-        return;
-      }
-
-      // IMPORTANTE: Definir scanning=true primeiro para renderizar o div
       setScanning(true);
 
-      // Aguardar o próximo frame para garantir que o div foi renderizado
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const html5QrCode = new Html5Qrcode("qr-reader");
-
-      // Iniciar scanner diretamente (ele pede permissão automaticamente)
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        { 
-          fps: 10, 
-          qrbox: { width: 250, height: 250 }
-        },
-        async (decodedText) => {
-          // Processar o scan primeiro
-          handleScan(decodedText);
-          // Parar scanner e limpar estado
-          try {
-            await html5QrCode.stop();
-            await html5QrCode.clear();
-          } catch (e) {
-            console.error("Error stopping scanner:", e);
+      // Iniciar scan contínuo
+      await codeReaderRef.current.decodeFromVideoDevice(
+        undefined, // undefined = câmera padrão
+        videoRef.current,
+        (result, error) => {
+          if (result) {
+            // QR Code encontrado!
+            const qrText = result.getText();
+            handleScan(qrText);
+            stopScanning();
           }
-          setScanning(false);
-          setScanner(null);
-        },
-        (errorMessage) => {
           // Ignorar erros de scan contínuo
         }
       );
-      
-      setScanner(html5QrCode);
-      toast.success("Caméra activée");
+
+      toast.success("📷 Caméra activée");
     } catch (err: any) {
-      console.error("Scanner start error:", err);
+      console.error("Scanner error:", err);
       setScanning(false);
       
-      if (err.name === 'NotAllowedError' || err.message?.includes('Permission')) {
-        toast.error("❌ Permission refusée. Cliquez sur l'icône 🔒 à gauche de l'URL et autorisez la caméra");
+      if (err.name === 'NotAllowedError') {
+        toast.error("❌ Permission refusée pour la caméra");
       } else if (err.name === 'NotFoundError') {
-        toast.error("❌ Aucune caméra trouvée sur cet appareil");
-      } else if (err.name === 'NotReadableError') {
-        toast.error("❌ Caméra déjà utilisée par une autre application");
+        toast.error("❌ Aucune caméra trouvée");
       } else {
         toast.error("❌ Erreur: " + (err.message || "Impossible d'accéder à la caméra"));
       }
     }
   };
 
-  const stopScanning = async () => {
-    if (scanner) {
-      try {
-        await scanner.stop();
-        await scanner.clear();
-        setScanning(false);
-        setScanner(null);
-      } catch (err) {
-        console.error("Erro ao parar scanner:", err);
-        setScanning(false);
-        setScanner(null);
-      }
+  const stopScanning = () => {
+    if (codeReaderRef.current) {
+      codeReaderRef.current.reset();
     }
-    
-    // Parar stream de câmera
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-      setCameraStream(null);
-    }
+    setScanning(false);
   };
 
   const handleScan = async (qrData: string) => {
@@ -392,7 +338,18 @@ export default function QRScannerNew() {
         {scanning && (
           <Card>
             <CardContent className="pt-6">
-              <div id="qr-reader" className="w-full"></div>
+              <div className="relative w-full aspect-square bg-black rounded-lg overflow-hidden">
+                <video 
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  playsInline
+                  muted
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-64 h-64 border-4 border-white/50 rounded-lg"></div>
+                </div>
+              </div>
               <Button onClick={stopScanning} variant="outline" className="w-full mt-4">
                 Annuler
               </Button>
