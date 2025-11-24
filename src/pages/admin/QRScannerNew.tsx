@@ -74,6 +74,8 @@ export default function QRScannerNew() {
       if (scanner) {
         await scanner.stop().catch(console.error);
         setScanner(null);
+        // Aguardar mais tempo para câmera ser liberada
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
       
       // Parar stream anterior se existir
@@ -105,7 +107,6 @@ export default function QRScannerNew() {
         },
         (decodedText) => {
           handleScan(decodedText);
-          html5QrCode.stop().catch(console.error);
         },
         (errorMessage) => {
           // Ignorar erros de scan contínuo
