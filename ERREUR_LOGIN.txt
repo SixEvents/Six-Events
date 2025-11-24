@@ -1,0 +1,130 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║     🚨 PROBLÈME: EMAIL OU MOT DE PASSE INCORRECT             ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+⚠️  POURQUOI ÇA NE FONCTIONNE PAS ?
+
+Le compte admin1@sixevents.com n'existe PAS encore dans Supabase.
+Vous devez d'abord le CRÉER avant de pouvoir vous connecter !
+
+═══════════════════════════════════════════════════════════════
+
+✅ SOLUTION EN 3 ÉTAPES (5 MINUTES)
+
+┌───────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1: CRÉER LE COMPTE (1 min)                             │
+└───────────────────────────────────────────────────────────────┘
+
+1. Vous êtes sur la page LOGIN
+2. En bas de la page, cliquer sur "Créer un compte"
+3. OU aller directement sur: http://localhost:8080/signup
+
+4. Remplir le formulaire:
+   ┌─────────────────────────────────────────┐
+   │ Email:    admin1@sixevents.com          │
+   │ Password: Admin123!SixEvents            │
+   │ Confirm:  Admin123!SixEvents            │
+   └─────────────────────────────────────────┘
+
+5. Cliquer sur "Créer un compte"
+
+✓ Le compte est maintenant créé dans Supabase !
+  Mais il est encore un compte CLIENT normal.
+
+┌───────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2: LE TRANSFORMER EN ADMIN (2 min)                     │
+└───────────────────────────────────────────────────────────────┘
+
+1. Ouvrir un nouvel onglet: https://app.supabase.com
+
+2. Se connecter à votre projet Supabase
+
+3. Dans le menu à gauche, cliquer sur:
+   Authentication → Users
+
+4. Vous verrez admin1@sixevents.com dans la liste
+   Cliquer dessus
+
+5. Scroller jusqu'à "Raw User Meta Data"
+
+6. Cliquer sur le bouton "Edit" (icône crayon)
+
+7. Vous verrez un JSON vide ou avec des données basiques
+
+8. REMPLACER tout le contenu par exactement ceci:
+   ┌─────────────────────────────────────────────────────┐
+   │ {"role":"admin","full_name":"Sophie Martin"}        │
+   └─────────────────────────────────────────────────────┘
+
+9. Cliquer sur "Save"
+
+✓ Le compte est maintenant ADMIN !
+
+┌───────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3: SE CONNECTER (30 secondes)                          │
+└───────────────────────────────────────────────────────────────┘
+
+1. Retourner sur: http://localhost:8080/login
+
+2. Se connecter avec:
+   Email:    admin1@sixevents.com
+   Password: Admin123!SixEvents
+
+3. Cliquer sur "Se connecter"
+
+✅ SUCCÈS ! Vous êtes maintenant connecté en tant qu'ADMIN
+
+4. Vous pouvez maintenant:
+   ✓ Accéder au dashboard admin (/admin)
+   ✓ Créer des événements
+   ✓ Gérer les réservations
+
+═══════════════════════════════════════════════════════════════
+
+🎯 RÉSUMÉ ULTRA-RAPIDE
+
+1. Cliquer sur "Créer un compte" → admin1@sixevents.com
+2. Aller sur Supabase → Authentication → Users → Edit metadata
+3. Ajouter: {"role":"admin","full_name":"Sophie Martin"}
+4. Revenir sur l'app et se connecter
+
+═══════════════════════════════════════════════════════════════
+
+💡 POUR LES 9 AUTRES ADMINS
+
+Répéter ces 3 étapes pour:
+- admin2@sixevents.com (Lucas Dubois)
+- admin3@sixevents.com (Emma Bernard)
+- admin4@sixevents.com (Thomas Petit)
+- admin5@sixevents.com (Léa Richard)
+- admin6@sixevents.com (Nathan Moreau)
+- admin7@sixevents.com (Chloé Laurent)
+- admin8@sixevents.com (Hugo Simon)
+- admin9@sixevents.com (Manon Michel)
+- admin10@sixevents.com (Arthur Garcia)
+
+Mot de passe identique: Admin123!SixEvents
+
+═══════════════════════════════════════════════════════════════
+
+🔒 IMPORTANT: POLITIQUES RLS
+
+Après avoir créé tous les admins, n'oubliez pas d'exécuter:
+create-admin-accounts.sql dans Supabase SQL Editor
+
+Cela active les politiques de sécurité qui empêchent les clients
+normaux de créer des événements.
+
+═══════════════════════════════════════════════════════════════
+
+❓ BESOIN D'AIDE ?
+
+Si vous avez des problèmes:
+1. Vérifier que le serveur est lancé (npm run dev)
+2. Vérifier la connexion à Supabase
+3. Vérifier que le metadata est exactement comme indiqué
+4. Se déconnecter et se reconnecter après le changement
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,111 @@
+═══════════════════════════════════════════════════════════════
+    📋 AIDE-MÉMOIRE RAPIDE - CRÉATION ADMINS SIX EVENTS
+═══════════════════════════════════════════════════════════════
+
+🚀 DÉMARRAGE RAPIDE (2 étapes par admin)
+
+┌───────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1: CRÉER LE COMPTE                                     │
+└───────────────────────────────────────────────────────────────┘
+
+URL: http://localhost:8080/signup
+
+Email:    admin1@sixevents.com
+Password: Admin123!SixEvents
+
+[Créer un compte]
+
+┌───────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2: PROMOUVOIR EN ADMIN                                 │
+└───────────────────────────────────────────────────────────────┘
+
+URL: https://app.supabase.com
+
+Navigation:
+Authentication → Users → [Cliquer sur le user] → Edit metadata
+
+Copier-coller:
+{"role":"admin","full_name":"Sophie Martin"}
+
+[Save]
+
+═══════════════════════════════════════════════════════════════
+
+📧 LISTE COMPLÈTE (copier-coller rapide)
+
+ADMIN 1
+Email: admin1@sixevents.com
+Meta:  {"role":"admin","full_name":"Sophie Martin"}
+
+ADMIN 2
+Email: admin2@sixevents.com
+Meta:  {"role":"admin","full_name":"Lucas Dubois"}
+
+ADMIN 3
+Email: admin3@sixevents.com
+Meta:  {"role":"admin","full_name":"Emma Bernard"}
+
+ADMIN 4
+Email: admin4@sixevents.com
+Meta:  {"role":"admin","full_name":"Thomas Petit"}
+
+ADMIN 5
+Email: admin5@sixevents.com
+Meta:  {"role":"admin","full_name":"Léa Richard"}
+
+ADMIN 6
+Email: admin6@sixevents.com
+Meta:  {"role":"admin","full_name":"Nathan Moreau"}
+
+ADMIN 7
+Email: admin7@sixevents.com
+Meta:  {"role":"admin","full_name":"Chloé Laurent"}
+
+ADMIN 8
+Email: admin8@sixevents.com
+Meta:  {"role":"admin","full_name":"Hugo Simon"}
+
+ADMIN 9
+Email: admin9@sixevents.com
+Meta:  {"role":"admin","full_name":"Manon Michel"}
+
+ADMIN 10
+Email: admin10@sixevents.com
+Meta:  {"role":"admin","full_name":"Arthur Garcia"}
+
+Mot de passe identique pour tous: Admin123!SixEvents
+
+═══════════════════════════════════════════════════════════════
+
+✅ CHECKLIST
+
+[ ] Admin 1 - Sophie Martin
+[ ] Admin 2 - Lucas Dubois
+[ ] Admin 3 - Emma Bernard
+[ ] Admin 4 - Thomas Petit
+[ ] Admin 5 - Léa Richard
+[ ] Admin 6 - Nathan Moreau
+[ ] Admin 7 - Chloé Laurent
+[ ] Admin 8 - Hugo Simon
+[ ] Admin 9 - Manon Michel
+[ ] Admin 10 - Arthur Garcia
+
+═══════════════════════════════════════════════════════════════
+
+🔒 APRÈS CRÉATION
+
+[ ] Exécuter create-admin-accounts.sql dans Supabase SQL Editor
+[ ] Tester la connexion avec admin1@sixevents.com
+[ ] Vérifier l'accès au dashboard admin
+[ ] Confirmer qu'un client normal ne peut PAS créer d'événements
+
+═══════════════════════════════════════════════════════════════
+
+💡 CONSEILS
+
+• Gardez deux onglets ouverts (Signup + Supabase)
+• Créez tous les comptes d'abord, puis ajoutez les metadata
+• Copier-coller les emails et metadata pour gagner du temps
+• Ne pas oublier d'exécuter le script SQL pour les politiques RLS
+
+═══════════════════════════════════════════════════════════════
