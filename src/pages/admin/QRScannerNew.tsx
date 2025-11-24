@@ -69,7 +69,12 @@ export default function QRScannerNew() {
         return;
       }
 
+      // Limpar resultado anterior e parar scanner se existir
       setResult(null);
+      if (scanner) {
+        await scanner.stop().catch(console.error);
+        setScanner(null);
+      }
       
       // Parar stream anterior se existir
       if (cameraStream) {
