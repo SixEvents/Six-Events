@@ -7,7 +7,8 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Camera, CheckCircle2, XCircle, LogIn, LogOut, RefreshCcw, User, Clock } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Camera, CheckCircle2, XCircle, LogIn, LogOut, RefreshCcw, User, Clock, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 
 type ScanMode = 'entry' | 'exit' | 'reentry';
@@ -29,6 +30,8 @@ export default function QRScannerNew() {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [stats, setStats] = useState({ inside: 0, total: 0 });
+  const [manualInput, setManualInput] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -59,6 +62,13 @@ export default function QRScannerNew() {
 
   const startScanning = async () => {
     try {
+      // Verificar se getUserMedia está disponível
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("⚠️ Caméra non disponible. Utilisez HTTPS ou entrez le code manuellement");
+        setShowManualInput(true);
+        return;
+      }
+
       setResult(null);
       setScanning(true);
 
@@ -96,7 +106,8 @@ export default function QRScannerNew() {
       } else if (err.name === 'NotFoundError') {
         toast.error("❌ Aucune caméra trouvée");
       } else {
-        toast.error("❌ Erreur: " + (err.message || "Impossible d'accéder à la caméra"));
+        toast.error("❌ Erreur caméra. Utilisez l'entrée manuelle");
+        setShowManualInput(true);
       }
     }
   };
@@ -298,11 +309,37 @@ export default function QRScannerNew() {
                 <p className="text-center text-muted-foreground mb-4">
                   Scanner le QR code du billet pour autoriser <strong>l'entrée</strong>
                 </p>
-                {!scanning && !result && (
-                  <Button onClick={startScanning} size="lg" className="w-full">
-                    <Camera className="w-5 h-5 mr-2" />
-                    Commencer le scan
-                  </Button>
+                {!scanning && !result && !showManualInput && (
+                  <div className="space-y-2">
+                    <Button onClick={startScanning} size="lg" className="w-full">
+                      <Camera className="w-5 h-5 mr-2" />
+                      Commencer le scan
+                    </Button>
+                    <Button onClick={() => setShowManualInput(true)} size="lg" variant="outline" className="w-full">
+                      <Keyboard className="w-5 h-5 mr-2" />
+                      Entrée manuelle
+                    </Button>
+                  </div>
+                )}
+                {showManualInput && !scanning && !result && (
+                  <div className="space-y-2">
+                    <Input 
+                      placeholder="Collez le code QR ici..."
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && manualInput) {
+                          handleScan(manualInput);
+                          setManualInput('');
+                        }
+                      }}
+                      className="text-center"
+                      autoFocus
+                    />
+                    <Button onClick={() => setShowManualInput(false)} variant="ghost" className="w-full">
+                      Retour au scan
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -314,11 +351,37 @@ export default function QRScannerNew() {
                 <p className="text-center text-muted-foreground mb-4">
                   Scanner le QR code pour enregistrer une <strong>sortie temporaire</strong>
                 </p>
-                {!scanning && !result && (
-                  <Button onClick={startScanning} size="lg" className="w-full" variant="outline">
-                    <Camera className="w-5 h-5 mr-2" />
-                    Commencer le scan
-                  </Button>
+                {!scanning && !result && !showManualInput && (
+                  <div className="space-y-2">
+                    <Button onClick={startScanning} size="lg" className="w-full" variant="outline">
+                      <Camera className="w-5 h-5 mr-2" />
+                      Commencer le scan
+                    </Button>
+                    <Button onClick={() => setShowManualInput(true)} size="lg" variant="outline" className="w-full">
+                      <Keyboard className="w-5 h-5 mr-2" />
+                      Entrée manuelle
+                    </Button>
+                  </div>
+                )}
+                {showManualInput && !scanning && !result && (
+                  <div className="space-y-2">
+                    <Input 
+                      placeholder="Collez le code QR ici..."
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && manualInput) {
+                          handleScan(manualInput);
+                          setManualInput('');
+                        }
+                      }}
+                      className="text-center"
+                      autoFocus
+                    />
+                    <Button onClick={() => setShowManualInput(false)} variant="ghost" className="w-full">
+                      Retour au scan
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -330,11 +393,37 @@ export default function QRScannerNew() {
                 <p className="text-center text-muted-foreground mb-4">
                   Scanner le QR code pour autoriser une <strong>réentrée</strong> après sortie
                 </p>
-                {!scanning && !result && (
-                  <Button onClick={startScanning} size="lg" className="w-full" variant="secondary">
-                    <Camera className="w-5 h-5 mr-2" />
-                    Commencer le scan
-                  </Button>
+                {!scanning && !result && !showManualInput && (
+                  <div className="space-y-2">
+                    <Button onClick={startScanning} size="lg" className="w-full" variant="secondary">
+                      <Camera className="w-5 h-5 mr-2" />
+                      Commencer le scan
+                    </Button>
+                    <Button onClick={() => setShowManualInput(true)} size="lg" variant="outline" className="w-full">
+                      <Keyboard className="w-5 h-5 mr-2" />
+                      Entrée manuelle
+                    </Button>
+                  </div>
+                )}
+                {showManualInput && !scanning && !result && (
+                  <div className="space-y-2">
+                    <Input 
+                      placeholder="Collez le code QR ici..."
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && manualInput) {
+                          handleScan(manualInput);
+                          setManualInput('');
+                        }
+                      }}
+                      className="text-center"
+                      autoFocus
+                    />
+                    <Button onClick={() => setShowManualInput(false)} variant="ghost" className="w-full">
+                      Retour au scan
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
