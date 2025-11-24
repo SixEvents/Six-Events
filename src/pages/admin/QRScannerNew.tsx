@@ -55,11 +55,28 @@ export default function QRScannerNew() {
     setStats({ inside: inside || 0, total: total || 0 });
   };
 
+  const requestCameraPermission = async () => {
+    try {
+      // Pedir permissão explícita primeiro
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      toast.success("Autorisation caméra accordée");
+      return true;
+    } catch (err) {
+      toast.error("Veuillez autoriser l'accès à la caméra");
+      console.error(err);
+      return false;
+    }
+  };
+
   const startScanning = async () => {
     try {
+      // Verificar e pedir permissão
+      const hasPermission = await requestCameraPermission();
+      if (!hasPermission) return;
+
       const html5QrCode = new Html5Qrcode("qr-reader");
       
-      // Pedir permissão de câmera primeiro
+      // Verificar câmeras disponíveis
       const devices = await Html5Qrcode.getCameras();
       if (!devices || devices.length === 0) {
         toast.error("Nenhuma câmera encontrada");
