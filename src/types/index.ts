@@ -175,7 +175,7 @@ export interface CheckoutFormData {
   buyerEmail: string;
   buyerPhone: string;
   participants: string[];
-  paymentMethod: 'card' | 'cash';
+  paymentMethod: 'card' | 'cash' | 'transfer';
   cardNumber?: string;
   cardExpiry?: string;
   cardCVC?: string;

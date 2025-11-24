@@ -19,6 +19,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import PaymentProof from './pages/PaymentProof';
 import Profile from './pages/Profile';
 import MyReservations from './pages/MyReservations';
 import Settings from './pages/Settings';
@@ -72,6 +73,14 @@ const App = () => (
             <Route
               path="/checkout/event"
               element={<CheckoutEvent />}
+            />
+            <Route
+              path="/payment-proof"
+              element={
+                <ProtectedRoute>
+                  <PaymentProof />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/profile"
