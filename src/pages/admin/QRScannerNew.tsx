@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { BrowserQRCodeReader } from '@zxing/browser';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { decodeQRCodeData } from '../../lib/qrcode';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Input } from '../../components/ui/input';
-import { Camera, CheckCircle2, XCircle, LogIn, LogOut, RefreshCcw, User, Clock, Keyboard } from 'lucide-react';
+import { CheckCircle2, XCircle, LogIn, LogOut, RefreshCcw, User, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 type ScanMode = 'entry' | 'exit' | 'reentry';
@@ -23,28 +22,14 @@ interface ScanResult {
 
 export default function QRScannerNew() {
   const { user } = useAuth();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReaderRef = useRef<BrowserQRCodeReader | null>(null);
   
   const [mode, setMode] = useState<ScanMode>('entry');
-  const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [stats, setStats] = useState({ inside: 0, total: 0 });
-  const [manualInput, setManualInput] = useState('');
-  const [showManualInput, setShowManualInput] = useState(false);
+  const [qrInput, setQrInput] = useState('');
 
   useEffect(() => {
     loadStats();
-    
-    // Inicializar o leitor QR
-    codeReaderRef.current = new BrowserQRCodeReader();
-    
-    return () => {
-      // Limpar ao desmontar
-      if (codeReaderRef.current) {
-        codeReaderRef.current.reset();
-      }
-    };
   }, []);
 
   const loadStats = async () => {
@@ -60,63 +45,13 @@ export default function QRScannerNew() {
     setStats({ inside: inside || 0, total: total || 0 });
   };
 
-  const startScanning = async () => {
-    try {
-      // Verificar se getUserMedia está disponível
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        toast.error("⚠️ Caméra non disponible. Utilisez HTTPS ou entrez le code manuellement");
-        setShowManualInput(true);
-        return;
-      }
-
-      setResult(null);
-      setScanning(true);
-
-      // Aguardar o vídeo ser renderizado
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      if (!videoRef.current || !codeReaderRef.current) {
-        toast.error("Erreur d'initialisation de la caméra");
-        setScanning(false);
-        return;
-      }
-
-      // Iniciar scan contínuo
-      await codeReaderRef.current.decodeFromVideoDevice(
-        undefined, // undefined = câmera padrão
-        videoRef.current,
-        (result, error) => {
-          if (result) {
-            // QR Code encontrado!
-            const qrText = result.getText();
-            handleScan(qrText);
-            stopScanning();
-          }
-          // Ignorar erros de scan contínuo
-        }
-      );
-
-      toast.success("📷 Caméra activée");
-    } catch (err: any) {
-      console.error("Scanner error:", err);
-      setScanning(false);
-      
-      if (err.name === 'NotAllowedError') {
-        toast.error("❌ Permission refusée pour la caméra");
-      } else if (err.name === 'NotFoundError') {
-        toast.error("❌ Aucune caméra trouvée");
-      } else {
-        toast.error("❌ Erreur caméra. Utilisez l'entrée manuelle");
-        setShowManualInput(true);
-      }
+  const processQR = () => {
+    if (!qrInput.trim()) {
+      toast.error("Veuillez entrer un code");
+      return;
     }
-  };
-
-  const stopScanning = () => {
-    if (codeReaderRef.current) {
-      codeReaderRef.current.reset();
-    }
-    setScanning(false);
+    handleScan(qrInput.trim());
+    setQrInput('');
   };
 
   const handleScan = async (qrData: string) => {
@@ -305,39 +240,26 @@ export default function QRScannerNew() {
 
           <TabsContent value="entry" className="space-y-4">
             <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground mb-4">
-                  Scanner le QR code du billet pour autoriser <strong>l'entrée</strong>
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-center text-muted-foreground">
+                  Entrez le code du QR pour autoriser <strong>l'entrée</strong>
                 </p>
-                {!scanning && !result && !showManualInput && (
-                  <div className="space-y-2">
-                    <Button onClick={startScanning} size="lg" className="w-full">
-                      <Camera className="w-5 h-5 mr-2" />
-                      Commencer le scan
-                    </Button>
-                    <Button onClick={() => setShowManualInput(true)} size="lg" variant="outline" className="w-full">
-                      <Keyboard className="w-5 h-5 mr-2" />
-                      Entrée manuelle
-                    </Button>
-                  </div>
-                )}
-                {showManualInput && !scanning && !result && (
-                  <div className="space-y-2">
+                {!result && (
+                  <div className="space-y-3">
                     <Input 
-                      placeholder="Collez le code QR ici..."
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
+                      placeholder="Tapez ou collez le code ici..."
+                      value={qrInput}
+                      onChange={(e) => setQrInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && manualInput) {
-                          handleScan(manualInput);
-                          setManualInput('');
+                        if (e.key === 'Enter' && qrInput.trim()) {
+                          processQR();
                         }
                       }}
-                      className="text-center"
+                      className="text-center text-lg h-14"
                       autoFocus
                     />
-                    <Button onClick={() => setShowManualInput(false)} variant="ghost" className="w-full">
-                      Retour au scan
+                    <Button onClick={processQR} size="lg" className="w-full">
+                      Valider l'entrée
                     </Button>
                   </div>
                 )}
@@ -347,39 +269,26 @@ export default function QRScannerNew() {
 
           <TabsContent value="exit" className="space-y-4">
             <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground mb-4">
-                  Scanner le QR code pour enregistrer une <strong>sortie temporaire</strong>
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-center text-muted-foreground">
+                  Entrez le code du QR pour enregistrer une <strong>sortie</strong>
                 </p>
-                {!scanning && !result && !showManualInput && (
-                  <div className="space-y-2">
-                    <Button onClick={startScanning} size="lg" className="w-full" variant="outline">
-                      <Camera className="w-5 h-5 mr-2" />
-                      Commencer le scan
-                    </Button>
-                    <Button onClick={() => setShowManualInput(true)} size="lg" variant="outline" className="w-full">
-                      <Keyboard className="w-5 h-5 mr-2" />
-                      Entrée manuelle
-                    </Button>
-                  </div>
-                )}
-                {showManualInput && !scanning && !result && (
-                  <div className="space-y-2">
+                {!result && (
+                  <div className="space-y-3">
                     <Input 
-                      placeholder="Collez le code QR ici..."
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
+                      placeholder="Tapez ou collez le code ici..."
+                      value={qrInput}
+                      onChange={(e) => setQrInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && manualInput) {
-                          handleScan(manualInput);
-                          setManualInput('');
+                        if (e.key === 'Enter' && qrInput.trim()) {
+                          processQR();
                         }
                       }}
-                      className="text-center"
+                      className="text-center text-lg h-14"
                       autoFocus
                     />
-                    <Button onClick={() => setShowManualInput(false)} variant="ghost" className="w-full">
-                      Retour au scan
+                    <Button onClick={processQR} size="lg" className="w-full" variant="outline">
+                      Valider la sortie
                     </Button>
                   </div>
                 )}
@@ -389,39 +298,26 @@ export default function QRScannerNew() {
 
           <TabsContent value="reentry" className="space-y-4">
             <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground mb-4">
-                  Scanner le QR code pour autoriser une <strong>réentrée</strong> après sortie
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-center text-muted-foreground">
+                  Entrez le code du QR pour autoriser une <strong>réentrée</strong>
                 </p>
-                {!scanning && !result && !showManualInput && (
-                  <div className="space-y-2">
-                    <Button onClick={startScanning} size="lg" className="w-full" variant="secondary">
-                      <Camera className="w-5 h-5 mr-2" />
-                      Commencer le scan
-                    </Button>
-                    <Button onClick={() => setShowManualInput(true)} size="lg" variant="outline" className="w-full">
-                      <Keyboard className="w-5 h-5 mr-2" />
-                      Entrée manuelle
-                    </Button>
-                  </div>
-                )}
-                {showManualInput && !scanning && !result && (
-                  <div className="space-y-2">
+                {!result && (
+                  <div className="space-y-3">
                     <Input 
-                      placeholder="Collez le code QR ici..."
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
+                      placeholder="Tapez ou collez le code ici..."
+                      value={qrInput}
+                      onChange={(e) => setQrInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && manualInput) {
-                          handleScan(manualInput);
-                          setManualInput('');
+                        if (e.key === 'Enter' && qrInput.trim()) {
+                          processQR();
                         }
                       }}
-                      className="text-center"
+                      className="text-center text-lg h-14"
                       autoFocus
                     />
-                    <Button onClick={() => setShowManualInput(false)} variant="ghost" className="w-full">
-                      Retour au scan
+                    <Button onClick={processQR} size="lg" className="w-full" variant="secondary">
+                      Valider la réentrée
                     </Button>
                   </div>
                 )}
@@ -429,29 +325,6 @@ export default function QRScannerNew() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Scanner */}
-        {scanning && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="relative w-full aspect-square bg-black rounded-lg overflow-hidden">
-                <video 
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  playsInline
-                  muted
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-64 h-64 border-4 border-white/50 rounded-lg"></div>
-                </div>
-              </div>
-              <Button onClick={stopScanning} variant="outline" className="w-full mt-4">
-                Annuler
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Résultat */}
         {result && (
@@ -481,9 +354,8 @@ export default function QRScannerNew() {
                   </Badge>
                 </div>
 
-                <Button onClick={startScanning} size="lg" className="w-full mt-4">
-                  <Camera className="w-5 h-5 mr-2" />
-                  Scanner suivant
+                <Button onClick={processQR} size="lg" className="w-full mt-4">
+                  Suivant
                 </Button>
               </div>
             </CardContent>
