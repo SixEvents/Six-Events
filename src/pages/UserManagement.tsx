@@ -55,20 +55,46 @@ export default function UserManagement() {
     try {
       setLoading(true);
 
-      // Carregar roles existentes
+      // Carregar roles existentes da tabela profiles
       const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (rolesError) throw rolesError;
-      setUserRoles(rolesData || []);
-
-      // Carregar usuários do auth (apenas admins podem ver isso)
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
       
-      if (!usersError && users) {
-        setAuthUsers(users as AuthUser[]);
+      // Mapear profiles para formato user_roles
+      const mappedRoles = (rolesData || []).map(profile => ({
+        id: profile.id,
+        user_id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        created_at: profile.created_at,
+        updated_at: profile.created_at,
+      }));
+      
+      setUserRoles(mappedRoles);
+
+      // Carregar todos os usuários do auth
+      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (!authError && authData?.users) {
+        setAuthUsers(authData.users as AuthUser[]);
+      } else {
+        // Fallback: buscar usuários da tabela profiles
+        const { data: profileUsers } = await supabase
+          .from('profiles')
+          .select('id, email');
+        
+        if (profileUsers) {
+          const mappedUsers = profileUsers.map((p: any) => ({
+            id: p.id,
+            email: p.email,
+            email_confirmed_at: null,
+            last_sign_in_at: null,
+          }));
+          setAuthUsers(mappedUsers as AuthUser[]);
+        }
       }
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -108,24 +134,18 @@ export default function UserManagement() {
         return;
       }
 
-      // Inserir role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
+      // Inserir/atualizar na tabela profiles
+      const { error: upsertError } = await (supabase
+        .from('profiles') as any)
+        .upsert({
+          id: user.id,
           email: selectedEmail,
           role: selectedRole,
+        }, {
+          onConflict: 'id'
         });
 
-      if (insertError) {
-        // Se já existe, fazer update
-        const { error: updateError } = await supabase
-          .from('user_roles')
-          .update({ role: selectedRole, updated_at: new Date().toISOString() })
-          .eq('user_id', user.id);
-
-        if (updateError) throw updateError;
-      }
+      if (upsertError) throw upsertError;
 
       toast({
         title: 'Sucesso!',
@@ -151,10 +171,10 @@ export default function UserManagement() {
     }
 
     try {
-      const { error } = await supabase
-        .from('user_roles')
+      const { error } = await (supabase
+        .from('profiles') as any)
         .delete()
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) throw error;
 
