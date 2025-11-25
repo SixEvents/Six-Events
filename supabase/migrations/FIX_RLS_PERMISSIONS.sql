@@ -76,7 +76,7 @@ ON CONFLICT (user_id) DO UPDATE SET role = 'admin', updated_at = NOW();
 INSERT INTO public.user_roles (user_id, email, role)
 SELECT id, email, 'admin'
 FROM auth.users
-WHERE email = '6events.mjt@gmail.com'
+WHERE email = 'natan.bilt8860@gmail.com'
 ON CONFLICT (user_id) DO UPDATE SET role = 'admin', updated_at = NOW();
 
 -- 3. REMOVER POLÍTICAS ANTIGAS DA TABELA EVENTS

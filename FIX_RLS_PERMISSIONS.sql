@@ -191,13 +191,19 @@ WITH CHECK (true);
 -- COPIE SEU USER ID executando esta query primeiro:
 -- SELECT id FROM auth.users WHERE email = 'ls8528950@gmail.com';
 
--- DEPOIS, insira manualmente (substitua SEU_USER_ID_AQUI pelo resultado acima):
--- INSERT INTO public.profiles (id, email, role)
--- VALUES ('SEU_USER_ID_AQUI', 'ls8528950@gmail.com', 'admin')
--- ON CONFLICT (id) DO UPDATE SET role = 'admin';
+-- DEPOIS, insira automaticamente VOCÊS 2 COMO ADMINS:
 
--- Exemplo se seu ID for: 1a875icd-85e8-4366-9b9e-b5eaf85c7318
--- INSERT INTO public.profiles (id, email, role)
--- VALUES ('1a875icd-85e8-4366-9b9e-b5eaf85c7318', 'ls8528950@gmail.com', 'admin')
--- ON CONFLICT (id) DO UPDATE SET role = 'admin';
+-- Você (owner principal)
+INSERT INTO public.profiles (id, email, role)
+SELECT id, email, 'admin'
+FROM auth.users
+WHERE email = 'ls8528950@gmail.com'
+ON CONFLICT (id) DO UPDATE SET role = 'admin', email = 'ls8528950@gmail.com';
+
+-- Seu ajudante
+INSERT INTO public.profiles (id, email, role)
+SELECT id, email, 'admin'
+FROM auth.users
+WHERE email = 'natan.bilt8860@gmail.com'
+ON CONFLICT (id) DO UPDATE SET role = 'admin', email = 'natan.bilt8860@gmail.com';
 
