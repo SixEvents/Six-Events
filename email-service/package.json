@@ -1,0 +1,28 @@
+{
+  "name": "six-events-email-service",
+  "version": "1.0.0",
+  "description": "Background email service for Six Events platform",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts",
+    "build": "tsc",
+    "deploy": "node index.js"
+  },
+  "keywords": ["email", "gmail", "queue", "six-events"],
+  "author": "Six Events",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "@types/nodemailer": "^6.4.14",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Users } from "lucide-react";
+import { AvailabilityBadge, getAvailabilityInfo } from "@/lib/availability";
 
 interface EventCardProps {
   title: string;
@@ -14,6 +15,8 @@ interface EventCardProps {
 }
 
 const EventCard = ({ title, image, date, location, price, spotsLeft, theme }: EventCardProps) => {
+  const availabilityInfo = getAvailabilityInfo(spotsLeft);
+  
   return (
     <Card className="overflow-hidden hover-lift group cursor-pointer border-2 border-border hover:border-primary transition-all">
       <div className="relative h-48 overflow-hidden">
@@ -25,6 +28,10 @@ const EventCard = ({ title, image, date, location, price, spotsLeft, theme }: Ev
         <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
           {theme}
         </Badge>
+        {/* Badge de disponibilidade no canto superior esquerdo */}
+        <div className="absolute top-3 left-3">
+          <AvailabilityBadge availablePlaces={spotsLeft} />
+        </div>
       </div>
       <CardContent className="p-5">
         <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
@@ -42,7 +49,9 @@ const EventCard = ({ title, image, date, location, price, spotsLeft, theme }: Ev
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4 text-primary" />
-            <span>{spotsLeft} places restantes</span>
+            <span className={availabilityInfo.color}>
+              {availabilityInfo.emoji} {spotsLeft} place{spotsLeft > 1 ? 's' : ''} restante{spotsLeft > 1 ? 's' : ''}
+            </span>
           </div>
         </div>
 
@@ -51,8 +60,12 @@ const EventCard = ({ title, image, date, location, price, spotsLeft, theme }: Ev
             <span className="text-2xl font-bold text-primary">{price}€</span>
             <span className="text-sm text-muted-foreground ml-1">/personne</span>
           </div>
-          <Button variant="hero" size="sm">
-            Réserver
+          <Button 
+            variant="hero" 
+            size="sm"
+            disabled={availabilityInfo.disabled}
+          >
+            {availabilityInfo.disabled ? 'Complet' : 'Réserver'}
           </Button>
         </div>
       </CardContent>

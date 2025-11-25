@@ -119,6 +119,26 @@ export default function CheckoutEvent() {
       }
 
       // Se for Cash, criar reserva pendente diretamente
+      // 🔒 VERIFICAÇÃO DE SEGURANÇA: Verificar disponibilidade antes de criar reserva
+      const { data: currentEvent, error: eventError } = await supabase
+        .from('events')
+        .select('available_places')
+        .eq('id', event.id)
+        .single();
+
+      if (eventError) {
+        throw new Error('Impossible de vérifier la disponibilité');
+      }
+
+      if (!currentEvent || (currentEvent.available_places || 0) < quantity) {
+        toast.error(
+          `Désolé, seulement ${currentEvent?.available_places || 0} place(s) disponible(s). ` +
+          `Veuillez réduire votre réservation.`
+        );
+        setLoading(false);
+        return;
+      }
+
       // 1. Criar reserva
       const { data: reservation, error: reservationError } = await supabase
         .from('reservations')
@@ -192,6 +212,26 @@ export default function CheckoutEvent() {
 
   const handleStripeCheckout = async () => {
     try {
+      // 🔒 VERIFICAÇÃO DE SEGURANÇA: Verificar disponibilidade ANTES de criar sessão Stripe
+      const { data: currentEvent, error: eventError } = await supabase
+        .from('events')
+        .select('available_places')
+        .eq('id', event.id)
+        .single();
+
+      if (eventError) {
+        throw new Error('Impossible de vérifier la disponibilité');
+      }
+
+      if (!currentEvent || (currentEvent.available_places || 0) < quantity) {
+        toast.error(
+          `Désolé, seulement ${currentEvent?.available_places || 0} place(s) disponible(s). ` +
+          `Veuillez réduire votre réservation.`
+        );
+        setLoading(false);
+        return;
+      }
+
       const stripe = await getStripe();
       
       if (!stripe) {
