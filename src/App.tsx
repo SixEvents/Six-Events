@@ -31,6 +31,7 @@ import AdminReservations from './pages/admin/Reservations';
 import AdminPartyBuilder from './pages/admin/PartyBuilder';
 import AdminSettings from './pages/admin/Settings';
 import QRScannerNew from './pages/admin/QRScannerNew';
+import UserManagement from './pages/UserManagement';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -157,6 +158,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminSettings />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <UserManagement />
                 </AdminRoute>
               }
             />
