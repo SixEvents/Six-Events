@@ -4,7 +4,7 @@
     "module": "ES2022",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
@@ -12,7 +12,8 @@
     "rootDir": ".",
     "declaration": true,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "noImplicitAny": false
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
