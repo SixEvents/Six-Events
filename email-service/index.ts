@@ -7,7 +7,7 @@ import {
   generatePartyBuilderClientConfirmationHTML,
   type ReservationEmailData,
   type PartyBuilderDemandData,
-} from './lib/gmail';
+} from './lib/gmail.js';
 
 const app = express();
 const PORT = process.env.EMAIL_SERVICE_PORT || 3001;
