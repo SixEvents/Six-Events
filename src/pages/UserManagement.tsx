@@ -55,41 +55,33 @@ export default function UserManagement() {
     try {
       setLoading(true);
 
-      // Carregar roles existentes da tabela profiles
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('profiles')
+      // Carregar roles existentes da tabela user_roles
+      const { data: rolesData, error: rolesError } = await (supabase
+        .from('user_roles') as any)
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('Error loading roles:', rolesError);
+        throw rolesError;
+      }
       
-      // Mapear profiles para formato user_roles
-      const mappedRoles = (rolesData || []).map(profile => ({
-        id: profile.id,
-        user_id: profile.id,
-        email: profile.email,
-        role: profile.role,
-        created_at: profile.created_at,
-        updated_at: profile.created_at,
-      }));
-      
-      setUserRoles(mappedRoles);
+      setUserRoles(rolesData || []);
 
       // Carregar todos os usuários do auth
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (!authError && authData?.users) {
-        setAuthUsers(authData.users as AuthUser[]);
-      } else {
-        // Fallback: buscar usuários da tabela profiles
-        const { data: profileUsers } = await supabase
-          .from('profiles')
-          .select('id, email');
+      try {
+        const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
         
-        if (profileUsers) {
-          const mappedUsers = profileUsers.map((p: any) => ({
-            id: p.id,
-            email: p.email,
+        if (!authError && authData?.users) {
+          setAuthUsers(authData.users as AuthUser[]);
+        }
+      } catch (authErr) {
+        console.warn('Could not load auth users (admin API may be restricted):', authErr);
+        // Fallback: usar emails da tabela user_roles
+        if (rolesData) {
+          const mappedUsers = rolesData.map((r: any) => ({
+            id: r.user_id,
+            email: r.email,
             email_confirmed_at: null,
             last_sign_in_at: null,
           }));
@@ -100,7 +92,7 @@ export default function UserManagement() {
       console.error('Error loading data:', error);
       toast({
         title: 'Erro ao carregar dados',
-        description: error.message,
+        description: error.message || 'Verifique se executou o script SQL FINAL_FIX_COMPLETE.sql',
         variant: 'destructive',
       });
     } finally {
@@ -134,15 +126,15 @@ export default function UserManagement() {
         return;
       }
 
-      // Inserir/atualizar na tabela profiles
+      // Inserir/atualizar na tabela user_roles
       const { error: upsertError } = await (supabase
-        .from('profiles') as any)
+        .from('user_roles') as any)
         .upsert({
-          id: user.id,
+          user_id: user.id,
           email: selectedEmail,
           role: selectedRole,
         }, {
-          onConflict: 'id'
+          onConflict: 'user_id'
         });
 
       if (upsertError) throw upsertError;
@@ -172,9 +164,9 @@ export default function UserManagement() {
 
     try {
       const { error } = await (supabase
-        .from('profiles') as any)
+        .from('user_roles') as any)
         .delete()
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
