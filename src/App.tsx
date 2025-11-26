@@ -27,7 +27,6 @@ import MyReservations from './pages/MyReservations';
 import Settings from './pages/Settings';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminEvents from './pages/admin/Events';
-import AdminReservations from './pages/admin/Reservations';
 import AdminPartyBuilder from './pages/admin/PartyBuilder';
 import AdminSettings from './pages/admin/Settings';
 import QRScannerNew from './pages/admin/QRScannerNew';
@@ -126,14 +125,6 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminEvents />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/reservations"
-              element={
-                <AdminRoute>
-                  <AdminReservations />
                 </AdminRoute>
               }
             />

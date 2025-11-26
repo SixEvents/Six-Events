@@ -18,12 +18,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalEvents: 0,
-    totalReservations: 0,
     totalRevenue: 0,
     activeEvents: 0
   });
   const [loading, setLoading] = useState(true);
-  const [recentReservations, setRecentReservations] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -43,14 +41,6 @@ export default function AdminDashboard() {
         .eq('is_visible', true)
         .gte('date', new Date().toISOString());
 
-      // Fetch reservations
-      const { data: reservations, count: reservationsCount } = await supabase
-        .from('reservations')
-        .select('*, event:events(title)', { count: 'exact' })
-        .eq('status', 'confirmed')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
       // Calculate revenue
       const { data: confirmedReservations } = await supabase
         .from('reservations')
@@ -61,12 +51,9 @@ export default function AdminDashboard() {
 
       setStats({
         totalEvents: eventsCount || 0,
-        totalReservations: reservationsCount || 0,
         totalRevenue: revenue,
         activeEvents: activeEventsCount || 0
       });
-
-      setRecentReservations(reservations || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -83,18 +70,11 @@ export default function AdminDashboard() {
       link: '/admin/events'
     },
     {
-      title: 'Réservations',
-      value: stats.totalReservations,
-      icon: Users,
-      color: 'from-purple-500 to-blue-600',
-      link: '/admin/reservations'
-    },
-    {
       title: 'Revenus',
       value: `${stats.totalRevenue.toFixed(0)}€`,
       icon: DollarSign,
       color: 'from-blue-500 to-cyan-600',
-      link: '/admin/reservations'
+      link: '/admin/events'
     },
     {
       title: 'Total Événements',
@@ -142,7 +122,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -169,95 +149,54 @@ export default function AdminDashboard() {
             })}
           </div>
 
-          {/* Recent Reservations */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Réservations Récentes</h2>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/admin/reservations">
-                    Voir tout
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
+          {/* Actions Rapides */}
+          <Card className="p-6 max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-6">Actions Rapides</h2>
+            <div className="space-y-3">
+              <Link to="/admin/qr-scanner">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-14 border-2 border-primary/20 hover:border-primary hover:bg-primary/5"
+                >
+                  <QrCode className="w-5 h-5 mr-3 text-primary" />
+                  <div className="text-left">
+                    <div className="font-semibold">📱 Scanner QR Codes</div>
+                    <div className="text-xs text-gray-500">Valider les entrées des participants</div>
+                  </div>
                 </Button>
-              </div>
-              {recentReservations.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Aucune réservation récente</p>
-              ) : (
-                <div className="space-y-4">
-                  {recentReservations.map((reservation) => (
-                    <div key={reservation.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <div className="font-semibold">{reservation.event?.title}</div>
-                        <div className="text-sm text-gray-600">{reservation.user_name || 'Client'}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-pink-600">{reservation.total_price}€</div>
-                        <div className="text-xs text-gray-500">{reservation.number_of_places} places</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-6">Actions Rapides</h2>
-              <div className="space-y-3">
-                <Link to="/admin/qr-scanner">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-14 border-2 border-primary/20 hover:border-primary hover:bg-primary/5"
-                  >
-                    <QrCode className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">📱 Scanner QR Codes</div>
-                      <div className="text-xs text-gray-500">Valider les entrées des participants</div>
-                    </div>
-                  </Button>
-                </Link>
-                <Link to="/admin/events">
-                  <Button variant="outline" className="w-full justify-start h-14">
-                    <Calendar className="w-5 h-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-semibold">Gérer les événements</div>
-                      <div className="text-xs text-gray-500">Créer, modifier, supprimer</div>
-                    </div>
-                  </Button>
-                </Link>
-                <Link to="/admin/reservations">
-                  <Button variant="outline" className="w-full justify-start h-14">
-                    <Users className="w-5 h-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-semibold">Voir les réservations</div>
-                      <div className="text-xs text-gray-500">Gérer les inscriptions</div>
-                    </div>
-                  </Button>
-                </Link>
-                <Link to="/admin/party-builder">
-                  <Button variant="outline" className="w-full justify-start h-14">
-                    <PartyPopper className="w-5 h-5 mr-3" />
-                    <div className="text-left">
-                      <div className="font-semibold">Party Builder Options</div>
-                      <div className="text-xs text-gray-500">Gérer les options disponibles</div>
-                    </div>
-                  </Button>
-                </Link>
-                <Link to="/admin/users">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-14 border-2 border-amber-500/20 hover:border-amber-500 hover:bg-amber-50"
-                  >
-                    <Users className="w-5 h-5 mr-3 text-amber-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">🔐 Gestão de Permissões</div>
-                      <div className="text-xs text-gray-500">Gerenciar acesso de usuários</div>
-                    </div>
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          </div>
+              </Link>
+              <Link to="/admin/events">
+                <Button variant="outline" className="w-full justify-start h-14">
+                  <Calendar className="w-5 h-5 mr-3" />
+                  <div className="text-left">
+                    <div className="font-semibold">Gérer les événements</div>
+                    <div className="text-xs text-gray-500">Créer, modifier, supprimer</div>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/admin/party-builder">
+                <Button variant="outline" className="w-full justify-start h-14">
+                  <PartyPopper className="w-5 h-5 mr-3" />
+                  <div className="text-left">
+                    <div className="font-semibold">Party Builder Options</div>
+                    <div className="text-xs text-gray-500">Gérer les options disponibles</div>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/admin/users">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-14 border-2 border-amber-500/20 hover:border-amber-500 hover:bg-amber-50"
+                >
+                  <Users className="w-5 h-5 mr-3 text-amber-600" />
+                  <div className="text-left">
+                    <div className="font-semibold">🔐 Gestão de Permissões</div>
+                    <div className="text-xs text-gray-500">Gerenciar acesso de usuários</div>
+                  </div>
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </motion.div>
       </div>
     </div>
