@@ -298,14 +298,18 @@ export default function CheckoutEvent() {
         throw new Error('Aucune donnée reçue de la session de paiement');
       }
 
-      if (!data.url) {
-        console.error('Session data:', data);
+      // La réponse peut être directement l'objet ou wrapped
+      const sessionData = typeof data === 'string' ? JSON.parse(data) : data;
+      console.log('Session data parsed:', sessionData);
+
+      if (!sessionData.url) {
+        console.error('Session data structure:', sessionData);
         throw new Error('URL de paiement manquante dans la réponse');
       }
 
       // Redirection vers Stripe Checkout (nouvelle méthode)
-      console.log('Redirecting to:', data.url);
-      window.location.href = data.url;
+      console.log('Redirecting to:', sessionData.url);
+      window.location.href = sessionData.url;
     } catch (error: any) {
       console.error('Stripe checkout error:', error);
       toast.error(error.message || 'Erreur lors du processus de paiement');
