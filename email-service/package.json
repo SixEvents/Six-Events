@@ -1,6 +1,6 @@
 {
   "name": "six-events-email-service",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Background email service for Six Events platform",
   "main": "dist/index.js",
   "type": "module",
