@@ -170,13 +170,12 @@ const App = () => (
 
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </CartProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
+  </TooltipProvider>
+</QueryClientProvider>
 );
 
 export default App;
