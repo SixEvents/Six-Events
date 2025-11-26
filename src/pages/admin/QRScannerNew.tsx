@@ -75,22 +75,61 @@ export default function QRScannerNew() {
         return;
       }
 
-      // Iniciar scan contínuo
-      await codeReaderRef.current.decodeFromVideoDevice(
-        undefined, // undefined = câmera padrão
-        videoRef.current,
-        (result, error) => {
+      // Configurer les contraintes vidéo pour une meilleure qualité
+      const videoConstraints: MediaStreamConstraints = {
+        video: {
+          facingMode: 'environment', // Caméra arrière sur mobile
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          aspectRatio: { ideal: 1 },
+          focusMode: 'continuous' as any,
+          zoom: 1.0 as any
+        }
+      };
+
+      // Obtenir le stream vidéo avec contraintes optimisées
+      const stream = await navigator.mediaDevices.getUserMedia(videoConstraints);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      // Démarrer le scan avec des paramètres optimisés
+      let lastScanTime = 0;
+      const scanInterval = 100; // Scan toutes les 100ms pour plus de réactivité
+
+      const scanLoop = async () => {
+        if (!scanning || !videoRef.current || !codeReaderRef.current) return;
+
+        const now = Date.now();
+        if (now - lastScanTime < scanInterval) {
+          requestAnimationFrame(scanLoop);
+          return;
+        }
+        lastScanTime = now;
+
+        try {
+          const result = await codeReaderRef.current.decodeFromVideoElement(videoRef.current);
           if (result) {
-            // QR Code encontrado!
             const qrText = result.getText();
+            // Arrêter le stream
+            if (videoRef.current?.srcObject) {
+              const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+              tracks.forEach(track => track.stop());
+            }
             handleScan(qrText);
             stopScanning();
+            return;
           }
-          // Ignorar erros de scan contínuo
+        } catch (err) {
+          // Continuer le scan si aucun QR code n'est trouvé
         }
-      );
 
-      toast.success("📷 Caméra activée");
+        requestAnimationFrame(scanLoop);
+      };
+
+      scanLoop();
+      toast.success("📷 Caméra activée - Positionnez le QR code");
     } catch (err: any) {
       console.error("Scanner error:", err);
       setScanning(false);
@@ -108,6 +147,12 @@ export default function QRScannerNew() {
   const stopScanning = () => {
     if (codeReaderRef.current) {
       codeReaderRef.current.reset();
+    }
+    // Arrêter tous les streams vidéo
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     setScanning(false);
   };
@@ -405,13 +450,41 @@ export default function QRScannerNew() {
                   playsInline
                   muted
                 />
+                {/* Guide visuel avec animation */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-64 h-64 border-4 border-white/50 rounded-lg"></div>
+                  <div className="relative">
+                    <div className="w-64 h-64 border-4 border-white/50 rounded-lg"></div>
+                    {/* Coins animés pour meilleur feedback */}
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-lg animate-pulse"></div>
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-lg animate-pulse"></div>
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-lg animate-pulse"></div>
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-lg animate-pulse"></div>
+                  </div>
+                </div>
+                {/* Instructions */}
+                <div className="absolute bottom-4 left-0 right-0 text-center">
+                  <div className="bg-black/70 text-white px-4 py-2 rounded-lg mx-auto inline-block">
+                    <p className="text-sm font-medium">📱 Centrez le QR code dans le cadre</p>
+                    <p className="text-xs opacity-75">Maintenez stable pendant 1 seconde</p>
+                  </div>
                 </div>
               </div>
-              <Button onClick={stopScanning} variant="outline" className="w-full mt-4">
-                Annuler
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={stopScanning} variant="outline" className="flex-1">
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={() => {
+                    stopScanning();
+                    setTimeout(startScanning, 100);
+                  }} 
+                  variant="secondary" 
+                  className="flex-1"
+                >
+                  <RefreshCcw className="w-4 h-4 mr-2" />
+                  Changer caméra
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
