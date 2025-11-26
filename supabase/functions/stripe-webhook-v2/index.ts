@@ -256,8 +256,7 @@ serve(async (req) => {
         });
       }
 
-      // 5. Marcar email como pendente (será enviado pelo backend do Node.js)
-      // Armazenar os dados do email no banco para processamento posterior
+      // 5. Adicionar email na fila (JSONB direto, não string)
       await supabase
         .from('email_queue')
         .insert({
@@ -265,7 +264,7 @@ serve(async (req) => {
           recipient_email: buyer_email,
           recipient_name: buyer_name,
           reservation_id: reservation.id,
-          data: JSON.stringify({
+          data: {
             eventName: event_title,
             eventDate: event_date,
             eventLocation: event_location,
@@ -273,7 +272,7 @@ serve(async (req) => {
             participants: participantsList,
             totalAmount: parseFloat(total_price),
             qrCodes,
-          }),
+          },
           status: 'pending',
         });
 
