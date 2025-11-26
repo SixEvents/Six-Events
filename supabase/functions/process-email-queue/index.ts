@@ -91,7 +91,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: {
-              email: 'info@trial.mlsender.net',
+              email: 'info@test-yxj6lj925y04do2r.mlsender.net',
               name: 'Six Events'
             },
             to: [{
