@@ -169,7 +169,7 @@ const PartyBuilder = () => {
         .insert({
           type: 'party_builder_request',
           recipient_email: '6events.mjt@gmail.com',
-          data: emailData,
+          data: JSON.stringify(emailData),
           status: 'pending',
         });
       

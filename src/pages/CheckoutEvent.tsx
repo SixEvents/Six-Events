@@ -14,7 +14,7 @@ import { ArrowLeft, CreditCard, Banknote, CheckCircle2, Loader2, Calendar, MapPi
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { generateQRCodeData, generateUniqueCode } from '../lib/qrcode';
+import { generateQRCodeData, generateUniqueCode, generateQRCodeDataURL } from '../lib/qrcode';
 
 export default function CheckoutEvent() {
   const location = useLocation();
@@ -194,6 +194,34 @@ export default function CheckoutEvent() {
         .from('events')
         .update({ available_places: newAvailablePlaces })
         .eq('id', event.id);
+
+      // 4. Enfileirar email de confirmação (mesmo para cash)
+      // Gerar QR Codes como imagens
+      const qrCodes = [];
+      for (const ticket of tickets) {
+        const dataUrl = await generateQRCodeDataURL(ticket.qr_code_data);
+        qrCodes.push({
+          name: ticket.participant_name,
+          dataUrl,
+        });
+      }
+
+      await supabase
+        .from('email_queue')
+        .insert({
+          type: 'reservation_confirmation',
+          recipient_email: formData.buyerEmail,
+          data: JSON.stringify({
+            eventName: event.title,
+            eventDate: event.date,
+            eventLocation: event.location,
+            ticketCount: quantity,
+            participants: allParticipants,
+            totalAmount: totalPrice,
+            qrCodes,
+          }),
+          status: 'pending',
+        });
 
       setSuccess(true);
       toast.success('Réservation enregistrée!');
