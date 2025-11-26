@@ -291,19 +291,12 @@ export default function CheckoutEvent() {
         throw new Error('Impossible de créer la session de paiement');
       }
 
-      if (!data?.sessionId) {
+      if (!data?.url) {
         throw new Error('Session de paiement invalide');
       }
 
-      // Redirecionar para Stripe Checkout
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId
-      });
-
-      if (stripeError) {
-        console.error('Stripe redirect error:', stripeError);
-        throw new Error(stripeError.message);
-      }
+      // Redirection vers Stripe Checkout (nouvelle méthode)
+      window.location.href = data.url;
     } catch (error: any) {
       console.error('Stripe checkout error:', error);
       toast.error(error.message || 'Erreur lors du processus de paiement');
