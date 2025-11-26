@@ -287,6 +287,23 @@ serve(async (req) => {
         })
         .eq('id', reservation.id);
 
+      // 🚀 PROCESSAR EMAIL IMEDIATAMENTE (não esperar cron)
+      console.log('⏩ Triggering email processor...');
+      try {
+        const emailProcessResponse = await fetch(
+          'https://rzcdcwwdlnczojmslhax.supabase.co/functions/v1/process-email-queue',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        const emailResult = await emailProcessResponse.json();
+        console.log('✅ Email processor triggered:', emailResult);
+      } catch (emailError) {
+        console.error('⚠️ Email processor failed (non-blocking):', emailError);
+        // Não falhar o webhook se email processor der erro
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
         reservation_id: reservation.id,
