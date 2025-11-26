@@ -44,6 +44,24 @@ serve(async (req) => {
       );
     }
 
+    // Validar valor mínimo do Stripe (0.50 EUR)
+    if (totalPrice < 0.50) {
+      return new Response(
+        JSON.stringify({ error: 'Le montant minimum pour un paiement est de 0,50€' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Creating Stripe session with:', {
+      eventTitle,
+      quantity,
+      totalPrice,
+      unitAmount: Math.round((totalPrice / quantity) * 100)
+    });
+
     // Criar sessão de checkout Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -96,8 +114,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error creating checkout session:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
