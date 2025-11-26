@@ -86,8 +86,8 @@ export default function AdminPartyBuilderRequests() {
 
     setUpdating(true);
     try {
-      const updates: any = {
-        status: newStatus,
+      const updates: Partial<PartyBuilderRequest> = {
+        status: newStatus as any,
         admin_notes: adminNotes || null,
       };
 
@@ -97,7 +97,7 @@ export default function AdminPartyBuilderRequests() {
 
       const { error } = await supabase
         .from('party_builder_requests')
-        .update(updates)
+        .update(updates as any)
         .eq('id', selectedRequest.id);
 
       if (error) throw error;
