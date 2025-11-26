@@ -64,19 +64,31 @@ serve(async (req) => {
           .update({ attempts: email.attempts + 1 })
           .eq('id', email.id)
 
+        // 🔥 CRITICAL FIX: Parse data se for string (emails antigos com JSON.stringify)
+        let emailData = email.data
+        if (typeof emailData === 'string') {
+          console.log('⚠️ Data is string, parsing...', emailData.substring(0, 100))
+          try {
+            emailData = JSON.parse(emailData)
+          } catch (parseError) {
+            console.error('❌ Failed to parse data:', parseError)
+            throw new Error('Invalid email data format')
+          }
+        }
+
         let html = ''
         let subject = ''
 
         // Gerar HTML baseado no tipo
         if (email.type === 'reservation_confirmation') {
-          subject = `Confirmação de Reserva - ${email.data.eventName}`
-          html = generateReservationEmailHTML(email.data)
+          subject = `Confirmação de Reserva - ${emailData.eventName || 'Evento'}`
+          html = generateReservationEmailHTML(emailData)
         } else if (email.type === 'party_builder_demand') {
           subject = 'Nova Solicitação de Party Builder'
-          html = generatePartyBuilderDemandHTML(email.data)
+          html = generatePartyBuilderDemandHTML(emailData)
         } else if (email.type === 'party_builder_confirmation') {
           subject = 'Confirmação de Solicitação - Party Builder'
-          html = generatePartyBuilderClientConfirmationHTML(email.data)
+          html = generatePartyBuilderClientConfirmationHTML(emailData)
         }
 
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
