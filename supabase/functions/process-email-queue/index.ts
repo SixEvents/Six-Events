@@ -89,7 +89,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${resendApiKey}`
           },
           body: JSON.stringify({
-            from: 'Six Events <onboarding@resend.dev>',
+            from: 'Six Events <noreply@sixevents.be>',
             to: [email.recipient_email],
             subject: subject,
             html: html
