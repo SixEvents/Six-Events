@@ -106,20 +106,12 @@ export default function AdminDashboard() {
               <h1 className="text-4xl font-bold mb-2">Dashboard Admin 👑</h1>
               <p className="text-gray-600">Vue d'ensemble de votre plateforme</p>
             </div>
-            <div className="flex space-x-3">
-              <Button variant="outline" asChild>
-                <Link to="/admin/events">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Gérer les événements
-                </Link>
-              </Button>
-              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white" asChild>
-                <Link to="/admin/events">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Créer un événement
-                </Link>
-              </Button>
-            </div>
+            <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white" asChild>
+              <Link to="/admin/events">
+                <Calendar className="w-4 h-4 mr-2" />
+                Gérer les événements
+              </Link>
+            </Button>
           </div>
 
           {/* Stats Grid */}
