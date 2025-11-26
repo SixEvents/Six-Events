@@ -324,6 +324,9 @@ export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): st
 
 // Template de confirmation pour le client (Party Builder)
 export const generatePartyBuilderClientConfirmationHTML = (data: PartyBuilderDemandData): string => {
+  // Proteção contra undefined
+  const safeEstimatedPrice = data.estimatedPrice || 0;
+  
   return `
     <!DOCTYPE html>
     <html>
