@@ -45,6 +45,12 @@ SET role = 'admin', updated_at = NOW();
 -- PASSO 4: CRIAR POLICIES PARA user_roles
 -- ============================================
 
+-- Dropar policies antigas se existirem
+DROP POLICY IF EXISTS "Autenticados podem ver roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Admins podem inserir roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Admins podem atualizar roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Admins podem deletar roles" ON public.user_roles;
+
 -- Todos autenticados podem ver roles
 CREATE POLICY "Autenticados podem ver roles"
   ON public.user_roles FOR SELECT
@@ -98,6 +104,11 @@ DROP POLICY IF EXISTS "Apenas usuários autenticados podem criar eventos" ON pub
 DROP POLICY IF EXISTS "Apenas criadores podem atualizar eventos" ON public.events;
 DROP POLICY IF EXISTS "Apenas criadores podem deletar eventos" ON public.events;
 DROP POLICY IF EXISTS "System can update event places" ON public.events;
+DROP POLICY IF EXISTS "Público pode ver eventos" ON public.events;
+DROP POLICY IF EXISTS "Autenticados veem todos eventos" ON public.events;
+DROP POLICY IF EXISTS "Admins criam eventos" ON public.events;
+DROP POLICY IF EXISTS "Admins atualizam eventos" ON public.events;
+DROP POLICY IF EXISTS "Admins deletam eventos" ON public.events;
 
 -- Público pode ver eventos (sem coluna status!)
 CREATE POLICY "Público pode ver eventos"
@@ -157,6 +168,10 @@ DROP POLICY IF EXISTS "Admins podem atualizar reservas" ON public.reservations;
 DROP POLICY IF EXISTS "Authenticated users can create reservations" ON public.reservations;
 DROP POLICY IF EXISTS "Users can view own reservations" ON public.reservations;
 DROP POLICY IF EXISTS "Users can update own reservations" ON public.reservations;
+DROP POLICY IF EXISTS "Público cria reservas" ON public.reservations;
+DROP POLICY IF EXISTS "Ver próprias reservas" ON public.reservations;
+DROP POLICY IF EXISTS "Admins veem reservas" ON public.reservations;
+DROP POLICY IF EXISTS "Admins atualizam reservas" ON public.reservations;
 
 -- Público pode criar reservas (checkout)
 CREATE POLICY "Público cria reservas"
@@ -200,6 +215,9 @@ DROP POLICY IF EXISTS "Público pode criar tickets" ON public.tickets;
 DROP POLICY IF EXISTS "Usuários podem ver seus tickets" ON public.tickets;
 DROP POLICY IF EXISTS "Admins podem ver todos os tickets" ON public.tickets;
 DROP POLICY IF EXISTS "Authenticated users can create tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Criar tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Ver próprios tickets" ON public.tickets;
+DROP POLICY IF EXISTS "Admins veem tickets" ON public.tickets;
 
 -- Público e service role podem criar
 CREATE POLICY "Criar tickets"
@@ -238,6 +256,11 @@ DROP POLICY IF EXISTS "Admins can view party builder options" ON public.party_bu
 DROP POLICY IF EXISTS "Admins can create party builder options" ON public.party_builder_options;
 DROP POLICY IF EXISTS "Admins can update party builder options" ON public.party_builder_options;
 DROP POLICY IF EXISTS "Admins can delete party builder options" ON public.party_builder_options;
+DROP POLICY IF EXISTS "Ver options ativas" ON public.party_builder_options;
+DROP POLICY IF EXISTS "Admins veem options" ON public.party_builder_options;
+DROP POLICY IF EXISTS "Admins criam options" ON public.party_builder_options;
+DROP POLICY IF EXISTS "Admins atualizam options" ON public.party_builder_options;
+DROP POLICY IF EXISTS "Admins deletam options" ON public.party_builder_options;
 
 -- Público vê options ativas
 CREATE POLICY "Ver options ativas"
