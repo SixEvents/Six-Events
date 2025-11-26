@@ -24,7 +24,7 @@ interface BuilderOption {
 }
 
 const PartyBuilder = () => {
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [customTheme, setCustomTheme] = useState<string>("");
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -58,8 +58,7 @@ const PartyBuilder = () => {
       if (error) throw error;
 
       if (data) {
-        // Separar por categoria
-        setThemes(data.filter(o => o.category === 'theme'));
+        // Separar por categoria (não incluir themes, pois agora é customizado)
         setAnimations(data.filter(o => o.category === 'animation'));
         setDecorations(data.filter(o => o.category === 'decoration'));
         setCakes(data.filter(o => o.category === 'cake'));
@@ -109,10 +108,7 @@ const PartyBuilder = () => {
   const calculateTotal = () => {
     let total = 0;
     
-    if (selectedTheme) {
-      const theme = themes.find(t => t.id === selectedTheme);
-      if (theme) total += theme.price;
-    }
+    // Não incluir preço de theme pois é customizado (preço será definido pelo staff)
     
     [...animations, ...decorations, ...cakes, ...extras].forEach(option => {
       const quantity = selectedOptions[option.id] || 0;
@@ -125,8 +121,8 @@ const PartyBuilder = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!selectedTheme) {
-      toast.error("Veuillez sélectionner un thème d'abord");
+    if (!customTheme.trim()) {
+      toast.error("Veuillez décrire la décoration souhaitée");
       return;
     }
 
@@ -139,7 +135,6 @@ const PartyBuilder = () => {
     
     try {
       const total = calculateTotal();
-      const theme = themes.find(t => t.id === selectedTheme);
       
       // Construir lista de opções selecionadas
       const selectedOptionsList = [...animations, ...decorations, ...cakes, ...extras]
@@ -151,20 +146,40 @@ const PartyBuilder = () => {
           total: option.price * selectedOptions[option.id]
         }));
       
+      // Salvar na tabela party_builder_requests
+      const requestData = {
+        client_name: clientName,
+        client_email: clientEmail,
+        client_phone: clientPhone,
+        client_message: clientMessage,
+        custom_theme: customTheme,
+        selected_options: selectedOptionsList,
+        estimated_price: total,
+        status: 'pending'
+      };
+
+      const { data: savedRequest, error: requestError } = await supabase
+        .from('party_builder_requests')
+        .insert(requestData)
+        .select()
+        .single();
+
+      if (requestError) throw requestError;
+
       // Enviar email para staff via email_queue
       const emailData = {
         clientName,
         clientEmail,
         clientPhone,
         clientMessage,
-        theme: theme?.name,
-        themePrice: theme?.price,
+        customTheme,
         options: selectedOptionsList,
-        totalPrice: total,
-        requestDate: new Date().toISOString()
+        estimatedPrice: total,
+        requestDate: new Date().toISOString(),
+        requestId: savedRequest.id
       };
       
-      const { error } = await supabase
+      const { error: emailError } = await supabase
         .from('email_queue')
         .insert({
           type: 'party_builder_request',
@@ -173,12 +188,12 @@ const PartyBuilder = () => {
           status: 'pending',
         });
       
-      if (error) throw error;
+      if (emailError) console.error('Email queue error:', emailError);
       
       toast.success("Votre demande a été envoyée avec succès! Notre équipe vous contactera bientôt.");
       
       // Reset do formulário
-      setSelectedTheme(null);
+      setCustomTheme("");
       setSelectedOptions({});
       setClientName("");
       setClientEmail("");
@@ -281,39 +296,29 @@ const PartyBuilder = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Builder Options */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Themes */}
+            {/* Thème Personnalisé */}
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">
-                1. Choisissez votre thème *
+                1. Décrivez votre décoration personnalisée *
               </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {themes.map(theme => (
-                  <Card
-                    key={theme.id}
-                    className={`cursor-pointer transition-all duration-200 hover-lift ${
-                      selectedTheme === theme.id
-                        ? "border-2 border-primary shadow-md"
-                        : "border-2 border-border"
-                    }`}
-                    onClick={() => setSelectedTheme(theme.id)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="text-xl font-bold text-foreground">{theme.name}</h3>
-                          <p className="text-sm text-muted-foreground">{theme.description}</p>
-                        </div>
-                        {selectedTheme === theme.id && (
-                          <div className="flex items-center justify-center w-6 h-6 bg-primary rounded-full">
-                            <Check className="h-4 w-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-2xl font-bold text-primary">{theme.price}€</span>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Card className="border-2 border-primary/20">
+                <CardContent className="p-6">
+                  <Label htmlFor="customTheme" className="text-base mb-2 block">
+                    Décrivez le thème et la décoration que vous souhaitez
+                  </Label>
+                  <Textarea
+                    id="customTheme"
+                    value={customTheme}
+                    onChange={(e) => setCustomTheme(e.target.value)}
+                    placeholder="Exemple : Thème princesse avec des ballons roses et dorés, château gonflable, table décorée style royal..."
+                    rows={6}
+                    className="resize-none"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Soyez aussi précis que possible : couleurs, éléments décoratifs souhaités, ambiance générale...
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Animations */}
@@ -465,7 +470,7 @@ const PartyBuilder = () => {
                   size="lg" 
                   className="w-full"
                   onClick={handleAddToCart}
-                  disabled={submitting || !selectedTheme}
+                  disabled={submitting || !customTheme.trim()}
                 >
                   {submitting ? (
                     <>
