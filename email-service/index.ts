@@ -121,11 +121,21 @@ async function processEmailQueue() {
 // Enviar email de confirmação de reserva
 async function sendReservationEmail(email: any): Promise<boolean> {
   try {
+    console.log(`📤 Sending reservation email to ${email.recipient_email}...`);
     const data = email.data as ReservationEmailData;
+    
+    console.log(`  Data:`, {
+      eventName: data.eventName,
+      ticketCount: data.ticketCount,
+      totalAmount: data.totalAmount,
+      qrCodesCount: data.qrCodes?.length || 0,
+      participantsCount: data.participants?.length || 0,
+    });
+    
     const transporter = createGmailTransporter();
 
     const htmlContent = generateReservationEmailHTML({
-      recipientName: email.recipient_name,
+      recipientName: email.recipient_name || 'Client',
       eventName: data.eventName,
       eventDate: data.eventDate,
       eventLocation: data.eventLocation,
@@ -145,9 +155,11 @@ async function sendReservationEmail(email: any): Promise<boolean> {
       html: htmlContent,
     });
 
+    console.log(`✅ Reservation email sent successfully to ${email.recipient_email}`);
     return true;
   } catch (error) {
     console.error('Error sending reservation email:', error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
     return false;
   }
 }
