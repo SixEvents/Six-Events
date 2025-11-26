@@ -1,23 +1,86 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Sparkles, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import { supabase } from '../lib/supabase';
+import { toast } from 'sonner';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get('session_id');
+  const [checking, setChecking] = useState(true);
+  const [reservationFound, setReservationFound] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
-    // Aqui você pode fazer uma verificação adicional com o backend
-    // para confirmar o status do pagamento via session_id
-    if (!sessionId) {
-      // Se não há session_id, redirecionar para home
-      setTimeout(() => navigate('/'), 3000);
+    if (sessionId) {
+      checkReservation();
+    } else {
+      setChecking(false);
     }
-  }, [sessionId, navigate]);
+  }, [sessionId]);
+
+  const checkReservation = async () => {
+    try {
+      setChecking(true);
+      
+      // Verificar se já existe uma reserva com este session_id
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('id, buyer_email, status')
+        .eq('stripe_checkout_session_id', sessionId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking reservation:', error);
+      }
+
+      if (data) {
+        setReservationFound(true);
+        console.log('✅ Reservation found:', (data as any).id);
+      } else {
+        setReservationFound(false);
+        console.log('⚠️ Reservation not found for session:', sessionId);
+        
+        // Avisar após 3 segundos se não encontrar
+        setTimeout(() => {
+          if (!reservationFound) {
+            toast.warning('Réservation en cours de traitement...', {
+              description: 'Cela peut prendre quelques secondes.'
+            });
+          }
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const retryWebhook = async () => {
+    setRetrying(true);
+    try {
+      // Tentar reprocessar manualmente
+      toast.info('Vérification en cours...');
+      
+      // Esperar 5 segundos para dar tempo ao webhook processar
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      await checkReservation();
+      
+      if (reservationFound) {
+        toast.success('Réservation trouvée !');
+      } else {
+        toast.error('Réservation non trouvée. Contactez le support avec votre ID de session.');
+      }
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 p-4">
@@ -64,34 +127,82 @@ export default function PaymentSuccess() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8"
+              className={`border rounded-xl p-6 mb-8 ${
+                checking ? 'bg-gray-50 border-gray-200' :
+                reservationFound ? 'bg-blue-50 border-blue-200' : 
+                'bg-orange-50 border-orange-200'
+              }`}
             >
-              <div className="flex items-start space-x-3">
-                <Sparkles className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-                <div className="text-left">
-                  <h3 className="font-semibold text-blue-900 mb-2">
-                    📧 Email de confirmation envoyé
-                  </h3>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>✓ Vérifiez votre boîte de réception</li>
-                    <li>✓ Vous y trouverez tous les détails de votre réservation</li>
-                    <li>✓ Vos QR codes sont inclus dans l'email</li>
-                    <li>✓ Conservez cet email jusqu'au jour de l'événement</li>
-                  </ul>
+              {checking ? (
+                <div className="flex items-center justify-center space-x-3">
+                  <Loader2 className="w-6 h-6 text-gray-600 animate-spin" />
+                  <p className="text-gray-600">Vérification de votre réservation...</p>
                 </div>
-              </div>
+              ) : reservationFound ? (
+                <div className="flex items-start space-x-3">
+                  <Sparkles className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div className="text-left">
+                    <h3 className="font-semibold text-blue-900 mb-2">
+                      📧 Email de confirmation envoyé
+                    </h3>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>✓ Vérifiez votre boîte de réception</li>
+                      <li>✓ Vous y trouverez tous les détails de votre réservation</li>
+                      <li>✓ Vos QR codes sont inclus dans l'email</li>
+                      <li>✓ Conservez cet email jusqu'au jour de l'événement</li>
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
+                  <div className="text-left w-full">
+                    <h3 className="font-semibold text-orange-900 mb-2">
+                      ⏳ Réservation en cours de traitement
+                    </h3>
+                    <p className="text-sm text-orange-800 mb-4">
+                      Votre paiement a été accepté mais la réservation n'apparaît pas encore. 
+                      Cela peut prendre quelques secondes.
+                    </p>
+                    <Button
+                      onClick={retryWebhook}
+                      disabled={retrying}
+                      size="sm"
+                      variant="outline"
+                      className="border-orange-600 text-orange-600 hover:bg-orange-100"
+                    >
+                      {retrying ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Vérification...
+                        </>
+                      ) : (
+                        'Vérifier à nouveau'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             {/* Session ID (for debugging) */}
             {sessionId && (
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="text-xs text-gray-400 mb-6 font-mono"
+                className="mb-6"
               >
-                Session: {sessionId.substring(0, 20)}...
-              </motion.p>
+                <p className="text-xs text-gray-400 font-mono mb-2">
+                  Session: {sessionId.substring(0, 30)}...
+                </p>
+                {!reservationFound && !checking && (
+                  <p className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                    💡 Si la réservation n'apparaît pas après plusieurs tentatives, 
+                    copiez cet ID de session et contactez le support.
+                  </p>
+                )}
+              </motion.div>
             )}
 
             {/* Buttons */}
