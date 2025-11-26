@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+const MAILERSEND_API_KEY = Deno.env.get('MAILERSEND_API_KEY')
 
 serve(async (req) => {
   // CORS headers
@@ -19,32 +19,38 @@ serve(async (req) => {
 
     console.log(`📤 Sending email to ${to}...`)
 
-    // Usar Resend API (muito mais simples que Gmail)
-    const res = await fetch('https://api.resend.com/emails', {
+    // Usar MailerSend API (12.000 emails/mês grátis)
+    const res = await fetch('https://api.mailersend.com/v1/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`
+        'Authorization': `Bearer ${MAILERSEND_API_KEY}`,
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({
-        from: 'Six Events <noreply@sixevents.be>',
-        to: [to],
+        from: {
+          email: 'noreply@sixevents.be',
+          name: 'Six Events'
+        },
+        to: [{
+          email: to,
+          name: recipientName || 'Client'
+        }],
         subject: subject,
         html: html
       })
     })
 
-    const data = await res.json()
-
     if (!res.ok) {
-      console.error('❌ Resend error:', data)
-      throw new Error(`Resend API error: ${JSON.stringify(data)}`)
+      const errorData = await res.text()
+      console.error('❌ MailerSend error:', errorData)
+      throw new Error(`MailerSend API error: ${errorData}`)
     }
 
     console.log(`✅ Email sent successfully to ${to}`)
 
     return new Response(
-      JSON.stringify({ success: true, messageId: data.id }),
+      JSON.stringify({ success: true, status: res.status }),
       {
         headers: {
           'Content-Type': 'application/json',

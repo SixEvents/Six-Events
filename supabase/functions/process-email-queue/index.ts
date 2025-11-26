@@ -3,11 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://rzcdcwwdlnczojmslhax.supabase.co'
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const resendApiKey = Deno.env.get('RESEND_API_KEY')!
+const mailersendApiKey = Deno.env.get('MAILERSEND_API_KEY')!
 
 console.log('🚀 Email Queue Processor initialized')
 console.log('📍 Supabase URL:', supabaseUrl)
-console.log('🔑 Resend API Key:', resendApiKey ? 'Configured ✅' : 'Missing ❌')
+console.log('🔑 MailerSend API Key:', mailersendApiKey ? 'Configured ✅' : 'Missing ❌')
 
 serve(async (req) => {
   // CORS headers
@@ -81,26 +81,32 @@ serve(async (req) => {
 
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
 
-        // Enviar via Resend
-        const res = await fetch('https://api.resend.com/emails', {
+        // Enviar via MailerSend
+        const res = await fetch('https://api.mailersend.com/v1/email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey}`
+            'Authorization': `Bearer ${mailersendApiKey}`,
+            'X-Requested-With': 'XMLHttpRequest'
           },
           body: JSON.stringify({
-            from: 'Six Events <noreply@sixevents.be>',
-            to: [email.recipient_email],
+            from: {
+              email: 'noreply@sixevents.be',
+              name: 'Six Events'
+            },
+            to: [{
+              email: email.recipient_email,
+              name: email.recipient_name || 'Client'
+            }],
             subject: subject,
             html: html
           })
         })
 
-        const data = await res.json()
-
         if (!res.ok) {
-          console.error('❌ Resend error:', data)
-          throw new Error(`Resend error: ${JSON.stringify(data)}`)
+          const errorData = await res.text()
+          console.error('❌ MailerSend error:', errorData)
+          throw new Error(`MailerSend error: ${errorData}`)
         }
 
         // Marcar como enviado
