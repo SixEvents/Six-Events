@@ -61,38 +61,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loadProfile = async (userId: string) => {
     try {
-      // Buscar profile da tabela profiles (não de user_metadata)
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+      // Buscar role da tabela user_roles
+      const { data: roleData, error: roleError } = await (supabase
+        .from('user_roles') as any)
+        .select('role')
+        .eq('user_id', userId)
         .single();
 
-      if (profileError) {
-        console.error('Error loading profile from DB:', profileError);
-        // Fallback para user_metadata se não encontrar na tabela
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          const role = userData.user.user_metadata?.role || 'client';
-          setProfile({
-            id: userData.user.id,
-            email: userData.user.email || '',
-            full_name: userData.user.user_metadata?.full_name,
-            role: role as 'admin' | 'client',
-            phone: userData.user.user_metadata?.phone,
-            avatar_url: userData.user.user_metadata?.avatar_url,
-          });
-        }
-      } else if (profileData) {
-        // Usar dados da tabela profiles
-        const { data: userData } = await supabase.auth.getUser();
+      let userRole: 'admin' | 'manager' | 'staff' | 'client' = 'client';
+      
+      if (!roleError && roleData) {
+        // Se tem role na tabela user_roles, usar ela
+        userRole = roleData.role === 'user' ? 'client' : roleData.role;
+      }
+
+      // Buscar dados do usuário
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (userData.user) {
         setProfile({
-          id: profileData.id,
-          email: profileData.email || userData.user?.email || '',
-          full_name: userData.user?.user_metadata?.full_name || profileData.email?.split('@')[0],
-          role: (profileData.role || 'client') as 'admin' | 'client',
-          phone: userData.user?.user_metadata?.phone,
-          avatar_url: userData.user?.user_metadata?.avatar_url,
+          id: userData.user.id,
+          email: userData.user.email || '',
+          full_name: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0] || '',
+          role: userRole as 'admin' | 'client',
+          phone: userData.user.user_metadata?.phone,
+          avatar_url: userData.user.user_metadata?.avatar_url,
         });
       }
     } catch (error) {
