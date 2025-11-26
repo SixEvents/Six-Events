@@ -15,7 +15,6 @@ import {
   QrCode
 } from 'lucide-react';
 import { Button } from './ui/button';
-import Cart from './Cart';
 
 const Navbar = () => {
   const location = useLocation();
@@ -86,9 +85,6 @@ const Navbar = () => {
 
           {/* Right Side - Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Cart */}
-            <Cart />
-            
             {user ? (
               <div className="relative">
                 <button

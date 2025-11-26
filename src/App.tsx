@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { CartProvider } from './contexts/CartContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 
@@ -13,7 +12,6 @@ import Home from './pages/Home';
 import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
 import PartyBuilder from './pages/PartyBuilder';
-import Checkout from './pages/Checkout';
 import CheckoutEvent from './pages/CheckoutEvent';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -42,12 +40,11 @@ const App = () => (
     <TooltipProvider>
       <ThemeProvider>
         <AuthProvider>
-          <CartProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Navbar />
-              <Routes>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Navbar />
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/events" element={<Events />} />
@@ -65,14 +62,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PartyBuilder />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <Checkout />
                 </ProtectedRoute>
               }
             />
