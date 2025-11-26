@@ -24,23 +24,57 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
 
-    // Buscar sessões de checkout com este email (últimas 100)
-    const sessions = await stripe.checkout.sessions.list({
-      limit: 100,
-    });
+    // Buscar sessões dos últimos 365 dias (1 ano)
+    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+    
+    console.log(`Buscando pagamentos para email: ${email}`);
+    console.log(`Data limite: ${new Date(oneYearAgo * 1000).toISOString()}`);
+    
+    let allSessions: any[] = [];
+    let hasMore = true;
+    let startingAfter: string | undefined;
+
+    // Buscar todas as sessões com paginação
+    while (hasMore) {
+      const params: any = {
+        limit: 100,
+        created: { gte: oneYearAgo },
+      };
+      
+      if (startingAfter) {
+        params.starting_after = startingAfter;
+      }
+
+      const sessions = await stripe.checkout.sessions.list(params);
+      allSessions = allSessions.concat(sessions.data);
+      
+      hasMore = sessions.has_more;
+      if (hasMore && sessions.data.length > 0) {
+        startingAfter = sessions.data[sessions.data.length - 1].id;
+      }
+    }
+
+    console.log(`Total de sessões encontradas: ${allSessions.length}`);
 
     // Filtrar por email e payment_status = paid
-    const paidSessions = sessions.data.filter(
+    const paidSessions = allSessions.filter(
       (session) => 
-        session.customer_details?.email === email &&
+        session.customer_details?.email?.toLowerCase() === email.toLowerCase() &&
         session.payment_status === 'paid'
     );
 
+    console.log(`Sessões pagas para ${email}: ${paidSessions.length}`);
+
     if (paidSessions.length === 0) {
+      console.log(`Nenhuma sessão paga encontrada para ${email}`);
+      console.log(`Total de sessões verificadas: ${allSessions.length}`);
+      
       return new Response(
         JSON.stringify({
           success: true,
           payments: [],
+          totalSearched: allSessions.length,
+          message: `Nenhum pagamento encontrado nos últimos 365 dias para ${email}`,
         }),
         {
           status: 200,
@@ -48,6 +82,14 @@ serve(async (req) => {
         }
       );
     }
+
+    console.log(`Sessões pagas encontradas:`, paidSessions.map(s => ({
+      id: s.id,
+      date: new Date(s.created * 1000).toISOString(),
+      amount: s.amount_total,
+      email: s.customer_details?.email,
+      event: s.metadata?.event_title,
+    })));
 
     // Inicializar Supabase para verificar se já existem reservas
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
