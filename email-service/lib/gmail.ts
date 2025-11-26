@@ -66,7 +66,11 @@ export interface PartyBuilderDemandData {
 export const generateReservationEmailHTML = (data: ReservationEmailData): string => {
   const { recipientName, eventName, eventDate, eventLocation, ticketCount, participants, totalAmount, qrCodes } = data;
   
-  const qrCodesHtml = qrCodes.map((qr, index) => `
+  // Proteção contra undefined
+  const safeQrCodes = qrCodes || [];
+  const safeParticipants = participants || [];
+  
+  const qrCodesHtml = safeQrCodes.map((qr, index) => `
     <div style="text-align: center; margin: 20px 0;">
       <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px; font-weight: bold;">
         Billet ${index + 1} - ${qr.name}
@@ -144,7 +148,7 @@ export const generateReservationEmailHTML = (data: ReservationEmailData): string
                       👥 Participants
                     </h3>
                     <ul style="margin: 0; padding-left: 20px; color: #111827; font-size: 14px; line-height: 1.8;">
-                      ${participants.map(p => `<li>${p}</li>`).join('')}
+                      ${safeParticipants.map(p => `<li>${p}</li>`).join('')}
                     </ul>
                   </div>
                   
@@ -209,6 +213,11 @@ export const generateReservationEmailHTML = (data: ReservationEmailData): string
 
 // Template de demande Party Builder (para l'entreprise)
 export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): string => {
+  // Proteção contra undefined
+  const safeAnimations = data.animations || [];
+  const safeDecorations = data.decorations || [];
+  const safeExtras = data.extras || [];
+  
   return `
     <!DOCTYPE html>
     <html>
@@ -265,21 +274,21 @@ export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): st
         
         <h3 style="color: #6b7280; font-size: 16px;">Animations :</h3>
         <ul style="color: #111827;">
-          ${data.animations.map(anim => `<li>${anim}</li>`).join('')}
+          ${safeAnimations.map(anim => `<li>${anim}</li>`).join('')}
         </ul>
         
         <h3 style="color: #6b7280; font-size: 16px;">Décorations :</h3>
         <ul style="color: #111827;">
-          ${data.decorations.map(deco => `<li>${deco}</li>`).join('')}
+          ${safeDecorations.map(deco => `<li>${deco}</li>`).join('')}
         </ul>
         
         <h3 style="color: #6b7280; font-size: 16px;">Gâteau :</h3>
         <p style="color: #111827; font-weight: bold;">${data.cake}</p>
         
-        ${data.extras.length > 0 ? `
+        ${safeExtras.length > 0 ? `
         <h3 style="color: #6b7280; font-size: 16px;">Extras :</h3>
         <ul style="color: #111827;">
-          ${data.extras.map(extra => `<li>${extra}</li>`).join('')}
+          ${safeExtras.map(extra => `<li>${extra}</li>`).join('')}
         </ul>
         ` : ''}
         
