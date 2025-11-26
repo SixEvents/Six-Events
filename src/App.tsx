@@ -28,6 +28,7 @@ import Settings from './pages/Settings';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminEvents from './pages/admin/Events';
 import AdminPartyBuilder from './pages/admin/PartyBuilder';
+import ReservationsList from './pages/admin/ReservationsList';
 import AdminSettings from './pages/admin/Settings';
 import QRScannerNew from './pages/admin/QRScannerNew';
 import UserManagement from './pages/UserManagement';
@@ -125,6 +126,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminEvents />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/reservations"
+              element={
+                <AdminRoute>
+                  <ReservationsList />
                 </AdminRoute>
               }
             />

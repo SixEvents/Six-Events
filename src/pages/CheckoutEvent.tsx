@@ -151,8 +151,8 @@ export default function CheckoutEvent() {
           number_of_places: quantity,
           total_price: totalPrice,
           payment_method: formData.paymentMethod,
-          payment_status: 'pending',
-          status: 'pending'
+          payment_status: 'paid',
+          status: 'confirmed'
         })
         .select()
         .single();

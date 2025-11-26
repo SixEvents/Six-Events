@@ -174,6 +174,15 @@ export default function AdminDashboard() {
                   </div>
                 </Button>
               </Link>
+              <Link to="/admin/reservations">
+                <Button variant="outline" className="w-full justify-start h-14">
+                  <Users className="w-5 h-5 mr-3" />
+                  <div className="text-left">
+                    <div className="font-semibold">📋 Voir les réservations</div>
+                    <div className="text-xs text-gray-500">Consultation uniquement</div>
+                  </div>
+                </Button>
+              </Link>
               <Link to="/admin/party-builder">
                 <Button variant="outline" className="w-full justify-start h-14">
                   <PartyPopper className="w-5 h-5 mr-3" />
