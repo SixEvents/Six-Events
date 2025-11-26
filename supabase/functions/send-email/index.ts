@@ -29,7 +29,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: {
-          email: 'noreply@sixevents.be',
+          email: 'info@trial.mlsender.net',
           name: 'Six Events'
         },
         to: [{
