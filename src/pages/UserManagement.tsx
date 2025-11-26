@@ -44,6 +44,7 @@ export default function UserManagement() {
   const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmail, setSelectedEmail] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<'admin' | 'manager' | 'staff' | 'user'>('user');
   const { toast } = useToast();
 
@@ -101,26 +102,51 @@ export default function UserManagement() {
   };
 
   const addUserRole = async () => {
-    if (!selectedEmail) {
+    const emailToAdd = selectedEmail || manualEmail;
+    
+    if (!emailToAdd) {
       toast({
         title: 'Email obrigatório',
-        description: 'Por favor, selecione um email',
+        description: 'Por favor, selecione ou digite um email',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      // Buscar user_id do email
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+      // Tentar buscar usuário do auth
+      let userId: string | null = null;
       
-      if (userError) throw userError;
+      try {
+        const { data: userData } = await supabase.auth.admin.listUsers();
+        const user = userData?.users.find((u) => u.email === emailToAdd);
+        if (user) userId = user.id;
+      } catch (err) {
+        console.warn('Auth admin API not available, will try to add by email');
+      }
 
-      const user = userData.users.find((u) => u.email === selectedEmail);
-      if (!user) {
+      // Se não encontrou no auth.admin, buscar na tabela auth.users via função SQL
+      if (!userId) {
+        const { data, error } = await (supabase.rpc as any)('get_user_id_by_email', {
+          user_email: emailToAdd
+        });
+        
+        if (error) {
+          toast({
+            title: 'Usuário não encontrado',
+            description: `O email ${emailToAdd} não está registrado. O usuário precisa fazer signup primeiro.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+        
+        if (data) userId = data;
+      }
+
+      if (!userId) {
         toast({
           title: 'Usuário não encontrado',
-          description: 'Este email não está registrado no sistema',
+          description: `O email ${emailToAdd} não está registrado no sistema. O usuário precisa fazer signup primeiro.`,
           variant: 'destructive',
         });
         return;
@@ -130,8 +156,8 @@ export default function UserManagement() {
       const { error: upsertError } = await (supabase
         .from('user_roles') as any)
         .upsert({
-          user_id: user.id,
-          email: selectedEmail,
+          user_id: userId,
+          email: emailToAdd,
           role: selectedRole,
         }, {
           onConflict: 'user_id'
@@ -141,10 +167,11 @@ export default function UserManagement() {
 
       toast({
         title: 'Sucesso!',
-        description: `Permissão ${selectedRole} atribuída para ${selectedEmail}`,
+        description: `Permissão ${selectedRole} atribuída para ${emailToAdd}`,
       });
 
       setSelectedEmail('');
+      setManualEmail('');
       setSelectedRole('user');
       loadData();
     } catch (error: any) {
@@ -242,21 +269,39 @@ export default function UserManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="email">Email do Usuário</Label>
-              <Select value={selectedEmail} onValueChange={setSelectedEmail}>
-                <SelectTrigger id="email">
-                  <SelectValue placeholder="Selecionar usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {authUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.email}>
-                      {user.email}
-                      {user.email_confirmed_at ? ' ✓' : ' (não confirmado)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                {authUsers.length > 0 ? (
+                  <Select value={selectedEmail} onValueChange={setSelectedEmail}>
+                    <SelectTrigger id="email" className="flex-1">
+                      <SelectValue placeholder="Selecionar usuário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {authUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.email}>
+                          {user.email}
+                          {user.email_confirmed_at ? ' ✓' : ' (não confirmado)'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="manual-email"
+                    type="email"
+                    placeholder="Digite o email do usuário"
+                    value={manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {authUsers.length > 0 
+                  ? 'Selecione um usuário da lista' 
+                  : 'Digite o email de um usuário já registrado no sistema'}
+              </p>
             </div>
 
             <div className="space-y-2">

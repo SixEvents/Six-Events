@@ -320,6 +320,20 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.get_user_id_by_email(user_email TEXT)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN (
+    SELECT id FROM auth.users
+    WHERE email = user_email
+    LIMIT 1
+  );
+END;
+$$;
+
 -- PASSO 10: TRIGGER AUTO-UPDATE
 -- ============================================
 
