@@ -69,6 +69,7 @@ export const generateReservationEmailHTML = (data: ReservationEmailData): string
   // Proteção contra undefined
   const safeQrCodes = qrCodes || [];
   const safeParticipants = participants || [];
+  const safeTotalAmount = totalAmount || 0;
   
   const qrCodesHtml = safeQrCodes.map((qr, index) => `
     <div style="text-align: center; margin: 20px 0;">
@@ -158,7 +159,7 @@ export const generateReservationEmailHTML = (data: ReservationEmailData): string
                       💰 Total payé
                     </h3>
                     <p style="color: #ec4899; font-size: 32px; font-weight: bold; margin: 0;">
-                      ${totalAmount.toFixed(2)}€
+                      ${safeTotalAmount.toFixed(2)}€
                     </p>
                   </div>
                   
@@ -217,6 +218,7 @@ export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): st
   const safeAnimations = data.animations || [];
   const safeDecorations = data.decorations || [];
   const safeExtras = data.extras || [];
+  const safeEstimatedPrice = data.estimatedPrice || 0;
   
   return `
     <!DOCTYPE html>
@@ -301,7 +303,7 @@ export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): st
         
         <div style="background: linear-gradient(135deg, #ec4899 0%, #000000 100%); color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
           <h2 style="margin: 0 0 10px 0; font-size: 24px;">Prix Estimé</h2>
-          <p style="margin: 0; font-size: 36px; font-weight: bold;">${data.estimatedPrice.toFixed(2)}€</p>
+          <p style="margin: 0; font-size: 36px; font-weight: bold;">${safeEstimatedPrice.toFixed(2)}€</p>
           <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">
             (Prix indicatif - À confirmer avec le client)
           </p>
@@ -351,7 +353,7 @@ export const generatePartyBuilderClientConfirmationHTML = (data: PartyBuilderDem
               <li><strong>Date :</strong> ${data.eventDate}</li>
               <li><strong>Thème :</strong> ${data.theme}</li>
               <li><strong>Nombre d'enfants :</strong> ${data.numberOfChildren}</li>
-              <li><strong>Prix estimé :</strong> ${data.estimatedPrice.toFixed(2)}€</li>
+              <li><strong>Prix estimé :</strong> ${safeEstimatedPrice.toFixed(2)}€</li>
             </ul>
           </div>
           
