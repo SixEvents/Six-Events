@@ -287,16 +287,24 @@ export default function CheckoutEvent() {
         }
       });
 
+      console.log('Stripe session response:', { data, error });
+
       if (error) {
         console.error('Error creating checkout session:', error);
-        throw new Error('Impossible de créer la session de paiement');
+        throw new Error(`Impossible de créer la session de paiement: ${error.message || 'Erreur inconnue'}`);
       }
 
-      if (!data?.url) {
-        throw new Error('Session de paiement invalide');
+      if (!data) {
+        throw new Error('Aucune donnée reçue de la session de paiement');
+      }
+
+      if (!data.url) {
+        console.error('Session data:', data);
+        throw new Error('URL de paiement manquante dans la réponse');
       }
 
       // Redirection vers Stripe Checkout (nouvelle méthode)
+      console.log('Redirecting to:', data.url);
       window.location.href = data.url;
     } catch (error: any) {
       console.error('Stripe checkout error:', error);
