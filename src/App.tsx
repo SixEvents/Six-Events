@@ -30,6 +30,7 @@ import AdminPartyBuilderRequests from './pages/admin/PartyBuilderRequests';
 import ReservationsList from './pages/admin/ReservationsList';
 import AdminSettings from './pages/admin/Settings';
 import QRScannerNew from './pages/admin/QRScannerNew';
+import RecoverReservation from './pages/admin/RecoverReservation';
 import UserManagement from './pages/UserManagement';
 import NotFound from './pages/NotFound';
 
@@ -164,6 +165,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <UserManagement />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/recover-reservation"
+              element={
+                <AdminRoute>
+                  <RecoverReservation />
                 </AdminRoute>
               }
             />
