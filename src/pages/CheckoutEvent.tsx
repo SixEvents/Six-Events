@@ -298,18 +298,33 @@ export default function CheckoutEvent() {
         throw new Error('Aucune donnée reçue de la session de paiement');
       }
 
-      // La réponse peut être directement l'objet ou wrapped
-      const sessionData = typeof data === 'string' ? JSON.parse(data) : data;
-      console.log('Session data parsed:', sessionData);
+      console.log('Session data type:', typeof data);
+      console.log('Session data raw:', data);
 
-      if (!sessionData.url) {
-        console.error('Session data structure:', sessionData);
-        throw new Error('URL de paiement manquante dans la réponse');
+      // Si la réponse contient directement sessionId et url
+      let checkoutUrl = null;
+      
+      if (typeof data === 'object' && data.url) {
+        checkoutUrl = data.url;
+      } else if (typeof data === 'string') {
+        // Essayer de parser si c'est une string JSON
+        try {
+          const parsed = JSON.parse(data);
+          checkoutUrl = parsed.url;
+        } catch {
+          // Si ce n'est pas du JSON, peut-être que c'est directement le sessionId
+          console.error('Cannot parse data as JSON:', data);
+        }
       }
 
-      // Redirection vers Stripe Checkout (nouvelle méthode)
-      console.log('Redirecting to:', sessionData.url);
-      window.location.href = sessionData.url;
+      if (!checkoutUrl) {
+        console.error('Full response structure:', { data, error });
+        throw new Error('URL de paiement introuvable. Vérifiez que la fonction Edge create-checkout-session est bien déployée.');
+      }
+
+      // Redirection vers Stripe Checkout
+      console.log('Redirecting to:', checkoutUrl);
+      window.location.href = checkoutUrl;
     } catch (error: any) {
       console.error('Stripe checkout error:', error);
       toast.error(error.message || 'Erreur lors du processus de paiement');
