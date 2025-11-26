@@ -151,8 +151,8 @@ export default function CheckoutEvent() {
           number_of_places: quantity,
           total_price: totalPrice,
           payment_method: formData.paymentMethod,
-          payment_status: 'paid',
-          status: 'confirmed'
+          payment_status: 'pending', // Cash payment pending until validated at entrance
+          status: 'confirmed' // Reservation confirmed, but payment pending
         })
         .select()
         .single();

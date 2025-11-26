@@ -18,6 +18,10 @@ interface ScanResult {
   event?: string;
   message: string;
   color: string;
+  paymentStatus?: 'paid' | 'pending';
+  paymentMethod?: string;
+  reservationId?: string;
+  totalPrice?: number;
 }
 
 export default function QRScannerNew() {
@@ -127,6 +131,11 @@ export default function QRScannerNew() {
         return;
       }
 
+      const reservation = ticket.reservation;
+      const paymentStatus = reservation?.payment_status;
+      const paymentMethod = reservation?.payment_method;
+      const totalPrice = reservation?.total_price;
+
       // ENTRÉE
       if (mode === 'entry') {
         if (ticket.status === 'used') {
@@ -134,9 +143,40 @@ export default function QRScannerNew() {
             success: false,
             participant: ticket.participant_name,
             message: `Déjà entré à ${new Date(ticket.validated_at).toLocaleTimeString()}`,
-            color: 'red'
+            color: 'red',
+            paymentStatus,
+            paymentMethod,
+            reservationId: reservation?.id,
+            totalPrice
           });
           return;
+        }
+
+        // Se pagamento pending, mostrar aviso mas permitir entrada
+        if (paymentStatus === 'pending') {
+          showResult({
+            success: true,
+            participant: ticket.participant_name,
+            event: ticket.reservation?.event_title || '',
+            message: '⚠️ PAIEMENT NON RÉGLÉ - Entrée autorisée',
+            color: 'orange',
+            paymentStatus,
+            paymentMethod,
+            reservationId: reservation?.id,
+            totalPrice
+          });
+        } else {
+          showResult({
+            success: true,
+            participant: ticket.participant_name,
+            event: ticket.reservation?.event_title || '',
+            message: '✅ PAIEMENT RÉGLÉ - Entrée autorisée',
+            color: 'green',
+            paymentStatus,
+            paymentMethod,
+            reservationId: reservation?.id,
+            totalPrice
+          });
         }
 
         await supabase
@@ -144,13 +184,6 @@ export default function QRScannerNew() {
           .update({ status: 'used', validated_at: new Date().toISOString(), validated_by: user?.id })
           .eq('id', ticket.id);
 
-        showResult({
-          success: true,
-          participant: ticket.participant_name,
-          event: ticket.reservation?.event_title || '',
-          message: 'Entrée autorisée ✓',
-          color: 'green'
-        });
         loadStats();
         return;
       }
@@ -236,6 +269,25 @@ export default function QRScannerNew() {
       toast.success(r.message);
     } else {
       toast.error(r.message);
+    }
+  };
+
+  const validatePayment = async () => {
+    if (!result?.reservationId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .update({ payment_status: 'paid' })
+        .eq('id', result.reservationId);
+      
+      if (error) throw error;
+      
+      toast.success('💰 Paiement validé avec succès!');
+      setResult({ ...result, paymentStatus: 'paid' });
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la validation du paiement');
     }
   };
 
@@ -384,12 +436,56 @@ export default function QRScannerNew() {
                   <XCircle className="w-20 h-20 text-red-600" />
                 )}
                 
-                <div className="text-center">
+                <div className="text-center w-full">
                   <h3 className="text-2xl font-bold mb-2">{result.participant}</h3>
                   {result.event && <p className="text-sm text-muted-foreground mb-2">{result.event}</p>}
                   <Badge variant={result.success ? "default" : "destructive"} className="text-base px-4 py-1">
                     {result.message}
                   </Badge>
+
+                  {/* Informations de paiement */}
+                  {result.paymentStatus && (
+                    <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                      <h4 className="font-semibold mb-3">💳 Informations de paiement</h4>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Statut:</span>
+                          <Badge variant={result.paymentStatus === 'paid' ? 'default' : 'secondary'}>
+                            {result.paymentStatus === 'paid' ? '✅ Payé' : '⏳ Non payé'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Méthode:</span>
+                          <span className="font-medium">
+                            {result.paymentMethod === 'cash' ? '💵 Espèces' : 
+                             result.paymentMethod === 'card' ? '💳 Carte' : 
+                             result.paymentMethod === 'stripe' ? '💳 Stripe' :
+                             result.paymentMethod}
+                          </span>
+                        </div>
+                        
+                        {result.totalPrice && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Montant:</span>
+                            <span className="font-bold text-lg">{result.totalPrice.toFixed(2)}€</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bouton pour valider le paiement */}
+                      {result.paymentStatus === 'pending' && (
+                        <Button 
+                          onClick={validatePayment}
+                          className="w-full mt-4 bg-green-600 hover:bg-green-700"
+                          size="lg"
+                        >
+                          💰 Valider le paiement en espèces
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <Button onClick={startScanning} size="lg" className="w-full mt-4">
