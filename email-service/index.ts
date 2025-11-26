@@ -60,7 +60,7 @@ async function processEmailQueue() {
 
         if (email.type === 'reservation_confirmation') {
           success = await sendReservationEmail(email);
-        } else if (email.type === 'party_builder_quote') {
+        } else if (email.type === 'party_builder_quote' || email.type === 'party_builder_request') {
           success = await sendPartyBuilderQuoteEmail(email);
         }
 

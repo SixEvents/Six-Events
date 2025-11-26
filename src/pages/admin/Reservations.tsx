@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { Reservation } from '../../types';
-import { Search, Filter, Download, Calendar, MapPin, User, Mail, Phone, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, Filter, Download, Calendar, MapPin, User, Mail, Phone } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -61,23 +61,6 @@ export default function AdminReservations() {
         .reduce((sum, r) => sum + (r.total_price || 0), 0)
     };
     setStats(stats);
-  };
-
-  const updateStatus = async (id: string, newStatus: 'confirmed' | 'cancelled' | 'pending') => {
-    try {
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: newStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      toast.success('Statut mis à jour');
-      fetchReservations();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Erreur lors de la mise à jour');
-    }
   };
 
   const exportToCSV = () => {
@@ -293,52 +276,6 @@ export default function AdminReservations() {
                             {reservation.total_price?.toFixed(2)}€
                           </div>
                         </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        {reservation.status === 'pending' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => updateStatus(reservation.id, 'confirmed')}
-                              className="bg-green-600 hover:bg-green-700 transition-colors"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Confirmer
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateStatus(reservation.id, 'cancelled')}
-                              className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                            >
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Annuler
-                            </Button>
-                          </>
-                        )}
-                        {reservation.status === 'confirmed' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateStatus(reservation.id, 'cancelled')}
-                            className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                          >
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Annuler
-                          </Button>
-                        )}
-                        {reservation.status === 'cancelled' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateStatus(reservation.id, 'pending')}
-                            className="transition-colors"
-                          >
-                            <Clock className="w-4 h-4 mr-2" />
-                            Réactiver
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </CardContent>

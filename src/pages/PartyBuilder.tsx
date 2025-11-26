@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { Check, Sparkles, Plus, Minus, Loader2 } from "lucide-react";
+import { Check, Sparkles, Plus, Minus, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
-import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/lib/supabase";
 
 interface BuilderOption {
@@ -25,7 +27,13 @@ const PartyBuilder = () => {
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const { addItem } = useCart();
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Dados do cliente
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientMessage, setClientMessage] = useState("");
   
   // Estados para options do banco
   const [themes, setThemes] = useState<BuilderOption[]>([]);
@@ -116,26 +124,73 @@ const PartyBuilder = () => {
     return total;
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedTheme) {
       toast.error("Veuillez sélectionner un thème d'abord");
       return;
     }
+
+    if (!clientName || !clientEmail || !clientPhone) {
+      toast.error("Veuillez remplir vos coordonnées");
+      return;
+    }
     
-    const total = calculateTotal();
-    const theme = themes.find(t => t.id === selectedTheme);
+    setSubmitting(true);
     
-    addItem({
-      id: `party-builder-${Date.now()}`,
-      type: 'party_builder',
-      name: `Party Builder - ${theme?.name}`,
-      price: total,
-      quantity: 1,
-      details: {
+    try {
+      const total = calculateTotal();
+      const theme = themes.find(t => t.id === selectedTheme);
+      
+      // Construir lista de opções selecionadas
+      const selectedOptionsList = [...animations, ...decorations, ...cakes, ...extras]
+        .filter(option => selectedOptions[option.id] > 0)
+        .map(option => ({
+          name: option.name,
+          quantity: selectedOptions[option.id],
+          price: option.price,
+          total: option.price * selectedOptions[option.id]
+        }));
+      
+      // Enviar email para staff via email_queue
+      const emailData = {
+        clientName,
+        clientEmail,
+        clientPhone,
+        clientMessage,
         theme: theme?.name,
-        options: selectedOptions
-      }
-    });
+        themePrice: theme?.price,
+        options: selectedOptionsList,
+        totalPrice: total,
+        requestDate: new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('email_queue')
+        .insert({
+          type: 'party_builder_request',
+          recipient_email: '6events.mjt@gmail.com',
+          data: emailData,
+          status: 'pending',
+        });
+      
+      if (error) throw error;
+      
+      toast.success("Votre demande a été envoyée avec succès! Notre équipe vous contactera bientôt.");
+      
+      // Reset do formulário
+      setSelectedTheme(null);
+      setSelectedOptions({});
+      setClientName("");
+      setClientEmail("");
+      setClientPhone("");
+      setClientMessage("");
+      
+    } catch (error) {
+      console.error('Error submitting party builder request:', error);
+      toast.error("Erreur lors de l'envoi de votre demande");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const OptionCard = ({ option, category }: { option: BuilderOption; category: string }) => {
@@ -348,8 +403,61 @@ const PartyBuilder = () => {
                 <Separator className="my-4" />
 
                 <div className="flex justify-between items-center text-lg font-bold mb-6">
-                  <span>Total</span>
+                  <span>Total estimé</span>
                   <span className="text-2xl text-primary">{calculateTotal()}€</span>
+                </div>
+
+                <Separator className="my-4" />
+
+                {/* Formulário de contato */}
+                <div className="space-y-4 mb-6">
+                  <h4 className="font-semibold text-foreground">Vos coordonnées</h4>
+                  
+                  <div>
+                    <Label htmlFor="clientName">Nom complet *</Label>
+                    <Input
+                      id="clientName"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      placeholder="Votre nom"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="clientEmail">Email *</Label>
+                    <Input
+                      id="clientEmail"
+                      type="email"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      placeholder="votre@email.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="clientPhone">Téléphone *</Label>
+                    <Input
+                      id="clientPhone"
+                      type="tel"
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      placeholder="+33 6 12 34 56 78"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="clientMessage">Message (optionnel)</Label>
+                    <Textarea
+                      id="clientMessage"
+                      value={clientMessage}
+                      onChange={(e) => setClientMessage(e.target.value)}
+                      placeholder="Détails supplémentaires, date souhaitée..."
+                      rows={3}
+                    />
+                  </div>
                 </div>
 
                 <Button 
@@ -357,13 +465,23 @@ const PartyBuilder = () => {
                   size="lg" 
                   className="w-full"
                   onClick={handleAddToCart}
+                  disabled={submitting || !selectedTheme}
                 >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Ajouter au panier
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-5 w-5 mr-2" />
+                      Envoyer la demande
+                    </>
+                  )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  Prix TTC. Paiement sécurisé.
+                  Notre équipe vous contactera sous 24h pour finaliser votre réservation.
                 </p>
               </CardContent>
             </Card>
