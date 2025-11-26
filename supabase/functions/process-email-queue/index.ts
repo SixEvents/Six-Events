@@ -6,6 +6,17 @@ const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const resendApiKey = Deno.env.get('RESEND_API_KEY')!
 
 serve(async (req) => {
+  // CORS headers
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      }
+    })
+  }
+
   try {
     console.log('🔍 Processing email queue...')
 
@@ -29,7 +40,10 @@ serve(async (req) => {
       console.log('✅ No emails in queue')
       return new Response(
         JSON.stringify({ success: true, processed: 0 }),
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        } }
       )
     }
 
@@ -128,14 +142,24 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, processed: successCount, failed: failCount }),
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      } }
     )
 
   } catch (error) {
     console.error('Error processing queue:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: errorMessage }),
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        } 
+      }
     )
   }
 })
