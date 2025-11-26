@@ -203,7 +203,7 @@ const Events = () => {
                       <h3 className="text-xl font-bold mb-2 group-hover:text-pink-600 transition-colors">
                         {event.title}
                       </h3>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2 whitespace-pre-line">
                         {event.description}
                       </p>
 

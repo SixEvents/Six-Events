@@ -209,7 +209,7 @@ export default function EventDetail() {
 
               <div className="prose max-w-none">
                 <h2 className="text-2xl font-bold mb-4">Description</h2>
-                <p className="text-gray-700 leading-relaxed">{event.description}</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{event.description}</p>
               </div>
             </Card>
 

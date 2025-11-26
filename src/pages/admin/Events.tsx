@@ -365,7 +365,7 @@ export default function AdminEvents() {
                         <Badge>{event.category}</Badge>
                       </div>
                       
-                      <p className="text-gray-600 dark:text-gray-300 mb-4">{event.description}</p>
+                      <p className="text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-line">{event.description}</p>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="flex items-center text-gray-700 dark:text-gray-300">
