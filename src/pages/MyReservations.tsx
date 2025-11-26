@@ -6,16 +6,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
-import { Calendar, MapPin, Users, Download, QrCode, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Download, QrCode, Loader2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
+import { useToast } from '../hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../components/ui/alert-dialog';
 
 export default function MyReservations() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [reservations, setReservations] = useState<(Reservation & { tickets?: Ticket[] })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [expandedReservation, setExpandedReservation] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,6 +88,56 @@ export default function MyReservations() {
     reservation.tickets?.forEach((ticket, index) => {
       setTimeout(() => downloadQRCode(ticket.id, ticket.participant_name), index * 300);
     });
+  };
+
+  const cancelReservation = async (reservationId: string) => {
+    setCancellingId(reservationId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Erreur',
+          description: 'Vous devez être connecté pour annuler une réservation',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-reservation`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ reservationId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de l\'annulation');
+      }
+
+      toast({
+        title: 'Réservation annulée',
+        description: `${result.placesRestored} place(s) ont été restituées`,
+      });
+
+      // Rafraîchir la liste des réservations
+      await fetchReservations();
+    } catch (error: any) {
+      console.error('Error cancelling reservation:', error);
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible d\'annuler la réservation',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   if (loading) {
@@ -268,9 +332,59 @@ export default function MyReservations() {
 
                   {/* Buyer Info */}
                   <Separator />
-                  <div className="text-sm text-muted-foreground">
-                    <p>Réservation effectuée le {format(new Date(reservation.created_at!), 'dd MMMM yyyy à HH:mm', { locale: fr })}</p>
-                    <p>ID: {reservation.id.substring(0, 8)}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      <p>Réservation effectuée le {format(new Date(reservation.created_at!), 'dd MMMM yyyy à HH:mm', { locale: fr })}</p>
+                      <p>ID: {reservation.id.substring(0, 8)}</p>
+                    </div>
+                    
+                    {reservation.status !== 'cancelled' && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={cancellingId === reservation.id}
+                          >
+                            {cancellingId === reservation.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Annulation...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Annuler la réservation
+                              </>
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmer l'annulation</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir annuler cette réservation ?
+                              <br /><br />
+                              <strong>Cette action est irréversible :</strong>
+                              <ul className="list-disc list-inside mt-2 space-y-1">
+                                <li>{reservation.number_of_places} place(s) seront restituées</li>
+                                <li>Tous les QR codes seront supprimés</li>
+                                <li>La réservation sera définitivement effacée</li>
+                              </ul>
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => cancelReservation(reservation.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Confirmer l'annulation
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 </CardContent>
               </Card>
