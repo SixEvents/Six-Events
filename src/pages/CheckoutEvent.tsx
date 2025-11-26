@@ -14,7 +14,8 @@ import { ArrowLeft, CreditCard, Banknote, CheckCircle2, Loader2, Calendar, MapPi
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { generateQRCodeData, generateUniqueCode, generateQRCodeDataURL } from '../lib/qrcode';
+import { generateQRCodeData, generateUniqueCode } from '../lib/qrcode';
+import QRCode from 'qrcode';
 
 export default function CheckoutEvent() {
   const location = useLocation();
@@ -199,7 +200,7 @@ export default function CheckoutEvent() {
       // Gerar QR Codes como imagens
       const qrCodes = [];
       for (const ticket of tickets) {
-        const dataUrl = await generateQRCodeDataURL(ticket.qr_code_data);
+        const dataUrl = await QRCode.toDataURL(ticket.qr_code_data);
         qrCodes.push({
           name: ticket.participant_name,
           dataUrl,
