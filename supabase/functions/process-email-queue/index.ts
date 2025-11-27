@@ -3,11 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://rzcdcwwdlnczojmslhax.supabase.co'
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const mailersendApiKey = Deno.env.get('MAILERSEND_API_KEY')!
+const resendApiKey = Deno.env.get('RESEND_API_KEY')!
 
 console.log('🚀 Email Queue Processor initialized')
 console.log('📍 Supabase URL:', supabaseUrl)
-console.log('🔑 MailerSend API Key:', mailersendApiKey ? 'Configured ✅' : 'Missing ❌')
+console.log('🔑 Resend API Key:', resendApiKey ? 'Configured ✅' : 'Missing ❌')
 
 serve(async (req) => {
   // CORS headers
@@ -93,23 +93,16 @@ serve(async (req) => {
 
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
 
-        // Enviar via MailerSend
-        const res = await fetch('https://api.mailersend.com/v1/email', {
+        // Enviar via Resend
+        const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${mailersendApiKey}`,
-            'X-Requested-With': 'XMLHttpRequest'
+            'Authorization': `Bearer ${resendApiKey}`
           },
           body: JSON.stringify({
-            from: {
-              email: 'info@test-yxj6lj925y04do2r.mlsender.net',
-              name: 'Six Events'
-            },
-            to: [{
-              email: email.recipient_email,
-              name: email.recipient_name || 'Client'
-            }],
+            from: 'Six Events <onboarding@resend.dev>',
+            to: [email.recipient_email],
             subject: subject,
             html: html
           })

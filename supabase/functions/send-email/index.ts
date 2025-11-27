@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const MAILERSEND_API_KEY = Deno.env.get('MAILERSEND_API_KEY')
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
 serve(async (req) => {
   // CORS headers
@@ -19,23 +19,16 @@ serve(async (req) => {
 
     console.log(`📤 Sending email to ${to}...`)
 
-    // Usar MailerSend API (12.000 emails/mês grátis)
-    const res = await fetch('https://api.mailersend.com/v1/email', {
+    // Usar Resend com domínio onboarding grátis
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MAILERSEND_API_KEY}`,
-        'X-Requested-With': 'XMLHttpRequest'
+        'Authorization': `Bearer ${RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from: {
-          email: 'info@test-yxj6lj925y04do2r.mlsender.net',
-          name: 'Six Events'
-        },
-        to: [{
-          email: to,
-          name: recipientName || 'Client'
-        }],
+        from: 'Six Events <onboarding@resend.dev>',
+        to: [to],
         subject: subject,
         html: html
       })
@@ -43,8 +36,8 @@ serve(async (req) => {
 
     if (!res.ok) {
       const errorData = await res.text()
-      console.error('❌ MailerSend error:', errorData)
-      throw new Error(`MailerSend API error: ${errorData}`)
+      console.error('❌ Resend error:', errorData)
+      throw new Error(`Resend API error: ${errorData}`)
     }
 
     console.log(`✅ Email sent successfully to ${to}`)
