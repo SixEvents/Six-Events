@@ -29,7 +29,7 @@ import AdminPartyBuilder from './pages/admin/PartyBuilder';
 import AdminPartyBuilderRequests from './pages/admin/PartyBuilderRequests';
 import ReservationsList from './pages/admin/ReservationsList';
 import AdminSettings from './pages/admin/Settings';
-import QRScannerNew from './pages/admin/QRScannerNew';
+import ModernQRScanner from './pages/admin/ModernQRScanner';
 import SelectEventToScan from './pages/admin/SelectEventToScan';
 import RecoverReservation from './pages/admin/RecoverReservation';
 import UserManagement from './pages/UserManagement';
@@ -157,7 +157,7 @@ const App = () => (
               path="/admin/qr-scanner"
               element={
                 <AdminRoute>
-                  <QRScannerNew />
+                  <ModernQRScanner />
                 </AdminRoute>
               }
             />
