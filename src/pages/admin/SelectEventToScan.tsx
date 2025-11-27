@@ -263,7 +263,7 @@ export default function SelectEventToScan() {
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 rounded-full bg-red-500 mr-2" />
-              <span>Faible (<25%)</span>
+              <span>Faible (&lt;25%)</span>
             </div>
           </div>
         </motion.div>
