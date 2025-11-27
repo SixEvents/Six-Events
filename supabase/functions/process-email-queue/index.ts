@@ -76,21 +76,6 @@ serve(async (req) => {
           }
         }
 
-        let html = ''
-        let subject = ''
-
-        // Gerar HTML baseado no tipo
-        if (email.type === 'reservation_confirmation') {
-          subject = `Confirmação de Reserva - ${emailData.eventName || 'Evento'}`
-          html = generateReservationEmailHTML(emailData)
-        } else if (email.type === 'party_builder_demand') {
-          subject = 'Nova Solicitação de Party Builder'
-          html = generatePartyBuilderDemandHTML(emailData)
-        } else if (email.type === 'party_builder_confirmation') {
-          subject = 'Confirmação de Solicitação - Party Builder'
-          html = generatePartyBuilderClientConfirmationHTML(emailData)
-        }
-
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
 
         // Upload QR codes para Supabase Storage e obter URLs públicas
@@ -134,17 +119,18 @@ serve(async (req) => {
           }
         }
 
-        // Gerar HTML com as URLs públicas (agora emailData.qrCodes tem URLs https://)
+        // Gerar HTML DEPOIS do upload (com URLs públicas)
         let html = ''
         let subject = ''
 
+        // Gerar HTML baseado no tipo
         if (email.type === 'reservation_confirmation') {
-          subject = `Confirmação de Reserva - ${emailData.eventName}`
-          html = generateReservationConfirmationHTML(emailData)
+          subject = `Confirmação de Reserva - ${emailData.eventName || 'Evento'}`
+          html = generateReservationEmailHTML(emailData)
         } else if (email.type === 'party_builder_demand') {
-          subject = 'Nova Solicitação Party Builder'
+          subject = 'Nova Solicitação de Party Builder'
           html = generatePartyBuilderDemandHTML(emailData)
-        } else if (email.type === 'party_builder_client_confirmation') {
+        } else if (email.type === 'party_builder_confirmation') {
           subject = 'Confirmação de Solicitação - Party Builder'
           html = generatePartyBuilderClientConfirmationHTML(emailData)
         }
