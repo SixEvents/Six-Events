@@ -102,14 +102,16 @@ serve(async (req) => {
             const qr = emailData.qrCodes[i]
             if (qr.dataUrl && qr.dataUrl.startsWith('data:image/png;base64,')) {
               const base64Content = qr.dataUrl.replace('data:image/png;base64,', '')
+              const filename = `qrcode-${i + 1}.png`
               
-              // Resend precisa de um formato específico para attachments
+              // Formato correto do Resend para attachments inline
               attachments.push({
-                filename: `qrcode-${i + 1}.png`,
-                content: base64Content
+                filename: filename,
+                content: base64Content,
+                path: `cid:${filename}` // Necessário para inline CID
               })
               
-              console.log(`✅ Added attachment: qrcode-${i + 1}.png (${Math.round(base64Content.length / 1024)}KB)`)
+              console.log(`✅ Added inline attachment: ${filename} (${Math.round(base64Content.length / 1024)}KB)`)
             }
           }
           
@@ -122,7 +124,8 @@ serve(async (req) => {
           console.log(`🔄 Replacing data URLs with cid: references...`)
           
           emailData.qrCodes.forEach((qr: any, index: number) => {
-            const cidReference = `cid:qrcode-${index + 1}.png`
+            const filename = `qrcode-${index + 1}.png`
+            const cidReference = `cid:${filename}`
             finalHtml = finalHtml.replace(qr.dataUrl, cidReference)
             console.log(`   Replaced QR ${index + 1}: data:image... -> ${cidReference}`)
           })
