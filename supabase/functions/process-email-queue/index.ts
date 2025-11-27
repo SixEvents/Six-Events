@@ -94,26 +94,37 @@ serve(async (req) => {
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
 
         // Preparar attachments para QR codes (se houver)
-        const attachments = []
+        const attachments: any[] = []
         if (email.type === 'reservation_confirmation' && emailData.qrCodes && emailData.qrCodes.length > 0) {
+          console.log(`🔍 Processing ${emailData.qrCodes.length} QR codes for attachments...`)
+          
           for (let i = 0; i < emailData.qrCodes.length; i++) {
             const qr = emailData.qrCodes[i]
             if (qr.dataUrl && qr.dataUrl.startsWith('data:image/png;base64,')) {
               const base64Content = qr.dataUrl.replace('data:image/png;base64,', '')
+              
+              // Resend precisa de um formato específico para attachments
               attachments.push({
                 filename: `qrcode-${i + 1}.png`,
-                content: base64Content,
-                content_id: `qrcode${i + 1}`
+                content: base64Content
               })
+              
+              console.log(`✅ Added attachment: qrcode-${i + 1}.png (${Math.round(base64Content.length / 1024)}KB)`)
             }
           }
+          
+          console.log(`📎 Total attachments prepared: ${attachments.length}`)
         }
 
         // Atualizar HTML para usar cid: ao invés de data URLs
         let finalHtml = html
         if (attachments.length > 0) {
+          console.log(`🔄 Replacing data URLs with cid: references...`)
+          
           emailData.qrCodes.forEach((qr: any, index: number) => {
-            finalHtml = finalHtml.replace(qr.dataUrl, `cid:qrcode${index + 1}`)
+            const cidReference = `cid:qrcode-${index + 1}.png`
+            finalHtml = finalHtml.replace(qr.dataUrl, cidReference)
+            console.log(`   Replaced QR ${index + 1}: data:image... -> ${cidReference}`)
           })
         }
 
@@ -127,8 +138,11 @@ serve(async (req) => {
 
         if (attachments.length > 0) {
           emailPayload.attachments = attachments
+          console.log(`📎 Email payload includes ${attachments.length} attachments`)
         }
 
+        console.log(`📬 Sending email via Resend API...`)
+        
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -138,11 +152,14 @@ serve(async (req) => {
           body: JSON.stringify(emailPayload)
         })
 
+        const responseData = await res.text()
+        
         if (!res.ok) {
-          const errorData = await res.text()
-          console.error('❌ MailerSend error:', errorData)
-          throw new Error(`MailerSend error: ${errorData}`)
+          console.error('❌ Resend API error:', responseData)
+          throw new Error(`Resend error: ${responseData}`)
         }
+        
+        console.log(`✅ Resend API response:`, responseData)
 
         // Marcar como enviado
         await supabase
