@@ -99,7 +99,7 @@ export default function SelectEventToScan() {
     // Sauvegarder l'événement sélectionné dans le localStorage
     localStorage.setItem('selectedEventForScan', eventId);
     // Naviguer vers le scanner
-    navigate('/admin/qr-scanner-new');
+    navigate('/admin/qr-scanner');
   };
 
   const getProgressPercentage = (scanned: number, total: number) => {
