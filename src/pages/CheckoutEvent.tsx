@@ -212,7 +212,9 @@ export default function CheckoutEvent() {
         .insert({
           type: 'reservation_confirmation',
           recipient_email: formData.buyerEmail,
-          data: JSON.stringify({
+          recipient_name: formData.buyerName,
+          reservation_id: reservation.id,
+          data: {
             eventName: event.title,
             eventDate: event.date,
             eventLocation: event.location,
@@ -220,9 +222,20 @@ export default function CheckoutEvent() {
             participants: allParticipants,
             totalAmount: totalPrice,
             qrCodes,
-          }),
+          },
           status: 'pending',
         });
+
+      // 5. Processar email imediatamente
+      try {
+        await fetch('https://rzcdcwwdlnczojmslhax.supabase.co/functions/v1/process-email-queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (emailError) {
+        console.error('Failed to trigger email processor:', emailError);
+        // Não falhar a reserva se o email falhar
+      }
 
       setSuccess(true);
       toast.success('Réservation enregistrée!');
