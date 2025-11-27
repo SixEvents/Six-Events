@@ -245,12 +245,17 @@ function generateReservationEmailHTML(data: any): string {
   let qrCodesHTML = ''
   safeQrCodes.forEach((qr: any, index: number) => {
     qrCodesHTML += `
-      <div style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">Bilhete ${index + 1} - ${qr.name}</h3>
-        <img src="${qr.dataUrl}" alt="QR Code ${qr.name}" style="max-width: 300px; height: auto; display: block; margin: 10px auto;" />
-        <p style="font-size: 12px; color: #666; text-align: center; margin: 10px 0 0 0;">
-          Apresente este QR Code na entrada do evento
+      <div style="margin: 30px 0; padding: 30px; background: white; border: 2px solid #e0e0e0; border-radius: 12px; text-align: center;">
+        <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px; font-weight: 600;">Check in for this event</h2>
+        <div style="background: white; padding: 20px; display: inline-block; border-radius: 8px;">
+          <img src="${qr.dataUrl}" alt="QR Code ${qr.name}" style="width: 250px; height: 250px; display: block;" />
+        </div>
+        <p style="font-size: 16px; color: #666; margin: 20px 0 0 0; line-height: 1.5;">
+          Scan this QR code at the event to check in.
         </p>
+        <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+          <p style="margin: 0; color: #333; font-size: 14px;"><strong>ATTENDEE:</strong> ${qr.name}</p>
+        </div>
       </div>
     `
   })
@@ -297,13 +302,7 @@ function generateReservationEmailHTML(data: any): string {
           </div>
           ` : ''}
 
-          <div style="margin: 30px 0;">
-            <h3 style="color: #333; margin-bottom: 15px;">🎫 Seus QR Codes</h3>
-            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
-              Guarde bem estes QR codes! Você precisará apresentá-los na entrada do evento.
-            </p>
-            ${qrCodesHTML}
-          </div>
+          ${qrCodesHTML}
 
           <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0; color: #856404; font-size: 14px;">
