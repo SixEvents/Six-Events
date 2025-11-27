@@ -247,15 +247,15 @@ function generateReservationEmailHTML(data: any): string {
   safeQrCodes.forEach((qr: any, index: number) => {
     qrCodesHTML += `
       <div style="margin: 30px 0; padding: 30px; background: white; border: 2px solid #e0e0e0; border-radius: 12px; text-align: center;">
-        <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px; font-weight: 600;">Check in for this event</h2>
+        <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px; font-weight: 600;">Présentez-vous à l'entrée</h2>
         <div style="background: white; padding: 20px; display: inline-block; border-radius: 8px;">
           <img src="${qr.dataUrl}" alt="QR Code ${qr.name}" style="width: 250px; height: 250px; display: block;" />
         </div>
         <p style="font-size: 16px; color: #666; margin: 20px 0 0 0; line-height: 1.5;">
-          Scan this QR code at the event to check in.
+          Scannez ce QR code à l'entrée de l'événement.
         </p>
         <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-          <p style="margin: 0; color: #333; font-size: 14px;"><strong>ATTENDEE:</strong> ${qr.name}</p>
+          <p style="margin: 0; color: #333; font-size: 14px;"><strong>PARTICIPANT :</strong> ${qr.name}</p>
         </div>
       </div>
     `
