@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { Html5Qrcode } from 'html5-qrcode';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -38,9 +38,8 @@ export default function ModernQRScanner() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventName, setEventName] = useState<string>('');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerInitialized = useRef(false);
 
   useEffect(() => {
     // Récupérer l'événement sélectionné
@@ -96,90 +95,52 @@ export default function ModernQRScanner() {
   };
 
   const startScanning = async () => {
-    if (!videoRef.current) return;
-
     try {
       setScanning(true);
       setResult(null);
 
-      // Initialiser le lecteur de codes
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
+      // Criar scanner se não existir
+      if (!scannerRef.current && !scannerInitialized.current) {
+        scannerInitialized.current = true;
+        scannerRef.current = new Html5Qrcode("qr-reader");
+      }
 
-      // Demander l'accès à la caméra avec les meilleures options
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment', // Caméra arrière sur mobile
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      });
-
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-
-      // Scanner en continu avec haute fréquence
-      const scanInterval = setInterval(async () => {
-        if (!videoRef.current || !canvasRef.current) return;
-
-        try {
-          const canvas = canvasRef.current;
-          const video = videoRef.current;
-          
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-          
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          
-          // Convertir ImageData pour base64
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = canvas.width;
-          tempCanvas.height = canvas.height;
-          const tempCtx = tempCanvas.getContext('2d');
-          if (!tempCtx) return;
-          tempCtx.putImageData(imageData, 0, 0);
-          const dataUrl = tempCanvas.toDataURL('image/png');
-          
-          const code = await codeReader.decodeFromImageUrl(dataUrl);
-          
-          if (code && code.getText()) {
-            clearInterval(scanInterval);
-            stopCamera();
-            await validateQRCode(code.getText());
-          }
-        } catch (error) {
+      // Iniciar scanner
+      await scannerRef.current?.start(
+        { facingMode: "environment" }, // Câmera traseira
+        {
+          fps: 20, // 20 frames por segundo
+          qrbox: { width: 250, height: 250 } // Área de scan
+        },
+        async (decodedText) => {
+          // QR Code detectado!
+          console.log('QR Code detectado:', decodedText);
+          await stopScanning();
+          await validateQRCode(decodedText);
+        },
+        (errorMessage) => {
           // Ignorar erros de scan (QR não encontrado ainda)
         }
-      }, 50); // Scanner toutes les 50ms pour ultra-réactivité
-
-      // Nettoyer après 2 minutes maximum
-      setTimeout(() => {
-        clearInterval(scanInterval);
-        if (scanning) {
-          stopCamera();
-          setScanning(false);
-        }
-      }, 120000);
+      );
 
     } catch (error) {
       console.error('Erreur de caméra:', error);
       alert('Impossible d\'accéder à la caméra. Vérifiez les permissions.');
       setScanning(false);
+      scannerInitialized.current = false;
     }
   };
 
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+  const stopScanning = async () => {
+    try {
+      if (scannerRef.current && scanning) {
+        await scannerRef.current.stop();
+      }
+      setScanning(false);
+    } catch (error) {
+      console.error('Erreur arrêt scanner:', error);
+      setScanning(false);
     }
-    setScanning(false);
   };
 
   const validateQRCode = async (qrData: string) => {
@@ -360,24 +321,15 @@ export default function ModernQRScanner() {
               <Card className="overflow-hidden border-4 border-green-400 shadow-2xl">
                 <CardContent className="p-0">
                   <div className="relative">
-                    {/* Zone vidéo */}
-                    <video
-                      ref={videoRef}
-                      className="w-full h-auto rounded-t-lg"
-                      playsInline
+                    {/* Zone de scan */}
+                    <div 
+                      id="qr-reader" 
+                      className="w-full"
+                      style={{ minHeight: '400px' }}
                     />
-                    <canvas ref={canvasRef} className="hidden" />
-                    
-                    {/* Overlay de scan */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute inset-0 border-4 border-green-400 animate-pulse" />
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-64 h-64 border-4 border-white rounded-lg shadow-2xl" />
-                      </div>
-                    </div>
                     
                     {/* Indicateur de scan */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
                       <Badge className="bg-green-500 text-white px-6 py-2 text-lg animate-pulse">
                         <Camera className="w-5 h-5 mr-2" />
                         Scan en cours...
@@ -390,7 +342,7 @@ export default function ModernQRScanner() {
                       📱 Présentez le QR code devant la caméra
                     </p>
                     <Button
-                      onClick={stopCamera}
+                      onClick={stopScanning}
                       variant="outline"
                       className="w-full"
                       size="lg"
