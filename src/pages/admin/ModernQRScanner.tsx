@@ -3,6 +3,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
+import { ScanActionSelect, ScanAction } from '../../components/ui/scan-action-select';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -40,6 +41,7 @@ export default function ModernQRScanner() {
   const [eventName, setEventName] = useState<string>('');
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
+  const [scanAction, setScanAction] = useState<ScanAction>('entry');
 
   useEffect(() => {
     // Récupérer l'événement sélectionné
@@ -149,9 +151,15 @@ export default function ModernQRScanner() {
       console.log('Câmeras disponíveis:', devices);
 
       if (devices && devices.length > 0) {
-        const cameraId = devices[0].id;
+        // Priorizar câmera traseira
+        let cameraId = devices[0].id;
+        for (const device of devices) {
+          if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('traseira') || device.label.toLowerCase().includes('arrière')) {
+            cameraId = device.id;
+            break;
+          }
+        }
         console.log('Usando câmera:', cameraId);
-        
         await scannerRef.current?.start(
           cameraId,
           {
@@ -167,7 +175,6 @@ export default function ModernQRScanner() {
             // Ignorar erros de scan
           }
         );
-        
         console.log('Scanner iniciado com sucesso!');
       } else {
         throw new Error('Nenhuma câmera disponível');
@@ -293,18 +300,23 @@ export default function ModernQRScanner() {
         throw updateError;
       }
 
+
       // Enregistrer la validation
       await supabase.from('qr_code_validations').insert({
         ticket_id: ticket.id,
-        action: 'entry',
+        action: scanAction,
         validated_by: user?.id || 'unknown',
         success: true
       });
 
       playSound('success');
+
+      let msg = '✅ ENTRÉE VALIDÉE';
+      if (scanAction === 'exit') msg = '✅ SORTIE VALIDÉE';
+      if (scanAction === 'reentry') msg = '✅ RE-ENTRÉE VALIDÉE';
       setResult({
         success: true,
-        message: '✅ ENTRÉE VALIDÉE',
+        message: msg,
         ticket,
         reservation: ticket.reservation
       });
@@ -370,8 +382,9 @@ export default function ModernQRScanner() {
                     Prêt à scanner
                   </h2>
                   <p className="text-muted-foreground mb-8">
-                    Appuyez sur le bouton pour activer la caméra et scanner les billets
+                    Sélectionnez l'action puis appuyez sur le bouton pour activer la caméra et scanner les billets
                   </p>
+                  <ScanActionSelect value={scanAction} onChange={setScanAction} />
                   <Button
                     onClick={startScanning}
                     size="lg"
