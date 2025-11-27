@@ -104,11 +104,10 @@ serve(async (req) => {
               const base64Content = qr.dataUrl.replace('data:image/png;base64,', '')
               const filename = `qrcode-${i + 1}.png`
               
-              // Formato correto do Resend para attachments inline
+              // Resend: apenas filename e content para inline attachments
               attachments.push({
                 filename: filename,
-                content: base64Content,
-                path: `cid:${filename}` // Necessário para inline CID
+                content: base64Content
               })
               
               console.log(`✅ Added inline attachment: ${filename} (${Math.round(base64Content.length / 1024)}KB)`)
