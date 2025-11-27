@@ -359,21 +359,20 @@ export default function CheckoutEvent() {
             Votre réservation pour <strong>{event.title}</strong> a été enregistrée.
           </p>
           
-          <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-6 text-left">
-            <p className="text-sm font-bold text-yellow-900 dark:text-yellow-100 mb-2">
-              ⏳ En attente de validation de paiement
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-4 mb-6 text-left">
+            <p className="text-sm font-bold text-green-900 dark:text-green-100 mb-2">
+              ✅ Réservation confirmée!
             </p>
-            <p className="text-xs text-yellow-800 dark:text-yellow-200">
-              Votre réservation sera confirmée dès réception du virement bancaire (24-48h ouvrées)
+            <p className="text-xs text-green-800 dark:text-green-200">
+              Vous recevrez un email de confirmation avec vos QR codes dans quelques instants à <strong>{formData.buyerEmail}</strong>
+            </p>
+            <p className="text-xs text-green-800 dark:text-green-200 mt-2">
+              💵 Paiement: <strong>{totalPrice.toFixed(2)}€ en espèces</strong> à régler le jour de l'événement à l'entrée
             </p>
           </div>
 
-          <Badge variant="secondary" className="mb-6 text-base px-4 py-2">
-            💳 Virement bancaire: {totalPrice.toFixed(2)}€
-          </Badge>
-
           <p className="text-sm text-muted-foreground mb-8">
-            Vous recevrez vos {quantity} QR code{quantity > 1 ? 's' : ''} par email (<strong>{formData.buyerEmail}</strong>) après confirmation du paiement.
+            Présentez vos QR codes à l'entrée pour valider votre accès!
           </p>
 
           <div className="space-y-3">
