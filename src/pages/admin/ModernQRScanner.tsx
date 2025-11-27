@@ -99,44 +99,91 @@ export default function ModernQRScanner() {
       setScanning(true);
       setResult(null);
 
+      // Verificar suporte do navegador
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('❌ Seu navegador não suporta acesso à câmera!\n\nUse Chrome, Firefox, Safari ou Edge atualizado.');
+        setScanning(false);
+        return;
+      }
+
       // Criar scanner se não existir
       if (!scannerRef.current && !scannerInitialized.current) {
         scannerInitialized.current = true;
         scannerRef.current = new Html5Qrcode("qr-reader");
       }
 
-      // Iniciar scanner (ele mesmo vai pedir permissão)
-      await scannerRef.current?.start(
-        { facingMode: "environment" }, // Câmera traseira
-        {
-          fps: 20, // 20 frames por segundo
-          qrbox: { width: 250, height: 250 }, // Área de scan
-          aspectRatio: 1.0
-        },
-        async (decodedText) => {
-          // QR Code detectado!
-          console.log('QR Code detectado:', decodedText);
-          await stopScanning();
-          await validateQRCode(decodedText);
-        },
-        (errorMessage) => {
-          // Ignorar erros de scan (QR não encontrado ainda)
-        }
-      );
+      console.log('Iniciando scanner...');
+
+      // Iniciar scanner com fallback para qualquer câmera
+      try {
+        await scannerRef.current?.start(
+          { facingMode: "environment" }, // Tentar câmera traseira
+          {
+            fps: 10, // Reduzir para 10 FPS (mais estável)
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          async (decodedText) => {
+            console.log('QR Code detectado:', decodedText);
+            await stopScanning();
+            await validateQRCode(decodedText);
+          },
+          (errorMessage) => {
+            // Ignorar erros de scan
+          }
+        );
+      } catch (err) {
+        // Se falhar, tentar com câmera frontal
+        console.log('Falha com câmera traseira, tentando frontal...');
+        await scannerRef.current?.start(
+          { facingMode: "user" }, // Câmera frontal
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          async (decodedText) => {
+            console.log('QR Code detectado:', decodedText);
+            await stopScanning();
+            await validateQRCode(decodedText);
+          },
+          (errorMessage) => {
+            // Ignorar erros de scan
+          }
+        );
+      }
+
+      console.log('Scanner iniciado com sucesso!');
 
     } catch (error: any) {
-      console.error('Erreur de caméra:', error);
+      console.error('Erro completo:', error);
+      console.error('Nome do erro:', error?.name);
+      console.error('Mensagem:', error?.message);
       
-      let errorMsg = 'Impossible d\'accéder à la caméra.\\n\\n';
+      let errorMsg = '❌ Erro ao acessar câmera\n\n';
       
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        errorMsg += '❌ Permissão negada!\\n\\nPor favor, permita o acesso à câmera clicando no ícone de cadeado na barra de endereço.';
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        errorMsg += '📷 Nenhuma câmera encontrada!\\n\\nVerifique se seu dispositivo tem uma câmera conectada.';
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        errorMsg += '🔒 Câmera em uso por outro aplicativo!\\n\\nFeche outros apps que usam a câmera.';
+      if (error?.name === 'NotAllowedError' || error?.message?.includes('Permission')) {
+        errorMsg += '🔒 Permissão negada!\n\n';
+        errorMsg += '1. Clique no ícone de cadeado/câmera na barra de endereço\n';
+        errorMsg += '2. Permita acesso à câmera\n';
+        errorMsg += '3. Recarregue a página';
+      } else if (error?.name === 'NotFoundError' || error?.message?.includes('device')) {
+        errorMsg += '📷 Câmera não encontrada!\n\n';
+        errorMsg += 'Verifique se:\n';
+        errorMsg += '• Seu dispositivo tem câmera\n';
+        errorMsg += '• A câmera está conectada\n';
+        errorMsg += '• Nenhum outro app está usando a câmera';
+      } else if (error?.name === 'NotReadableError') {
+        errorMsg += '⚠️ Câmera em uso!\n\n';
+        errorMsg += 'Feche outros aplicativos/abas que usam a câmera.';
       } else {
-        errorMsg += `Erro: ${error.message || 'Desconhecido'}`;
+        errorMsg += 'Detalhes técnicos:\n';
+        errorMsg += `• Erro: ${error?.name || 'Desconhecido'}\n`;
+        errorMsg += `• Mensagem: ${error?.message || 'Sem mensagem'}\n\n`;
+        errorMsg += 'Tente:\n';
+        errorMsg += '• Usar outro navegador (Chrome)\n';
+        errorMsg += '• Recarregar a página\n';
+        errorMsg += '• Verificar permissões do sistema';
       }
       
       alert(errorMsg);
