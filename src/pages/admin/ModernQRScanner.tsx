@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { BrowserMultiFormatReader, NotFoundException } from '@zxing/browser';
-import { supabase } from '../../lib/supabase';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { 
@@ -131,7 +135,17 @@ export default function ModernQRScanner() {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = await codeReader.decodeFromImageData(imageData);
+          
+          // Convertir ImageData pour base64
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = canvas.height;
+          const tempCtx = tempCanvas.getContext('2d');
+          if (!tempCtx) return;
+          tempCtx.putImageData(imageData, 0, 0);
+          const dataUrl = tempCanvas.toDataURL('image/png');
+          
+          const code = await codeReader.decodeFromImageUrl(dataUrl);
           
           if (code && code.getText()) {
             clearInterval(scanInterval);
@@ -139,9 +153,7 @@ export default function ModernQRScanner() {
             await validateQRCode(code.getText());
           }
         } catch (error) {
-          if (!(error instanceof NotFoundException)) {
-            console.error('Scan error:', error);
-          }
+          // Ignorar erros de scan (QR não encontrado ainda)
         }
       }, 50); // Scanner toutes les 50ms pour ultra-réactivité
 
@@ -173,7 +185,7 @@ export default function ModernQRScanner() {
   const validateQRCode = async (qrData: string) => {
     try {
       // Vérifier le ticket dans la base de données
-      const { data: ticket, error } = await supabase
+      const { data, error } = await supabase
         .from('tickets')
         .select(`
           *,
@@ -181,6 +193,8 @@ export default function ModernQRScanner() {
         `)
         .eq('qr_code_data', qrData)
         .single();
+
+      const ticket: any = data;
 
       if (error || !ticket) {
         playSound('error');
@@ -232,7 +246,7 @@ export default function ModernQRScanner() {
       }
 
       // Marquer comme utilisé
-      await supabase
+      const { error: updateError } = await supabase
         .from('tickets')
         .update({
           status: 'used',
@@ -240,6 +254,10 @@ export default function ModernQRScanner() {
           validated_by: user?.id
         })
         .eq('id', ticket.id);
+
+      if (updateError) {
+        throw updateError;
+      }
 
       // Enregistrer la validation
       await supabase.from('qr_code_validations').insert({
