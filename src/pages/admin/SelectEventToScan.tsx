@@ -43,18 +43,33 @@ export default function SelectEventToScan() {
       // Pour chaque événement, charger les statistiques des tickets
       const eventsWithStats = await Promise.all(
         (eventsData || []).map(async (event) => {
-          const { data: tickets } = await supabase
-            .from('tickets')
-            .select('status')
+          // Primeiro buscar todas as reservations deste evento
+          const { data: reservations } = await supabase
+            .from('reservations')
+            .select('id')
             .eq('event_id', event.id);
 
-          const totalTickets = tickets?.length || 0;
-          const scannedTickets = tickets?.filter(t => 
-            t.status === 'used' || t.status === 'temporarily_valid'
-          ).length || 0;
-          const pendingTickets = tickets?.filter(t => 
-            t.status === 'valid'
-          ).length || 0;
+          const reservationIds = reservations?.map(r => r.id) || [];
+
+          // Depois buscar tickets dessas reservations
+          let totalTickets = 0;
+          let scannedTickets = 0;
+          let pendingTickets = 0;
+
+          if (reservationIds.length > 0) {
+            const { data: tickets } = await supabase
+              .from('tickets')
+              .select('status')
+              .in('reservation_id', reservationIds);
+
+            totalTickets = tickets?.length || 0;
+            scannedTickets = tickets?.filter(t => 
+              t.status === 'used' || t.status === 'temporarily_valid'
+            ).length || 0;
+            pendingTickets = tickets?.filter(t => 
+              t.status === 'valid'
+            ).length || 0;
+          }
 
           return {
             id: event.id,
