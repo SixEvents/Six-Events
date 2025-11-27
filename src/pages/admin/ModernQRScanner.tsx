@@ -96,15 +96,6 @@ export default function ModernQRScanner() {
 
   const startScanning = async () => {
     try {
-      // Pedir permissão de câmera ANTES
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach(track => track.stop()); // Parar stream temporário
-      } catch (permError) {
-        alert('❌ Permissão de câmera negada!\n\nPor favor, permita o acesso à câmera nas configurações do navegador.');
-        return;
-      }
-
       setScanning(true);
       setResult(null);
 
@@ -114,12 +105,13 @@ export default function ModernQRScanner() {
         scannerRef.current = new Html5Qrcode("qr-reader");
       }
 
-      // Iniciar scanner
+      // Iniciar scanner (ele mesmo vai pedir permissão)
       await scannerRef.current?.start(
         { facingMode: "environment" }, // Câmera traseira
         {
           fps: 20, // 20 frames por segundo
-          qrbox: { width: 250, height: 250 } // Área de scan
+          qrbox: { width: 250, height: 250 }, // Área de scan
+          aspectRatio: 1.0
         },
         async (decodedText) => {
           // QR Code detectado!
@@ -132,11 +124,25 @@ export default function ModernQRScanner() {
         }
       );
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur de caméra:', error);
-      alert('Impossible d\'accéder à la caméra. Vérifiez les permissions.');
+      
+      let errorMsg = 'Impossible d\'accéder à la caméra.\\n\\n';
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMsg += '❌ Permissão negada!\\n\\nPor favor, permita o acesso à câmera clicando no ícone de cadeado na barra de endereço.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMsg += '📷 Nenhuma câmera encontrada!\\n\\nVerifique se seu dispositivo tem uma câmera conectada.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMsg += '🔒 Câmera em uso por outro aplicativo!\\n\\nFeche outros apps que usam a câmera.';
+      } else {
+        errorMsg += `Erro: ${error.message || 'Desconhecido'}`;
+      }
+      
+      alert(errorMsg);
       setScanning(false);
       scannerInitialized.current = false;
+      scannerRef.current = null;
     }
   };
 
