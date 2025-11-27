@@ -93,54 +93,67 @@ serve(async (req) => {
 
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
 
-        // Preparar attachments para QR codes (se houver)
-        const attachments: any[] = []
+        // Upload QR codes para Supabase Storage e obter URLs públicas
         if (email.type === 'reservation_confirmation' && emailData.qrCodes && emailData.qrCodes.length > 0) {
-          console.log(`🔍 Processing ${emailData.qrCodes.length} QR codes for attachments...`)
+          console.log(`🔍 Uploading ${emailData.qrCodes.length} QR codes to Storage...`)
           
           for (let i = 0; i < emailData.qrCodes.length; i++) {
             const qr = emailData.qrCodes[i]
             if (qr.dataUrl && qr.dataUrl.startsWith('data:image/png;base64,')) {
               const base64Content = qr.dataUrl.replace('data:image/png;base64,', '')
-              const filename = `qrcode-${i + 1}.png`
+              const fileName = `${email.id}-qrcode-${i + 1}.png`
               
-              // Resend: apenas filename e content para inline attachments
-              attachments.push({
-                filename: filename,
-                content: base64Content
-              })
+              // Converter base64 para Uint8Array
+              const binaryString = atob(base64Content)
+              const bytes = new Uint8Array(binaryString.length)
+              for (let j = 0; j < binaryString.length; j++) {
+                bytes[j] = binaryString.charCodeAt(j)
+              }
               
-              console.log(`✅ Added inline attachment: ${filename} (${Math.round(base64Content.length / 1024)}KB)`)
+              // Upload para Supabase Storage
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('qr-codes')
+                .upload(fileName, bytes, {
+                  contentType: 'image/png',
+                  upsert: true
+                })
+              
+              if (uploadError) {
+                console.error(`❌ Error uploading QR code ${i + 1}:`, uploadError)
+              } else {
+                // Obter URL pública
+                const { data: publicData } = supabase.storage
+                  .from('qr-codes')
+                  .getPublicUrl(fileName)
+                
+                // Substituir dataUrl pela URL pública
+                emailData.qrCodes[i].dataUrl = publicData.publicUrl
+                console.log(`✅ QR code ${i + 1} uploaded: ${publicData.publicUrl}`)
+              }
             }
           }
-          
-          console.log(`📎 Total attachments prepared: ${attachments.length}`)
         }
 
-        // Atualizar HTML para usar cid: ao invés de data URLs
-        let finalHtml = html
-        if (attachments.length > 0) {
-          console.log(`🔄 Replacing data URLs with cid: references...`)
-          
-          emailData.qrCodes.forEach((qr: any, index: number) => {
-            const filename = `qrcode-${index + 1}.png`
-            const cidReference = `cid:${filename}`
-            finalHtml = finalHtml.replace(qr.dataUrl, cidReference)
-            console.log(`   Replaced QR ${index + 1}: data:image... -> ${cidReference}`)
-          })
+        // Gerar HTML com as URLs públicas (agora emailData.qrCodes tem URLs https://)
+        let html = ''
+        let subject = ''
+
+        if (email.type === 'reservation_confirmation') {
+          subject = `Confirmação de Reserva - ${emailData.eventName}`
+          html = generateReservationConfirmationHTML(emailData)
+        } else if (email.type === 'party_builder_demand') {
+          subject = 'Nova Solicitação Party Builder'
+          html = generatePartyBuilderDemandHTML(emailData)
+        } else if (email.type === 'party_builder_client_confirmation') {
+          subject = 'Confirmação de Solicitação - Party Builder'
+          html = generatePartyBuilderClientConfirmationHTML(emailData)
         }
 
-        // Enviar via Resend
         const emailPayload: any = {
           from: 'Six Events <noreply@sixevents.be>',
           to: [email.recipient_email],
           subject: subject,
-          html: finalHtml
-        }
-
-        if (attachments.length > 0) {
-          emailPayload.attachments = attachments
-          console.log(`📎 Email payload includes ${attachments.length} attachments`)
+          html: html
         }
 
         console.log(`📬 Sending email via Resend API...`)
