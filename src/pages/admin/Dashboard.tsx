@@ -146,7 +146,7 @@ export default function AdminDashboard() {
           <Card className="p-6 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Actions Rapides</h2>
             <div className="space-y-3">
-              <Link to="/admin/qr-scanner">
+              <Link to="/admin/select-event-scan">
                 <Button 
                   variant="outline" 
                   className="w-full justify-start h-14 border-2 border-primary/20 hover:border-primary hover:bg-primary/5"

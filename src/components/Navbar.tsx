@@ -126,7 +126,7 @@ const Navbar = () => {
                             <span>Dashboard Admin</span>
                           </Link>
                           <Link
-                            to="/admin/qr-scanner"
+                            to="/admin/select-event-scan"
                             onClick={() => setProfileMenuOpen(false)}
                             className="flex items-center space-x-2 px-4 py-2 hover:bg-primary/10 text-primary transition-colors font-medium"
                           >
@@ -247,7 +247,7 @@ const Navbar = () => {
                             <span>Dashboard Admin</span>
                           </Link>
                           <Link
-                            to="/admin/qr-scanner"
+                            to="/admin/select-event-scan"
                             onClick={() => setMobileMenuOpen(false)}
                             className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20"
                           >
