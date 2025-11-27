@@ -1,3 +1,4 @@
+// Checkout Event Page - v2.0 (Cash Payment Fixed)
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
