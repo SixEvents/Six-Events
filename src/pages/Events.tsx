@@ -42,11 +42,19 @@ const Events = () => {
         .from('events')
         .select('*')
         .eq('is_visible', true)
-        .gte('date', new Date().toISOString())
         .order('date', { ascending: true });
 
       if (error) throw error;
-      setEvents(data || []);
+      
+      // Filtrar apenas eventos futuros no cliente (mais seguro)
+      const futureEvents = (data || []).filter(event => {
+        const eventDate = new Date(event.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return eventDate >= today;
+      });
+      
+      setEvents(futureEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {

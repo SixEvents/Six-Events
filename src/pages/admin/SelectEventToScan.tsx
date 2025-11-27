@@ -73,7 +73,7 @@ export default function SelectEventToScan() {
 
           return {
             id: event.id,
-            name: event.name,
+            name: event.title || event.name,
             date: event.date,
             time: event.time,
             location: event.location,

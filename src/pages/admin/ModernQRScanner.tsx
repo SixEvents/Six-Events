@@ -55,11 +55,11 @@ export default function ModernQRScanner() {
   const loadEventName = async (eventId: string) => {
     const { data } = await supabase
       .from('events')
-      .select('name')
+      .select('title, name')
       .eq('id', eventId)
       .single();
     
-    if (data) setEventName(data.name);
+    if (data) setEventName(data.title || data.name);
   };
 
   const playSound = (type: 'success' | 'error' | 'warning') => {
@@ -96,6 +96,15 @@ export default function ModernQRScanner() {
 
   const startScanning = async () => {
     try {
+      // Pedir permissão de câmera ANTES
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop()); // Parar stream temporário
+      } catch (permError) {
+        alert('❌ Permissão de câmera negada!\n\nPor favor, permita o acesso à câmera nas configurações do navegador.');
+        return;
+      }
+
       setScanning(true);
       setResult(null);
 
