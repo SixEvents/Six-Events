@@ -93,19 +93,49 @@ serve(async (req) => {
 
         console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
 
+        // Preparar attachments para QR codes (se houver)
+        const attachments = []
+        if (email.type === 'reservation_confirmation' && emailData.qrCodes && emailData.qrCodes.length > 0) {
+          for (let i = 0; i < emailData.qrCodes.length; i++) {
+            const qr = emailData.qrCodes[i]
+            if (qr.dataUrl && qr.dataUrl.startsWith('data:image/png;base64,')) {
+              const base64Content = qr.dataUrl.replace('data:image/png;base64,', '')
+              attachments.push({
+                filename: `qrcode-${i + 1}.png`,
+                content: base64Content,
+                content_id: `qrcode${i + 1}`
+              })
+            }
+          }
+        }
+
+        // Atualizar HTML para usar cid: ao invés de data URLs
+        let finalHtml = html
+        if (attachments.length > 0) {
+          emailData.qrCodes.forEach((qr: any, index: number) => {
+            finalHtml = finalHtml.replace(qr.dataUrl, `cid:qrcode${index + 1}`)
+          })
+        }
+
         // Enviar via Resend
+        const emailPayload: any = {
+          from: 'Six Events <noreply@sixevents.be>',
+          to: [email.recipient_email],
+          subject: subject,
+          html: finalHtml
+        }
+
+        if (attachments.length > 0) {
+          emailPayload.attachments = attachments
+        }
+
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${resendApiKey}`
           },
-          body: JSON.stringify({
-            from: 'Six Events <noreply@sixevents.be>',
-            to: [email.recipient_email],
-            subject: subject,
-            html: html
-          })
+          body: JSON.stringify(emailPayload)
         })
 
         if (!res.ok) {
