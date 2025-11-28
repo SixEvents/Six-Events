@@ -41,7 +41,14 @@ export default function ModernQRScanner() {
   const [eventName, setEventName] = useState<string>('');
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
-  const [scanAction, setScanAction] = useState<ScanAction>('entry');
+  const [scanAction, setScanAction] = useState<ScanAction>(() => {
+    const saved = localStorage.getItem('selectedScanAction');
+    return (saved as ScanAction) || 'entry';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('selectedScanAction', scanAction);
+  }, [scanAction]);
 
   useEffect(() => {
     // Récupérer l'événement sélectionné
@@ -65,34 +72,27 @@ export default function ModernQRScanner() {
   };
 
   const playSound = (type: 'success' | 'error' | 'warning') => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    if (type === 'success') {
-      // Son de succès: 2 bips montants
-      oscillator.frequency.value = 800;
-      oscillator.start();
-      setTimeout(() => {
-        oscillator.frequency.value = 1000;
-      }, 100);
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
-    } else if (type === 'error') {
-      // Son d'erreur: bip descendant
-      oscillator.frequency.value = 400;
-      oscillator.start();
-      setTimeout(() => {
-        oscillator.frequency.value = 200;
-      }, 150);
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.4);
-    } else {
-      // Son d'avertissement: bip moyen
-      oscillator.frequency.value = 600;
-      oscillator.start();
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
+    const srcMap: Record<typeof type, string> = {
+      success: 'data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA',
+      error: 'data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA',
+      warning: 'data:audio/wav;base64,UklGRmQAAABXQVZFZm10 IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA'
+    };
+    try {
+      const audio = new Audio(srcMap[type]);
+      // Ensure playback after user gesture
+      audio.play().catch(async () => {
+        try {
+          // Try resuming audio context if blocked
+          const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+          if (AC) {
+            const ctx = new AC();
+            if (ctx.state === 'suspended') await ctx.resume();
+          }
+          audio.play().catch(() => {});
+        } catch {}
+      });
+    } catch (e) {
+      // silently ignore audio errors
     }
   };
 

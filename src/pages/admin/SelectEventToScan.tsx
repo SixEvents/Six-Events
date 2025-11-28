@@ -19,6 +19,7 @@ interface EventWithStats {
   total_tickets: number;
   scanned_tickets: number;
   pending_tickets: number;
+  inside_now?: number;
 }
 
 export default function SelectEventToScan() {
@@ -28,6 +29,18 @@ export default function SelectEventToScan() {
 
   useEffect(() => {
     loadEvents();
+
+    // Subscribe to validations to refresh stats in real-time
+    const channel = supabase
+      .channel('validations-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qr_code_validations' }, () => {
+        loadEvents();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadEvents = async () => {
@@ -55,11 +68,12 @@ export default function SelectEventToScan() {
           let totalTickets = 0;
           let scannedTickets = 0;
           let pendingTickets = 0;
+          let insideNow = 0;
 
           if (reservationIds.length > 0) {
             const { data: tickets } = await supabase
               .from('tickets')
-              .select('status')
+              .select('id, status')
               .in('reservation_id', reservationIds);
 
             totalTickets = tickets?.length || 0;
@@ -69,6 +83,23 @@ export default function SelectEventToScan() {
             pendingTickets = tickets?.filter(t => 
               t.status === 'valid'
             ).length || 0;
+            // Calcular quem está dentro agora via últimas validações
+            const ticketIds = (tickets || []).map(t => t.id);
+            if (ticketIds.length > 0) {
+              const { data: validations } = await supabase
+                .from('qr_code_validations')
+                .select('ticket_id, action, created_at')
+                .in('ticket_id', ticketIds);
+
+              const latest = new Map<string, { action: string; created_at: string }>();
+              (validations || []).forEach(v => {
+                const prev = latest.get(v.ticket_id);
+                if (!prev || new Date(v.created_at) > new Date(prev.created_at)) {
+                  latest.set(v.ticket_id, { action: v.action, created_at: v.created_at });
+                }
+              });
+              insideNow = Array.from(latest.values()).filter(v => v.action === 'entry' || v.action === 'reentry').length;
+            }
           }
 
           return {
@@ -81,7 +112,8 @@ export default function SelectEventToScan() {
             available_places: event.available_places,
             total_tickets: totalTickets,
             scanned_tickets: scannedTickets,
-            pending_tickets: pendingTickets
+            pending_tickets: pendingTickets,
+            inside_now: insideNow
           };
         })
       );
@@ -199,7 +231,7 @@ export default function SelectEventToScan() {
 
                       {/* Statistiques */}
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4 mb-4">
-                        <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="grid grid-cols-4 gap-4 text-center">
                           <div>
                             <div className="text-2xl font-bold text-primary">
                               {event.total_tickets}
@@ -217,6 +249,12 @@ export default function SelectEventToScan() {
                               {event.pending_tickets}
                             </div>
                             <div className="text-xs text-muted-foreground">En attente</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-blue-600">
+                              {event.inside_now || 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">À l'intérieur</div>
                           </div>
                         </div>
 
