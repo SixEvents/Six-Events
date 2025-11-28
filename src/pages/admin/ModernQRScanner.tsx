@@ -267,8 +267,10 @@ export default function ModernQRScanner() {
         });
         return;
       }
-
-      if (ticket.status === 'used') {
+      
+      // PERMITIR scan para exit e reentry mesmo se já foi escaneado
+      // Apenas para 'entry', bloquear se já estava marcado como used
+      if (scanAction === 'entry' && ticket.status === 'used') {
         playSound('warning');
         const validatedDate = new Date(ticket.validated_at).toLocaleString('fr-FR', {
           day: '2-digit',
@@ -277,28 +279,28 @@ export default function ModernQRScanner() {
           hour: '2-digit',
           minute: '2-digit'
         });
-        setResult({
-          success: false,
-          message: `⚠️ Billet déjà scanné\nLe ${validatedDate}`,
-          ticket,
-          reservation: ticket.reservation
-        });
-        return;
+        // Permitir o scan de exit/reentry mesmo se já foi entrada
+        console.log('Ação permitida: já foi escaneado como entrada em', validatedDate);
       }
 
-      // Marquer comme utilisé
-      const { error: updateError } = await supabase
-        .from('tickets')
-        .update({
-          status: 'used',
-          validated_at: new Date().toISOString(),
-          validated_by: user?.id
-        })
-        .eq('id', ticket.id);
+      // Marquer como usado na entrada (para rastrear que entrou)
+      if (scanAction === 'entry' && ticket.status !== 'used') {
+        const { error: updateError } = await supabase
+          .from('tickets')
+          .update({
+            status: 'used',
+            validated_at: new Date().toISOString(),
+            validated_by: user?.id
+          })
+          .eq('id', ticket.id);
 
-      if (updateError) {
-        throw updateError;
+        if (updateError) {
+          throw updateError;
+        }
       }
+      
+      // Para exit e reentry, NÃO mudar o status (apenas registrar no qr_code_validations)
+      // Isso permite múltiplos scans
 
 
       // Enregistrer la validation
