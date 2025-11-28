@@ -377,17 +377,16 @@ const PartyBuilder = () => {
                 <h3 className="text-2xl font-bold text-foreground mb-4">Récapitulatif</h3>
                 
                 <div className="space-y-3 mb-4">
-                  {selectedTheme && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">
-                        Thème: {themes.find(t => t.id === selectedTheme)?.name}
-                      </span>
-                      <span className="font-semibold">
-                        {themes.find(t => t.id === selectedTheme)?.price}€
-                      </span>
-                    </div>
-                  )}
-                  
+                  {/* Thème totalement personnalisé (prix à définir par le staff) */}
+                  <div className="flex justify-between items-start">
+                    <span className="text-sm max-w-[60%]">
+                      Thème personnalisé: {customTheme ? customTheme.substring(0, 80) + (customTheme.length > 80 ? '…' : '') : '—'}
+                    </span>
+                    <span className="text-xs text-muted-foreground text-right">
+                      Prix sur devis
+                    </span>
+                  </div>
+
                   {[...animations, ...decorations, ...cakes, ...extras].map(option => {
                     const quantity = selectedOptions[option.id];
                     if (!quantity) return null;
