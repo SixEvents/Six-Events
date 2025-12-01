@@ -8,13 +8,11 @@ import {
   DollarSign, 
   TrendingUp, 
   PartyPopper,
-  ArrowRight,
   QrCode,
   Mail
 } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
