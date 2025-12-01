@@ -79,29 +79,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const statCards = [
-    {
-      title: 'Événements Actifs',
-      value: stats.activeEvents,
-      icon: Calendar,
-      color: 'from-pink-500 to-purple-600',
-      link: '/admin/events'
-    },
-    {
-      title: 'Revenus',
-      value: `${stats.totalRevenue.toFixed(0)}€`,
-      icon: DollarSign,
-      color: 'from-blue-500 to-cyan-600',
-      link: '/admin/events'
-    },
-    {
-      title: 'Total Événements',
-      value: stats.totalEvents,
-      icon: PartyPopper,
-      color: 'from-cyan-500 to-teal-600',
-      link: '/admin/events'
-    }
-  ];
 
   if (loading) {
     return (
@@ -110,6 +87,30 @@ export default function AdminDashboard() {
       </div>
     );
   }
+
+  const statCards = [
+    {
+      title: 'Événements Actifs',
+      value: stats.activeEvents || 0,
+      icon: Calendar,
+      color: 'from-pink-500 to-purple-600',
+      link: '/admin/events'
+    },
+    {
+      title: 'Revenus',
+      value: `${(stats.totalRevenue || 0).toFixed(0)}€`,
+      icon: DollarSign,
+      color: 'from-blue-500 to-cyan-600',
+      link: '/admin/events'
+    },
+    {
+      title: 'Total Événements',
+      value: stats.totalEvents || 0,
+      icon: PartyPopper,
+      color: 'from-cyan-500 to-teal-600',
+      link: '/admin/events'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white py-12">
