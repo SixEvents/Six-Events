@@ -29,22 +29,35 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch events count
-      const { count: eventsCount } = await supabase
+      const { count: eventsCount, error: eventsError } = await supabase
         .from('events')
         .select('*', { count: 'exact', head: true });
 
+      if (eventsError) {
+        console.error('Error fetching events count:', eventsError);
+      }
+
       // Fetch active events count
-      const { count: activeEventsCount } = await supabase
+      const today = new Date();
+      const { count: activeEventsCount, error: activeError } = await supabase
         .from('events')
         .select('*', { count: 'exact', head: true })
         .eq('is_visible', true)
-        .gte('date', new Date().toISOString());
+        .gte('date', today.toISOString());
+
+      if (activeError) {
+        console.error('Error fetching active events:', activeError);
+      }
 
       // Calculate revenue
-      const { data: confirmedReservations } = await supabase
+      const { data: confirmedReservations, error: revenueError } = await supabase
         .from('reservations')
         .select('total_price')
         .eq('status', 'confirmed');
+
+      if (revenueError) {
+        console.error('Error fetching revenue:', revenueError);
+      }
 
       const revenue = (confirmedReservations as any[])?.reduce((acc, r) => acc + (r.total_price || 0), 0) || 0;
 
@@ -55,6 +68,12 @@ export default function AdminDashboard() {
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Set default values on error
+      setStats({
+        totalEvents: 0,
+        totalRevenue: 0,
+        activeEvents: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -114,8 +133,10 @@ export default function AdminDashboard() {
 
           {/* Stats Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {statCards.map((stat, index) => {
-              const Icon = stat.icon;
+            {statCards && statCards.length > 0 && statCards.map((stat, index) => {
+              const Icon = stat?.icon;
+              if (!Icon) return null;
+              
               return (
                 <motion.div
                   key={index}
