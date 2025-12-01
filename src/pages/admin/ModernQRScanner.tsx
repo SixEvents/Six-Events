@@ -41,14 +41,8 @@ export default function ModernQRScanner() {
   const [eventName, setEventName] = useState<string>('');
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
-  const [scanAction, setScanAction] = useState<ScanAction>(() => {
-    const saved = localStorage.getItem('selectedScanAction');
-    return (saved as ScanAction) || 'entry';
-  });
-
-  useEffect(() => {
-    localStorage.setItem('selectedScanAction', scanAction);
-  }, [scanAction]);
+  const [scannedCode, setScannedCode] = useState<string | null>(null);
+  const [waitingForAction, setWaitingForAction] = useState(false);
 
   useEffect(() => {
     // Récupérer l'événement sélectionné
@@ -71,28 +65,48 @@ export default function ModernQRScanner() {
     if (data) setEventName(data.title || data.name);
   };
 
-  const playSound = (type: 'success' | 'error' | 'warning') => {
-    const srcMap: Record<typeof type, string> = {
-      success: 'data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA',
-      error: 'data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA',
-      warning: 'data:audio/wav;base64,UklGRmQAAABXQVZFZm10 IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA'
-    };
+  const playSound = (type: 'entry' | 'exit' | 'reentry' | 'error') => {
     try {
-      const audio = new Audio(srcMap[type]);
-      // Ensure playback after user gesture
-      audio.play().catch(async () => {
-        try {
-          // Try resuming audio context if blocked
-          const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
-          if (AC) {
-            const ctx = new AC();
-            if (ctx.state === 'suspended') await ctx.resume();
-          }
-          audio.play().catch(() => {});
-        } catch {}
-      });
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      gainNode.gain.value = 0.3;
+
+      if (type === 'entry') {
+        // Bip court et aigu (succès positif)
+        oscillator.frequency.value = 880;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.15);
+      } else if (type === 'exit') {
+        // Bip moyen et grave (confirmation neutre)
+        oscillator.frequency.value = 440;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } else if (type === 'reentry') {
+        // Double bip rapide (action spéciale)
+        oscillator.frequency.value = 660;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+        setTimeout(() => {
+          const osc2 = audioContext.createOscillator();
+          const gain2 = audioContext.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioContext.destination);
+          gain2.gain.value = 0.3;
+          osc2.frequency.value = 660;
+          osc2.start();
+          osc2.stop(audioContext.currentTime + 0.1);
+        }, 120);
+      } else {
+        // Bip long et grave (erreur)
+        oscillator.frequency.value = 220;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.4);
+      }
     } catch (e) {
-      // silently ignore audio errors
+      console.error('Audio error:', e);
     }
   };
 

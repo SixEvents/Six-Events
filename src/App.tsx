@@ -25,7 +25,6 @@ import MyReservations from './pages/MyReservations';
 import Settings from './pages/Settings';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminEvents from './pages/admin/Events';
-import AdminPartyBuilder from './pages/admin/PartyBuilder';
 import AdminPartyBuilderRequests from './pages/admin/PartyBuilderRequests';
 import ReservationsList from './pages/admin/ReservationsList';
 import AdminSettings from './pages/admin/Settings';
@@ -126,14 +125,6 @@ const App = () => (
               element={
                 <AdminRoute>
                   <ReservationsList />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/party-builder"
-              element={
-                <AdminRoute>
-                  <AdminPartyBuilder />
                 </AdminRoute>
               }
             />
