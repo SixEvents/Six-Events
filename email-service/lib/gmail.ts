@@ -50,16 +50,21 @@ export interface PartyBuilderDemandData {
   clientName: string;
   clientEmail: string;
   clientPhone: string;
-  eventDate: string;
+  clientMessage?: string;
+  customTheme?: string;
+  theme?: string;
+  eventDate?: string;
   eventLocation?: string;
-  numberOfChildren: number;
-  theme: string;
-  animations: string[];
-  decorations: string[];
-  cake: string;
-  extras: string[];
-  estimatedPrice: number;
+  numberOfChildren?: number;
+  animations?: string[];
+  decorations?: string[];
+  cake?: string;
+  extras?: string[];
+  options?: any[];
+  estimatedPrice?: number | null;
   specialRequests?: string;
+  requestDate?: string;
+  requestId?: string;
 }
 
 // Template de email de confirmação de reserva
@@ -214,11 +219,9 @@ export const generateReservationEmailHTML = (data: ReservationEmailData): string
 
 // Template de demande Party Builder (para l'entreprise)
 export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): string => {
-  // Proteção contra undefined
-  const safeAnimations = data.animations || [];
-  const safeDecorations = data.decorations || [];
-  const safeExtras = data.extras || [];
-  const safeEstimatedPrice = data.estimatedPrice || 0;
+  const theme = data.customTheme || data.theme || 'Non spécifié';
+  const message = data.clientMessage || data.specialRequests || '';
+  const price = data.estimatedPrice || 0;
   
   return `
     <!DOCTYPE html>
@@ -228,93 +231,72 @@ export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): st
       <title>Nouvelle demande Party Builder</title>
     </head>
     <body style="font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 30px; box-shadow: 0 2 4px rgba(0,0,0,0.1);">
         
         <h1 style="color: #ec4899; border-bottom: 3px solid #ec4899; padding-bottom: 10px;">
           🎉 Nouvelle Demande Party Builder
         </h1>
         
         <h2 style="color: #111827; margin-top: 30px;">📋 Informations Client</h2>
-        <table style="width: 100%; border-collapse: collapse;">
+        <table style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px;">
           <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Nom :</td>
-            <td style="padding: 8px; color: #111827;">${data.clientName}</td>
+            <td style="padding: 12px; font-weight: bold; color: #6b7280;">Nom :</td>
+            <td style="padding: 12px; color: #111827;">${data.clientName}</td>
           </tr>
           <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Email :</td>
-            <td style="padding: 8px; color: #111827;"><a href="mailto:${data.clientEmail}">${data.clientEmail}</a></td>
+            <td style="padding: 12px; font-weight: bold; color: #6b7280;">Email :</td>
+            <td style="padding: 12px; color: #111827;"><a href="mailto:${data.clientEmail}" style="color: #ec4899;">${data.clientEmail}</a></td>
           </tr>
           <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Téléphone :</td>
-            <td style="padding: 8px; color: #111827;">${data.clientPhone}</td>
+            <td style="padding: 12px; font-weight: bold; color: #6b7280;">Téléphone :</td>
+            <td style="padding: 12px; color: #111827;"><a href="tel:${data.clientPhone}" style="color: #ec4899;">${data.clientPhone}</a></td>
           </tr>
-        </table>
-        
-        <h2 style="color: #111827; margin-top: 30px;">🎂 Détails de l'Événement</h2>
-        <table style="width: 100%; border-collapse: collapse;">
+          ${data.requestDate ? `
           <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Date souhaitée :</td>
-            <td style="padding: 8px; color: #111827;">${data.eventDate}</td>
-          </tr>
-          ${data.eventLocation ? `
-          <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Lieu :</td>
-            <td style="padding: 8px; color: #111827;">${data.eventLocation}</td>
+            <td style="padding: 12px; font-weight: bold; color: #6b7280;">Date demande :</td>
+            <td style="padding: 12px; color: #111827;">${new Date(data.requestDate).toLocaleString('fr-FR')}</td>
           </tr>
           ` : ''}
-          <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Nombre d'enfants :</td>
-            <td style="padding: 8px; color: #111827; font-weight: bold;">${data.numberOfChildren}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; font-weight: bold; color: #6b7280;">Thème :</td>
-            <td style="padding: 8px; color: #ec4899; font-weight: bold;">${data.theme}</td>
-          </tr>
         </table>
         
-        <h2 style="color: #111827; margin-top: 30px;">🎨 Configuration Choisie</h2>
+        <h2 style="color: #111827; margin-top: 30px;">🎨 Thème Personnalisé</h2>
+        <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+          <p style="color: #111827; margin: 0; white-space: pre-wrap; line-height: 1.6;">${theme}</p>
+        </div>
         
-        <h3 style="color: #6b7280; font-size: 16px;">Animations :</h3>
-        <ul style="color: #111827;">
-          ${safeAnimations.map(anim => `<li>${anim}</li>`).join('')}
-        </ul>
+        ${message ? `
+        <h2 style="color: #111827; margin-top: 30px;">💬 Message du Client</h2>
+        <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+          <p style="color: #111827; margin: 0; white-space: pre-wrap; line-height: 1.6;">${message}</p>
+        </div>
+        ` : ''}
         
-        <h3 style="color: #6b7280; font-size: 16px;">Décorations :</h3>
-        <ul style="color: #111827;">
-          ${safeDecorations.map(deco => `<li>${deco}</li>`).join('')}
-        </ul>
-        
-        <h3 style="color: #6b7280; font-size: 16px;">Gâteau :</h3>
-        <p style="color: #111827; font-weight: bold;">${data.cake}</p>
-        
-        ${safeExtras.length > 0 ? `
-        <h3 style="color: #6b7280; font-size: 16px;">Extras :</h3>
-        <ul style="color: #111827;">
-          ${safeExtras.map(extra => `<li>${extra}</li>`).join('')}
+        ${data.options && data.options.length > 0 ? `
+        <h2 style="color: #111827; margin-top: 30px;">📦 Options Sélectionnées</h2>
+        <ul style="color: #111827; line-height: 1.8;">
+          ${data.options.map(opt => `<li><strong>${opt.name}</strong> x${opt.quantity} - ${opt.total}€</li>`).join('')}
         </ul>
         ` : ''}
         
-        ${data.specialRequests ? `
-        <h3 style="color: #6b7280; font-size: 16px;">Demandes spéciales :</h3>
-        <p style="color: #111827; background-color: #fef3c7; padding: 12px; border-radius: 4px; border-left: 4px solid #f59e0b;">
-          ${data.specialRequests}
+        ${price > 0 ? `
+        <div style="background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
+          <h2 style="margin: 0 0 10px 0; font-size: 24px;">Prix Estimé</h2>
+          <p style="margin: 0; font-size: 36px; font-weight: bold;">${price.toFixed(2)}€</p>
+        </div>
+        ` : ''}
+        
+        <div style="background-color: #dcfce7; border-left: 4px solid #16a34a; padding: 16px; margin-top: 30px; border-radius: 4px;">
+          <p style="margin: 0; color: #166534; font-size: 14px;">
+            <strong>⏰ Action requise :</strong><br>
+            Contactez le client sous 24-48h pour discuter des détails et fournir un devis personnalisé.
+          </p>
+        </div>
+        
+        ${data.requestId ? `
+        <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;">
+          ID de la demande: ${data.requestId}
         </p>
         ` : ''}
-        
-        <div style="background: linear-gradient(135deg, #ec4899 0%, #000000 100%); color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
-          <h2 style="margin: 0 0 10px 0; font-size: 24px;">Prix Estimé</h2>
-          <p style="margin: 0; font-size: 36px; font-weight: bold;">${safeEstimatedPrice.toFixed(2)}€</p>
-          <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">
-            (Prix indicatif - À confirmer avec le client)
-          </p>
-        </div>
-        
-        <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin-top: 30px; border-radius: 4px;">
-          <p style="margin: 0; color: #1e40af; font-size: 14px;">
-            <strong>⏰ Action requise :</strong><br>
-            Contactez le client sous 24-48h avec un devis personnalisé et détaillé.
-          </p>
-        </div>
         
       </div>
     </body>
@@ -324,8 +306,8 @@ export const generatePartyBuilderDemandHTML = (data: PartyBuilderDemandData): st
 
 // Template de confirmation pour le client (Party Builder)
 export const generatePartyBuilderClientConfirmationHTML = (data: PartyBuilderDemandData): string => {
-  // Proteção contra undefined
-  const safeEstimatedPrice = data.estimatedPrice || 0;
+  const theme = data.customTheme || data.theme || 'Personnalisé';
+  const price = data.estimatedPrice || 0;
   
   return `
     <!DOCTYPE html>
@@ -352,12 +334,11 @@ export const generatePartyBuilderClientConfirmationHTML = (data: PartyBuilderDem
           
           <div style="background: linear-gradient(135deg, #fce7f3 0%, #f3f4f6 100%); border-radius: 8px; border-left: 4px solid #ec4899; padding: 20px; margin: 30px 0;">
             <h3 style="margin: 0 0 12px 0; color: #ec4899; font-size: 18px;">📋 Résumé de votre demande</h3>
-            <ul style="margin: 0; padding-left: 20px; color: #111827; line-height: 1.8;">
-              <li><strong>Date :</strong> ${data.eventDate}</li>
-              <li><strong>Thème :</strong> ${data.theme}</li>
-              <li><strong>Nombre d'enfants :</strong> ${data.numberOfChildren}</li>
-              <li><strong>Prix estimé :</strong> ${safeEstimatedPrice.toFixed(2)}€</li>
-            </ul>
+            <div style="color: #111827; line-height: 1.8;">
+              <p style="margin: 8px 0;"><strong>Thème :</strong></p>
+              <p style="margin: 8px 0; background-color: white; padding: 12px; border-radius: 4px; white-space: pre-wrap;">${theme}</p>
+              ${price > 0 ? `<p style="margin: 8px 0;"><strong>Prix estimé :</strong> ${price.toFixed(2)}€</p>` : ''}
+            </div>
           </div>
           
           <div style="background-color: #dbeafe; border-radius: 8px; padding: 20px; margin: 30px 0; border: 2px solid #3b82f6;">
