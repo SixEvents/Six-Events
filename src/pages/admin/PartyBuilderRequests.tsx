@@ -232,8 +232,8 @@ export default function AdminPartyBuilderRequests() {
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <Euro className="w-4 h-4 text-primary" />
-                          Options: {request.estimated_price.toFixed(2)}€
-                          {request.final_price && ` • Final: ${request.final_price.toFixed(2)}€`}
+                          Options: {(request.estimated_price || 0).toFixed(2)}€
+                          {request.final_price && ` • Final: ${(request.final_price || 0).toFixed(2)}€`}
                         </div>
                       </div>
 
@@ -323,7 +323,7 @@ export default function AdminPartyBuilderRequests() {
                     placeholder="Prix total après étude"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Prix estimé options : {selectedRequest.estimated_price.toFixed(2)}€
+                    Prix estimé options : {(selectedRequest.estimated_price || 0).toFixed(2)}€
                   </p>
                 </div>
 
