@@ -62,6 +62,8 @@ async function processEmailQueue() {
           success = await sendReservationEmail(email);
         } else if (email.type === 'party_builder_quote' || email.type === 'party_builder_request') {
           success = await sendPartyBuilderQuoteEmail(email);
+        } else if (email.type === 'party_builder_status_update') {
+          success = await sendPartyBuilderStatusUpdateEmail(email);
         }
 
         // Atualizar status
@@ -197,6 +199,107 @@ async function sendPartyBuilderQuoteEmail(email: any): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Error sending party builder email:', error);
+    return false;
+  }
+}
+
+// Enviar email de atualização de status Party Builder
+async function sendPartyBuilderStatusUpdateEmail(email: any): Promise<boolean> {
+  try {
+    const data = JSON.parse(email.data);
+    const transporter = createGmailTransporter();
+
+    const statusMessages: Record<string, { title: string; message: string; emoji: string }> = {
+      processing: {
+        emoji: '⏳',
+        title: 'Votre demande est en cours d\'étude',
+        message: 'Notre équipe travaille actuellement sur votre demande. Nous vous recontacterons très bientôt avec un devis personnalisé.'
+      },
+      quoted: {
+        emoji: '💰',
+        title: 'Devis disponible',
+        message: `Nous avons le plaisir de vous proposer un devis pour votre événement.${data.finalPrice ? ` Montant: ${data.finalPrice}€` : ''}`
+      },
+      accepted: {
+        emoji: '🎉',
+        title: 'Votre demande a été acceptée !',
+        message: 'Félicitations ! Votre événement est confirmé. Notre équipe va vous contacter pour finaliser les détails.'
+      },
+      rejected: {
+        emoji: '😔',
+        title: 'Votre demande',
+        message: 'Nous sommes désolés mais nous ne pouvons pas accepter votre demande pour le moment. N\'hésitez pas à nous contacter pour plus d\'informations.'
+      },
+      completed: {
+        emoji: '✅',
+        title: 'Événement terminé',
+        message: 'Votre événement est terminé ! Nous espérons que tout s\'est bien passé. Merci de nous avoir fait confiance !'
+      }
+    };
+
+    const statusInfo = statusMessages[data.newStatus] || statusMessages.processing;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+          .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #EC4899; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+          .button { display: inline-block; background: #EC4899; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 32px;">${statusInfo.emoji} ${statusInfo.title}</h1>
+          </div>
+          <div class="content">
+            <p>Bonjour <strong>${data.clientName}</strong>,</p>
+            
+            <p>${statusInfo.message}</p>
+
+            <div class="info-box">
+              <h3 style="margin-top: 0; color: #EC4899;">📋 Détails de votre demande</h3>
+              <p><strong>Thème:</strong> ${data.customTheme.substring(0, 200)}${data.customTheme.length > 200 ? '...' : ''}</p>
+              ${data.finalPrice ? `<p><strong>Prix:</strong> ${data.finalPrice}€</p>` : ''}
+              ${data.adminNotes ? `<p><strong>Notes:</strong> ${data.adminNotes}</p>` : ''}
+            </div>
+
+            <p>Pour toute question, n'hésitez pas à nous contacter:</p>
+            <ul>
+              <li>📧 Email: 6events.mjt@gmail.com</li>
+              <li>📱 Téléphone: [Votre numéro]</li>
+            </ul>
+
+            <div class="footer">
+              <p>Merci de votre confiance ❤️<br>
+              <strong>L'équipe Six Events</strong></p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await transporter.sendMail({
+      from: {
+        name: process.env.EMAIL_FROM_NAME || 'Six Events',
+        address: process.env.EMAIL_FROM || '6events.mjt@gmail.com',
+      },
+      to: data.clientEmail,
+      subject: `${statusInfo.emoji} ${statusInfo.title} - Six Events`,
+      html: htmlContent,
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error sending party builder status update email:', error);
     return false;
   }
 }

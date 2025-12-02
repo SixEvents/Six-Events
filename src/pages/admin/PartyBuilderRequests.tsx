@@ -102,6 +102,34 @@ export default function AdminPartyBuilderRequests() {
 
       if (error) throw error;
 
+      // Envoyer email au client si le status a changé
+      if (newStatus !== selectedRequest.status) {
+        const emailData = {
+          clientName: selectedRequest.client_name,
+          clientEmail: selectedRequest.client_email,
+          requestId: selectedRequest.id,
+          customTheme: selectedRequest.custom_theme,
+          oldStatus: selectedRequest.status,
+          newStatus: newStatus,
+          finalPrice: finalPrice ? parseFloat(finalPrice) : null,
+          adminNotes: adminNotes,
+          updatedAt: new Date().toISOString()
+        };
+
+        const { error: emailError } = await supabase
+          .from('email_queue')
+          .insert({
+            type: 'party_builder_status_update',
+            recipient_email: selectedRequest.client_email,
+            data: JSON.stringify(emailData),
+            status: 'pending',
+          });
+
+        if (emailError) {
+          console.error('Email queue error:', emailError);
+        }
+      }
+
       toast.success('Demande mise à jour!');
       setIsDialogOpen(false);
       fetchRequests();
