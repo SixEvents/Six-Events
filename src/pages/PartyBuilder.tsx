@@ -66,6 +66,7 @@ const PartyBuilder = () => {
         requestId: savedRequest.id
       };
       
+      // Email para equipe (staff)
       const { error: emailError } = await supabase
         .from('email_queue')
         .insert({
@@ -76,6 +77,18 @@ const PartyBuilder = () => {
         });
       
       if (emailError) console.error('Email queue error:', emailError);
+
+      // Email de confirmação para o cliente
+      const { error: clientEmailError } = await supabase
+        .from('email_queue')
+        .insert({
+          type: 'party_builder_client_confirmation',
+          recipient_email: clientEmail,
+          data: JSON.stringify(emailData),
+          status: 'pending',
+        });
+      
+      if (clientEmailError) console.error('Client email queue error:', clientEmailError);
       
       toast.success("Votre demande a été envoyée avec succès! Notre équipe vous contactera bientôt.");
       

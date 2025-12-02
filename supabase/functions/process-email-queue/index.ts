@@ -127,6 +127,14 @@ serve(async (req) => {
         if (email.type === 'reservation_confirmation') {
           subject = `Confirmação de Reserva - ${emailData.eventName || 'Evento'}`
           html = generateReservationEmailHTML(emailData)
+        } else if (email.type === 'party_builder_request') {
+          // Nova solicitação do cliente
+          subject = `🎉 Nova Solicitação Party Builder - ${emailData.clientName}`
+          html = generatePartyBuilderRequestHTML(emailData)
+        } else if (email.type === 'party_builder_client_confirmation') {
+          // Confirmação enviada ao cliente
+          subject = `✅ Demande Party Builder reçue - Six Events`
+          html = generatePartyBuilderClientConfirmationEmailHTML(emailData)
         } else if (email.type === 'party_builder_demand') {
           subject = 'Nova Solicitação de Party Builder'
           html = generatePartyBuilderDemandHTML(emailData)
@@ -318,6 +326,181 @@ function generateReservationEmailHTML(data: any): string {
             </p>
             <p style="color: #999; font-size: 12px; margin: 5px 0;">
               Six Events - Seus eventos inesquecíveis
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template para Party Builder Request (email para equipe)
+function generatePartyBuilderRequestHTML(data: any): string {
+  const { clientName, clientEmail, clientPhone, clientMessage, customTheme, options, estimatedPrice, requestDate } = data
+
+  const formattedDate = requestDate ? new Date(requestDate).toLocaleString('fr-BE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : 'N/A'
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎨 Nova Solicitação Party Builder</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Uma nova solicitação de Party Builder foi recebida em <strong>${formattedDate}</strong>
+          </p>
+
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">👤 Informações do Cliente</h3>
+            <p style="margin: 8px 0; color: #666;"><strong>Nome:</strong> ${clientName}</p>
+            <p style="margin: 8px 0; color: #666;"><strong>Email:</strong> <a href="mailto:${clientEmail}" style="color: #667eea;">${clientEmail}</a></p>
+            <p style="margin: 8px 0; color: #666;"><strong>Téléphone:</strong> <a href="tel:${clientPhone}" style="color: #667eea;">${clientPhone}</a></p>
+          </div>
+
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #856404;">🎨 Thème Personnalisé</h3>
+            <p style="margin: 0; color: #856404; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${customTheme}</p>
+          </div>
+
+          ${clientMessage ? `
+          <div style="margin: 20px 0;">
+            <h3 style="color: #333;">💬 Message Complémentaire</h3>
+            <p style="background: #f9f9f9; padding: 15px; border-radius: 4px; font-style: italic; color: #666; line-height: 1.6; white-space: pre-wrap;">
+              ${clientMessage}
+            </p>
+          </div>
+          ` : ''}
+
+          ${estimatedPrice ? `
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 10px 0; color: #155724;">💰 Prix Estimé</h3>
+            <p style="font-size: 24px; font-weight: bold; color: #155724; margin: 0;">
+              €${estimatedPrice.toFixed(2)}
+            </p>
+          </div>
+          ` : `
+          <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #004085; font-size: 15px;">
+              <strong>💡 Prix sur devis</strong> - Le client a demandé un thème totalement personnalisé
+            </p>
+          </div>
+          `}
+
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+              <strong>📋 Prochaines étapes :</strong><br>
+              1. Analyser la demande du client<br>
+              2. Préparer un devis détaillé<br>
+              3. Contacter le client pour confirmer les détails<br>
+              4. Finaliser la réservation
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Six Events - Admin Dashboard
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              <a href="https://sixevents.be/admin" style="color: #667eea;">Gérer cette demande</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template de confirmação para o cliente (Party Builder)
+function generatePartyBuilderClientConfirmationEmailHTML(data: any): string {
+  const { clientName, customTheme, clientMessage, requestDate } = data
+
+  const formattedDate = requestDate ? new Date(requestDate).toLocaleString('fr-BE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : 'N/A'
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Six Events</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333; margin-top: 0;">Demande reçue avec succès !</h2>
+          
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Bonjour <strong>${clientName}</strong>,
+          </p>
+
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Nous avons bien reçu votre demande pour le <strong>Party Builder</strong> le <strong>${formattedDate}</strong>. 
+            Notre équipe est ravie de créer avec vous un événement unique et personnalisé !
+          </p>
+
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">🎨 Votre thème personnalisé</h3>
+            <p style="margin: 0; color: #666; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${customTheme}</p>
+          </div>
+
+          ${clientMessage ? `
+          <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">💬 Vos informations complémentaires</h3>
+            <p style="margin: 0; color: #666; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${clientMessage}</p>
+          </div>
+          ` : ''}
+
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 10px 0; color: #155724;">✅ Prochaines étapes</h3>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #155724;">
+              <li style="margin: 8px 0;">Notre équipe va analyser votre demande en détail</li>
+              <li style="margin: 8px 0;">Nous vous contacterons dans les <strong>24-48 heures</strong></li>
+              <li style="margin: 8px 0;">Nous vous enverrons un devis personnalisé</li>
+              <li style="margin: 8px 0;">Nous finaliserons ensemble tous les détails de votre événement</li>
+            </ul>
+          </div>
+
+          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #856404; font-size: 14px;">
+              <strong>💡 Conseil :</strong> Gardez votre téléphone à portée de main ! 
+              Nous vous appellerons bientôt pour discuter de votre projet.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Une question ? Contactez-nous directement
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Six Events - Créer des moments inoubliables
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 15px 0 5px 0;">
+              <a href="https://sixevents.be" style="color: #667eea; text-decoration: none;">sixevents.be</a>
             </p>
           </div>
         </div>
