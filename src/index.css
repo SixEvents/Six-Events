@@ -87,6 +87,27 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+/* Scrollbars invisíveis */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Scrollbars invisíveis globais para todo o site */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "kern" 1;

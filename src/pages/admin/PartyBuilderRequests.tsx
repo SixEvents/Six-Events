@@ -295,8 +295,9 @@ export default function AdminPartyBuilderRequests() {
 
                     <div className="flex gap-2">
                       <Button
-                        variant="default"
+                          variant="outline"
                         size="sm"
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 border-0"
                         onClick={() => {
                           setSelectedRequest(request);
                           setIsEmailEditorOpen(true);
@@ -305,6 +306,14 @@ export default function AdminPartyBuilderRequests() {
                         <Send className="w-4 h-4 mr-2" />
                         Envoyer Email
                       </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openRequestDialog(request)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Gérer
+                        </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -402,7 +411,7 @@ export default function AdminPartyBuilderRequests() {
 
         {/* Email Editor Dialog */}
         <Dialog open={isEmailEditorOpen} onOpenChange={setIsEmailEditorOpen}>
-          <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-[95vw] h-[95vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>
                 Éditeur d'Email - {selectedRequest?.client_name}

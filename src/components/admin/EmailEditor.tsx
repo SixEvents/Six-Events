@@ -48,10 +48,19 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   const [backgroundColor, setBackgroundColor] = useState("#F8FAFC");
   const [accentColor, setAccentColor] = useState("#2563EB");
   const [textColor, setTextColor] = useState("#1E293B");
-  const [fontFamily, setFontFamily] = useState("Sans Serif");
+  const [fontFamily, setFontFamily] = useState("Arial");
   
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
+
+  // Carregar templates salvos
+  useEffect(() => {
+    const templates = JSON.parse(localStorage.getItem("emailTemplates") || "[]");
+    setSavedTemplates(templates);
+  }, []);
 
   useEffect(() => {
     // Mettre à jour le sujet en fonction du statut
@@ -76,6 +85,11 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   };
 
   const handleSaveTemplate = async () => {
+      if (!templateName.trim()) {
+        toast.error("Veuillez donner un nom au template");
+        return;
+      }
+
     setSaving(true);
     try {
       const template = {
@@ -93,12 +107,14 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
       const templates = JSON.parse(localStorage.getItem("emailTemplates") || "[]");
       templates.push({
         id: Date.now(),
-        name: `Template ${status} - ${new Date().toLocaleDateString()}`,
+          name: templateName,
         ...template,
       });
       localStorage.setItem("emailTemplates", JSON.stringify(templates));
+        setSavedTemplates(templates);
 
-      toast.success("Template enregistré avec succès !");
+        toast.success(`Template "${templateName}" enregistré avec succès !`);
+        setTemplateName("");
     } catch (error) {
       console.error("Erreur lors de l'enregistrement du template:", error);
       toast.error("Erreur lors de l'enregistrement du template");
@@ -106,6 +122,26 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
       setSaving(false);
     }
   };
+
+    const handleLoadTemplate = (template: any) => {
+      setSubject(template.subject);
+      setMessage(template.message);
+      setCompanyName(template.companyName);
+      setBackgroundColor(template.backgroundColor);
+      setAccentColor(template.accentColor);
+      setTextColor(template.textColor);
+      setFontFamily(template.fontFamily);
+      setStatus(template.status);
+      setShowTemplates(false);
+      toast.success(`Template "${template.name}" chargé !`);
+    };
+
+    const handleDeleteTemplate = (templateId: number) => {
+      const templates = savedTemplates.filter(t => t.id !== templateId);
+      localStorage.setItem("emailTemplates", JSON.stringify(templates));
+      setSavedTemplates(templates);
+      toast.success("Template supprimé !");
+    };
 
   const handleSendEmail = async () => {
     if (!message.trim()) {
@@ -174,7 +210,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
         style={{ 
           backgroundColor, 
           color: textColor,
-          fontFamily: fontFamily === "Sans Serif" ? "Arial, sans-serif" : "Georgia, serif",
+            fontFamily: `${fontFamily}, sans-serif`,
           padding: "20px",
           borderRadius: "8px",
           minHeight: "400px",
@@ -294,8 +330,39 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full overflow-hidden">
       {/* Editor (Esquerda) */}
-      <div className="space-y-4 overflow-y-auto pr-4 pb-4 max-h-[calc(90vh-120px)]">
-        <h3 className="text-lg font-semibold sticky top-0 bg-background pb-2 z-10">Éditeur d'Email</h3>
+        <div className="flex flex-col h-full">
+          <h3 className="text-lg font-semibold pb-3 border-b">Éditeur d'Email</h3>
+          <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4 scrollbar-hide">
+            {/* Botão Templates Sauvegardés */}
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="w-full"
+              >
+                📋 Templates Sauvegardés ({savedTemplates.length})
+              </Button>
+              {showTemplates && savedTemplates.length > 0 && (
+                <div className="mt-2 p-3 border rounded-lg space-y-2 max-h-40 overflow-y-auto scrollbar-hide">
+                  {savedTemplates.map((template) => (
+                    <div key={template.id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">
+                      <button
+                        onClick={() => handleLoadTemplate(template)}
+                        className="flex-1 text-left text-sm font-medium"
+                      >
+                        {template.name}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        className="text-red-500 hover:text-red-700 text-xs px-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
         {/* Statut */}
         <div>
@@ -384,16 +451,34 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Sans Serif">Sans Serif</SelectItem>
-                  <SelectItem value="Serif">Serif</SelectItem>
+                    <SelectItem value="Arial">Arial</SelectItem>
+                    <SelectItem value="Helvetica">Helvetica</SelectItem>
+                    <SelectItem value="Georgia">Georgia</SelectItem>
+                    <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                    <SelectItem value="Verdana">Verdana</SelectItem>
+                    <SelectItem value="Trebuchet MS">Trebuchet MS</SelectItem>
+                    <SelectItem value="Courier New">Courier New</SelectItem>
+                    <SelectItem value="Palatino">Palatino</SelectItem>
+                    <SelectItem value="Garamond">Garamond</SelectItem>
+                    <SelectItem value="Bookman">Bookman</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
+          </div>
 
         {/* Ações */}
-        <div className="flex gap-2 pt-4 sticky bottom-0 bg-background pb-2">
+          <div className="flex flex-col gap-2 pt-3 border-t bg-background">
+            <div>
+              <Label>Nom du Template</Label>
+              <Input
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Ex: Template Acceptation Moderne"
+              />
+            </div>
+            <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={handleSaveTemplate}
@@ -421,13 +506,14 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             Envoyer Email
           </Button>
         </div>
+          </div>
       </div>
 
       {/* Preview (Direita) */}
       <div className="border-l pl-6 overflow-hidden">
         <div className="h-full flex flex-col">
-          <h3 className="text-lg font-semibold mb-4 flex-shrink-0">Preview en Temps Réel</h3>
-          <div className="border rounded-lg overflow-auto shadow-lg flex-1 max-h-[calc(90vh-120px)]">
+            <h3 className="text-lg font-semibold mb-4 flex-shrink-0 pb-3 border-b">Preview en Temps Réel</h3>
+            <div className="border rounded-lg overflow-auto shadow-lg flex-1 scrollbar-hide">
             {emailPreview()}
           </div>
         </div>
