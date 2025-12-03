@@ -198,3 +198,12 @@ export interface StatsData {
   ticketsPending: number;
   paymentsPending: number;
 }
+
+export interface GalleryPhoto {
+  id: string;
+  image_url: string;
+  description?: string | null;
+  display_order: number;
+  created_at: string;
+  updated_at?: string;
+}

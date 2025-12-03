@@ -32,7 +32,9 @@ import AdminSettings from './pages/admin/Settings';
 import ModernQRScanner from './pages/admin/ModernQRScanner';
 import SelectEventToScan from './pages/admin/SelectEventToScan';
 import RecoverReservation from './pages/admin/RecoverReservation';
+import GalleryManagement from './pages/admin/GalleryManagement';
 import UserManagement from './pages/UserManagement';
+import Gallery from './pages/Gallery';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -51,6 +53,7 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/gallery" element={<Gallery />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -142,6 +145,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminPartyBuilderOptions />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/gallery"
+              element={
+                <AdminRoute>
+                  <GalleryManagement />
                 </AdminRoute>
               }
             />

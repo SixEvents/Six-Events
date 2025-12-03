@@ -9,7 +9,8 @@ import {
   TrendingUp, 
   PartyPopper,
   QrCode,
-  Mail
+  Mail,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -211,6 +212,15 @@ export default function AdminDashboard() {
                   <div className="text-left">
                     <div className="font-semibold">🎛️ Options Party Builder</div>
                     <div className="text-xs text-gray-500">Ajouter/éditer/activer des options</div>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/admin/gallery">
+                <Button variant="outline" className="w-full justify-start h-14 border-2 border-blue-500/20 hover:border-blue-500 hover:bg-blue-50">
+                  <ImageIcon className="w-5 h-5 mr-3 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold">📸 Gérer la Galerie</div>
+                    <div className="text-xs text-gray-500">Ajouter/modifier des photos d'événements</div>
                   </div>
                 </Button>
               </Link>

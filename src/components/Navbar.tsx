@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LayoutDashboard,
-  QrCode
+  QrCode,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -35,6 +36,7 @@ const Navbar = () => {
     { path: '/', label: 'Accueil', icon: Sparkles },
     { path: '/events', label: 'Événements', icon: Calendar },
     { path: '/party-builder', label: 'Party Builder', icon: PartyPopper },
+    { path: '/gallery', label: 'Galerie', icon: ImageIcon },
   ];
 
   return (
