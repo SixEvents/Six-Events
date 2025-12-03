@@ -210,7 +210,7 @@ export default function AdminDashboard() {
                   <PartyPopper className="w-5 h-5 mr-3 text-purple-600" />
                   <div className="text-left">
                     <div className="font-semibold">🎛️ Options Party Builder</div>
-                    <div className="text-xs text-gray-500">Adicionar/editar/ativar opções</div>
+                    <div className="text-xs text-gray-500">Ajouter/éditer/activer des options</div>
                   </div>
                 </Button>
               </Link>
@@ -221,8 +221,8 @@ export default function AdminDashboard() {
                 >
                   <Users className="w-5 h-5 mr-3 text-amber-600" />
                   <div className="text-left">
-                    <div className="font-semibold">🔐 Gestão de Permissões</div>
-                    <div className="text-xs text-gray-500">Gerenciar acesso de usuários</div>
+                    <div className="font-semibold">🔐 Gérer les Permissions</div>
+                    <div className="text-xs text-gray-500">Gérer l'accès des utilisateurs</div>
                   </div>
                 </Button>
               </Link>

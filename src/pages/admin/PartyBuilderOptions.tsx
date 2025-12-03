@@ -140,8 +140,8 @@ const AdminPartyBuilderOptions = () => {
 
   const renderRow = (opt: OptionRow) => {
     return (
-      <Card key={opt.id || opt.name} className="border">
-        <CardContent className="p-4 space-y-3">
+      <Card key={opt.id || opt.name} className="border rounded-xl shadow-sm">
+        <CardContent className="p-5 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
             <div>
               <Label>Nom</Label>
@@ -169,15 +169,15 @@ const AdminPartyBuilderOptions = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleToggleActive(opt)}>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" className="rounded-full" onClick={() => handleToggleActive(opt)}>
                 {opt.is_active ? "Désactiver" : "Activer"}
               </Button>
-              <Button onClick={() => handleSaveRow(opt)} disabled={saving}>
+              <Button onClick={() => handleSaveRow(opt)} disabled={saving} className="bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 <span className="ml-2">Sauvegarder</span>
               </Button>
-              <Button variant="destructive" onClick={() => handleDeleteRow(opt.id)}>
+              <Button variant="destructive" className="rounded-full" onClick={() => handleDeleteRow(opt.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -197,8 +197,8 @@ const AdminPartyBuilderOptions = () => {
       <p className="text-sm text-muted-foreground mb-6">Ajoutez, éditez, activez/désactivez les options visibles dans le Party Builder.</p>
 
       {/* Create new option */}
-      <Card className="mb-8">
-        <CardContent className="p-4 space-y-3">
+      <Card className="mb-8 rounded-xl shadow-sm">
+        <CardContent className="p-5 space-y-4">
           <h2 className="font-semibold">Ajouter une option</h2>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
             <div>
@@ -228,7 +228,7 @@ const AdminPartyBuilderOptions = () => {
               </Select>
             </div>
             <div className="flex gap-2">
-              <Button onClick={async () => {
+              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700" onClick={async () => {
                 if (!newOption.name.trim()) { toast.error("Le nom est requis"); return; }
                 setSaving(true);
                 try {

@@ -98,7 +98,17 @@ All colors MUST be HSL.
   }
 }
 
-/* Removido: esconder barras de rolagem globalmente (atrapalhava a usabilidade) */
+/* Scrollbars invisíveis globais (mantém funcionalidade de rolagem) */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+*::-webkit-scrollbar {
+  width: 0px; /* Chrome/Safari */
+  height: 0px;
+  background: transparent;
+}
 
   body {
     @apply bg-background text-foreground;
