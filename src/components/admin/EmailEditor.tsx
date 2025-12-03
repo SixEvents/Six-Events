@@ -31,9 +31,9 @@ interface EmailEditorProps {
 
 const statusOptions = [
   { value: "pending", label: "En Attente", color: "#F59E0B" },
-  { value: "analyzing", label: "En Analyse", color: "#3B82F6" },
+  { value: "processing", label: "En Analyse", color: "#3B82F6" },
+  { value: "quoted", label: "Devis Envoyé", color: "#06B6D4" },
   { value: "accepted", label: "Accepté", color: "#10B981" },
-  { value: "in_progress", label: "En Cours", color: "#8B5CF6" },
   { value: "completed", label: "Terminé", color: "#6B7280" },
   { value: "rejected", label: "Rejeté", color: "#EF4444" },
 ];
@@ -65,9 +65,9 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   const updateDefaultMessage = (newStatus: string) => {
     const messages: Record<string, string> = {
       pending: `Bonjour ${request.client_name},\n\nNous avons reçu votre demande de Party Builder et nous l'examinons actuellement.\n\nNous vous recontacterons bientôt avec un devis détaillé.\n\nMerci de votre confiance !`,
-      analyzing: `Bonjour ${request.client_name},\n\nNous analysons votre demande en détail.\n\nThème: ${request.custom_theme}\n\nNotre équipe prépare une proposition personnalisée pour vous.\n\nAttendez notre contact prochainement !`,
+      processing: `Bonjour ${request.client_name},\n\nNous analysons votre demande en détail.\n\nThème: ${request.custom_theme}\n\nNotre équipe prépare une proposition personnalisée pour vous.\n\nAttendez notre contact prochainement !`,
+      quoted: `Bonjour ${request.client_name},\n\nNous avons le plaisir de vous envoyer notre devis pour votre Party Builder.\n\n💰 Prix estimé: ${request.estimated_price || 'À définir'}€\n\nThème: ${request.custom_theme}\n\nVeuillez consulter les détails et nous faire savoir si vous souhaitez confirmer.\n\nNous restons à votre disposition pour toute question !`,
       accepted: `Bonjour ${request.client_name},\n\nNous avons le plaisir de vous informer que votre demande a été acceptée !\n\n✅ Votre Party Builder est confirmé\n\nNous vous recontacterons pour finaliser les détails.\n\nNous avons hâte de créer cette fête incroyable !`,
-      in_progress: `Bonjour ${request.client_name},\n\nBonne nouvelle ! Votre Party Builder est en cours.\n\n🎉 Notre équipe travaille déjà sur la préparation\n\nBientôt tout sera prêt pour une fête inoubliable !`,
       completed: `Bonjour ${request.client_name},\n\nVotre Party Builder a été terminé avec succès !\n\n🎊 Nous espérons que vous passerez une fête merveilleuse\n\nMerci de votre confiance. Nous serions ravis de recevoir des photos de l'événement !`,
       rejected: `Bonjour ${request.client_name},\n\nMalheureusement, nous ne pouvons pas accepter votre demande pour le moment.\n\nVeuillez nous contacter pour discuter des alternatives ou pour une nouvelle demande.\n\nMerci de votre compréhension.`,
     };
