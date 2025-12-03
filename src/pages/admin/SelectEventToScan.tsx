@@ -215,46 +215,18 @@ export default function SelectEventToScan() {
 
                       {/* Statistiques */}
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4 mb-4">
-                        <div className="grid grid-cols-4 gap-4 text-center">
+                        <div className="grid grid-cols-2 gap-6 text-center">
                           <div>
-                            <div className="text-2xl font-bold text-primary">
+                            <div className="text-3xl font-bold text-primary">
                               {event.total_tickets}
                             </div>
-                            <div className="text-xs text-muted-foreground">Total</div>
+                            <div className="text-sm text-muted-foreground mt-1">Total billets</div>
                           </div>
                           <div>
-                            <div className="text-2xl font-bold text-green-600">
-                              {event.scanned_tickets}
-                            </div>
-                            <div className="text-xs text-muted-foreground">Scannés</div>
-                          </div>
-                          <div>
-                            <div className="text-2xl font-bold text-orange-600">
-                              {event.pending_tickets}
-                            </div>
-                            <div className="text-xs text-muted-foreground">En attente</div>
-                          </div>
-                          <div>
-                            <div className="text-2xl font-bold text-blue-600">
+                            <div className="text-3xl font-bold text-green-600">
                               {event.inside_now || 0}
                             </div>
-                            <div className="text-xs text-muted-foreground">À l'intérieur</div>
-                          </div>
-                        </div>
-
-                        {/* Barre de progression */}
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="font-semibold">Progression</span>
-                            <span className="font-bold">{progress}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${progress}%` }}
-                              transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-                              className={`h-full ${statusColor} transition-all duration-300`}
-                            />
+                            <div className="text-sm text-muted-foreground mt-1">À l'intérieur</div>
                           </div>
                         </div>
                       </div>
