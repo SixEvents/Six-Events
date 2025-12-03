@@ -30,12 +30,12 @@ interface EmailEditorProps {
 }
 
 const statusOptions = [
-  { value: "pending", label: "Em Espera", color: "#F59E0B" },
-  { value: "analyzing", label: "Em Análise", color: "#3B82F6" },
-  { value: "accepted", label: "Aceito", color: "#10B981" },
-  { value: "in_progress", label: "Em Curso", color: "#8B5CF6" },
-  { value: "completed", label: "Concluído", color: "#6B7280" },
-  { value: "rejected", label: "Rejeitado", color: "#EF4444" },
+  { value: "pending", label: "En Attente", color: "#F59E0B" },
+  { value: "analyzing", label: "En Analyse", color: "#3B82F6" },
+  { value: "accepted", label: "Accepté", color: "#10B981" },
+  { value: "in_progress", label: "En Cours", color: "#8B5CF6" },
+  { value: "completed", label: "Terminé", color: "#6B7280" },
+  { value: "rejected", label: "Rejeté", color: "#EF4444" },
 ];
 
 export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
@@ -44,7 +44,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   const [message, setMessage] = useState("");
   const [companyName, setCompanyName] = useState("Six Events");
   
-  // Estilo
+  // Style
   const [backgroundColor, setBackgroundColor] = useState("#F8FAFC");
   const [accentColor, setAccentColor] = useState("#2563EB");
   const [textColor, setTextColor] = useState("#1E293B");
@@ -54,22 +54,22 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Atualizar assunto baseado no status
-    const statusLabel = statusOptions.find((s) => s.value === status)?.label || "Atualização";
+    // Mettre à jour le sujet en fonction du statut
+    const statusLabel = statusOptions.find((s) => s.value === status)?.label || "Mise à jour";
     setSubject(`${statusLabel} - Party Builder - ${companyName}`);
     
-    // Mensagem padrão baseada no status
+    // Message par défaut basé sur le statut
     updateDefaultMessage(status);
   }, [status]);
 
   const updateDefaultMessage = (newStatus: string) => {
     const messages: Record<string, string> = {
-      pending: `Olá ${request.client_name},\n\nRecebemos o seu pedido para o Party Builder e estamos a analisá-lo.\n\nEm breve entraremos em contacto com um orçamento detalhado.\n\nObrigado pela sua preferência!`,
-      analyzing: `Olá ${request.client_name},\n\nEstamos a analisar o seu pedido em detalhe.\n\nTema: ${request.custom_theme}\n\nA nossa equipa está a preparar uma proposta personalizada para si.\n\nAguarde o nosso contacto em breve!`,
-      accepted: `Olá ${request.client_name},\n\nTemos o prazer de informar que o seu pedido foi aceite!\n\n✅ O seu Party Builder está confirmado\n\nEntraremos em contacto para finalizar os detalhes.\n\nMal podemos esperar para criar esta festa incrível!`,
-      in_progress: `Olá ${request.client_name},\n\nBoas notícias! O seu Party Builder está em curso.\n\n🎉 A nossa equipa já está a trabalhar na preparação\n\nEm breve terá tudo pronto para uma festa inesquecível!`,
-      completed: `Olá ${request.client_name},\n\nO seu Party Builder foi concluído com sucesso!\n\n🎊 Esperamos que tenha uma festa maravilhosa\n\nObrigado por confiar em nós. Adoraríamos receber fotos do evento!`,
-      rejected: `Olá ${request.client_name},\n\nInfelizmente não conseguimos aceitar o seu pedido neste momento.\n\nPor favor, contacte-nos para discutir alternativas ou para um novo pedido.\n\nObrigado pela compreensão.`,
+      pending: `Bonjour ${request.client_name},\n\nNous avons reçu votre demande de Party Builder et nous l'examinons actuellement.\n\nNous vous recontacterons bientôt avec un devis détaillé.\n\nMerci de votre confiance !`,
+      analyzing: `Bonjour ${request.client_name},\n\nNous analysons votre demande en détail.\n\nThème: ${request.custom_theme}\n\nNotre équipe prépare une proposition personnalisée pour vous.\n\nAttendez notre contact prochainement !`,
+      accepted: `Bonjour ${request.client_name},\n\nNous avons le plaisir de vous informer que votre demande a été acceptée !\n\n✅ Votre Party Builder est confirmé\n\nNous vous recontacterons pour finaliser les détails.\n\nNous avons hâte de créer cette fête incroyable !`,
+      in_progress: `Bonjour ${request.client_name},\n\nBonne nouvelle ! Votre Party Builder est en cours.\n\n🎉 Notre équipe travaille déjà sur la préparation\n\nBientôt tout sera prêt pour une fête inoubliable !`,
+      completed: `Bonjour ${request.client_name},\n\nVotre Party Builder a été terminé avec succès !\n\n🎊 Nous espérons que vous passerez une fête merveilleuse\n\nMerci de votre confiance. Nous serions ravis de recevoir des photos de l'événement !`,
+      rejected: `Bonjour ${request.client_name},\n\nMalheureusement, nous ne pouvons pas accepter votre demande pour le moment.\n\nVeuillez nous contacter pour discuter des alternatives ou pour une nouvelle demande.\n\nMerci de votre compréhension.`,
     };
     
     setMessage(messages[newStatus] || messages.pending);
@@ -89,7 +89,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
         status,
       };
 
-      // Salvar no localStorage como template
+      // Enregistrer dans localStorage comme template
       const templates = JSON.parse(localStorage.getItem("emailTemplates") || "[]");
       templates.push({
         id: Date.now(),
@@ -98,10 +98,10 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
       });
       localStorage.setItem("emailTemplates", JSON.stringify(templates));
 
-      toast.success("Template salvo com sucesso!");
+      toast.success("Template enregistré avec succès !");
     } catch (error) {
-      console.error("Erro ao salvar template:", error);
-      toast.error("Erro ao salvar template");
+      console.error("Erreur lors de l'enregistrement du template:", error);
+      toast.error("Erreur lors de l'enregistrement du template");
     } finally {
       setSaving(false);
     }
@@ -109,13 +109,13 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
 
   const handleSendEmail = async () => {
     if (!message.trim()) {
-      toast.error("Por favor, escreva uma mensagem");
+      toast.error("Veuillez écrire un message");
       return;
     }
 
     setSending(true);
     try {
-      // Atualizar status do pedido
+      // Mettre à jour le statut de la demande
       const { error: updateError } = await supabase
         .from("party_builder_requests")
         .update({ status } as any)
@@ -123,7 +123,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
 
       if (updateError) throw updateError;
 
-      // Preparar dados do email com o HTML renderizado
+      // Préparer les données de l'email avec le HTML rendu
       const emailData = {
         clientName: request.client_name,
         clientEmail: request.client_email,
@@ -142,7 +142,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
         estimatedPrice: request.estimated_price,
       };
 
-      // Inserir na fila de emails
+      // Insérer dans la file d'attente des emails
       const { error: emailError } = await supabase
         .from("email_queue")
         .insert({
@@ -154,17 +154,17 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
 
       if (emailError) throw emailError;
 
-      toast.success("Email enviado com sucesso!");
+      toast.success("Email envoyé avec succès !");
       onClose();
     } catch (error) {
-      console.error("Erro ao enviar email:", error);
-      toast.error("Erro ao enviar email");
+      console.error("Erreur lors de l'envoi de l'email:", error);
+      toast.error("Erreur lors de l'envoi de l'email");
     } finally {
       setSending(false);
     }
   };
 
-  // Preview do email
+  // Aperçu de l'email
   const emailPreview = () => {
     const statusLabel = statusOptions.find((s) => s.value === status)?.label || status;
     const statusColorValue = statusOptions.find((s) => s.value === status)?.color || accentColor;
@@ -211,13 +211,13 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
           </span>
         </div>
 
-        {/* Saudação */}
+        {/* Salutation */}
         <div style={{ padding: "20px" }}>
           <h2 style={{ color: textColor, marginBottom: "20px" }}>
-            Olá, {request.client_name}!
+            Bonjour, {request.client_name} !
           </h2>
 
-          {/* Mensagem Principal */}
+          {/* Message Principal */}
           <div 
             style={{
               backgroundColor: "rgba(255,255,255,0.7)",
@@ -231,7 +231,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             {message}
           </div>
 
-          {/* Detalhes do Pedido */}
+          {/* Détails de la Demande */}
           <div 
             style={{
               backgroundColor: "rgba(255,255,255,0.5)",
@@ -245,11 +245,11 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
               <strong>📧 Email:</strong> {request.client_email}
             </p>
             <p style={{ margin: "5px 0" }}>
-              <strong>📱 Telefone:</strong> {request.client_phone}
+              <strong>📱 Téléphone:</strong> {request.client_phone}
             </p>
             {request.estimated_price && (
               <p style={{ margin: "5px 0" }}>
-                <strong>💰 Preço Estimado:</strong> {request.estimated_price}€
+                <strong>💰 Prix Estimé:</strong> {request.estimated_price}€
               </p>
             )}
           </div>
@@ -265,9 +265,9 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
               color: "#666",
             }}
           >
-            <p>Se tiver alguma dúvida, não hesite em contactar-nos.</p>
+            <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
             <p style={{ margin: "10px 0" }}>
-              © {new Date().getFullYear()} {companyName}. Todos os direitos reservados.
+              © {new Date().getFullYear()} {companyName}. Tous droits réservés.
             </p>
           </div>
         </div>
@@ -281,9 +281,9 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
       <div className="space-y-4 overflow-y-auto pr-4 pb-4 max-h-[calc(90vh-120px)]">
         <h3 className="text-lg font-semibold sticky top-0 bg-background pb-2 z-10">Éditeur d'Email</h3>
 
-        {/* Status */}
+        {/* Statut */}
         <div>
-          <Label>Status do Pedido</Label>
+          <Label>Statut de la Demande</Label>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger>
               <SelectValue />
@@ -298,9 +298,9 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
           </Select>
         </div>
 
-        {/* Nome da Empresa */}
+        {/* Nom de l'Entreprise */}
         <div>
-          <Label>Nome da Empresa</Label>
+          <Label>Nom de l'Entreprise</Label>
           <Input
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
@@ -308,34 +308,34 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
           />
         </div>
 
-        {/* Assunto */}
+        {/* Objet */}
         <div>
-          <Label>Assunto do Email</Label>
+          <Label>Objet de l'Email</Label>
           <Input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="Assunto..."
+            placeholder="Objet..."
           />
         </div>
 
-        {/* Mensagem */}
+        {/* Message */}
         <div>
-          <Label>Mensagem Principal</Label>
+          <Label>Message Principal</Label>
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={8}
-            placeholder="Digite sua mensagem..."
+            placeholder="Tapez votre message..."
           />
         </div>
 
-        {/* Estilo */}
+        {/* Style */}
         <div className="space-y-3 pt-4 border-t">
-          <h4 className="font-semibold">Personalização</h4>
+          <h4 className="font-semibold">Personnalisation</h4>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Cor de Fundo</Label>
+              <Label>Couleur de Fond</Label>
               <Input
                 type="color"
                 value={backgroundColor}
@@ -344,7 +344,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             </div>
 
             <div>
-              <Label>Cor de Destaque</Label>
+              <Label>Couleur d'Accent</Label>
               <Input
                 type="color"
                 value={accentColor}
@@ -353,7 +353,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             </div>
 
             <div>
-              <Label>Cor do Texto</Label>
+              <Label>Couleur du Texte</Label>
               <Input
                 type="color"
                 value={textColor}
@@ -362,7 +362,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             </div>
 
             <div>
-              <Label>Fonte</Label>
+              <Label>Police</Label>
               <Select value={fontFamily} onValueChange={setFontFamily}>
                 <SelectTrigger>
                   <SelectValue />
@@ -402,7 +402,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             ) : (
               <Send className="h-4 w-4 mr-2" />
             )}
-            Enviar Email
+            Envoyer Email
           </Button>
         </div>
       </div>
