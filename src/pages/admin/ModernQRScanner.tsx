@@ -54,6 +54,16 @@ export default function ModernQRScanner() {
     }
     setSelectedEventId(eventId);
     loadEventName(eventId);
+
+    // Cleanup on unmount
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.clear();
+        scannerRef.current = null;
+      }
+      scannerInitialized.current = false;
+    };
   }, [navigate]);
 
   const loadEventName = async (eventId: string) => {
@@ -124,7 +134,24 @@ export default function ModernQRScanner() {
       }
 
       console.log('Iniciando scanner...');
-      console.log('Navigator.mediaDevices:', navigator.mediaDevices);
+
+      // Se já existe um scanner, limpar primeiro
+      if (scannerRef.current) {
+        try {
+          const state = await scannerRef.current.getState();
+          if (state === 2) { // Scanner is running
+            await scannerRef.current.stop();
+          }
+          await scannerRef.current.clear();
+        } catch (e) {
+          console.log('Limpeza do scanner anterior:', e);
+        }
+        scannerRef.current = null;
+        scannerInitialized.current = false;
+      }
+
+      // Pequeno delay para garantir que a câmera foi liberada
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // PASSO 1: Primeiro pedir permissão explicitamente
       let stream: MediaStream;
@@ -154,6 +181,9 @@ export default function ModernQRScanner() {
       
       // Parar o stream temporário
       stream.getTracks().forEach(track => track.stop());
+      
+      // Pequeno delay após parar o stream
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // PASSO 2: Agora iniciar o html5-qrcode (já tem permissão)
       if (!scannerRef.current && !scannerInitialized.current) {
@@ -228,8 +258,11 @@ export default function ModernQRScanner() {
 
   const stopScanning = async () => {
     try {
-      if (scannerRef.current && scanning) {
-        await scannerRef.current.stop();
+      if (scannerRef.current) {
+        const state = await scannerRef.current.getState();
+        if (state === 2) { // Scanner is running
+          await scannerRef.current.stop();
+        }
       }
       setScanning(false);
     } catch (error) {
@@ -348,9 +381,11 @@ export default function ModernQRScanner() {
     }
   };
 
-  const resetScanner = () => {
+  const resetScanner = async () => {
     setResult(null);
-    startScanning();
+    // Delay antes de reiniciar para garantir limpeza
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await startScanning();
   };
 
   return (
