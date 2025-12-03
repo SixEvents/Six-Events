@@ -95,17 +95,26 @@ export default function SelectEventToScan() {
                 seen.add(v.ticket_id);
               });
 
-              // Scanned: qualquer ticket que tenha ao menos uma validação
-              scannedTickets = seen.size;
+              if ((validations || []).length > 0) {
+                // Scanned: qualquer ticket que tenha ao menos uma validação
+                scannedTickets = seen.size;
 
-              // Dentro agora: última ação é entry ou reentry
-              insideNow = Array.from(latest.values()).filter(action => 
-                action === 'entry' || action === 'reentry'
-              ).length;
+                // Dentro agora: última ação é entry ou reentry
+                insideNow = Array.from(latest.values()).filter(action => 
+                  action === 'entry' || action === 'reentry'
+                ).length;
 
-              // Em espera: última ação é exit, mas já teve uma entrada antes em algum momento
-              // Para simplificar, consideramos "exit" como aguardando reentrada
-              pendingTickets = Array.from(latest.values()).filter(action => action === 'exit').length;
+                // Em espera: última ação é exit, mas já teve uma entrada antes em algum momento
+                // Para simplificar, consideramos "exit" como aguardando reentrada
+                pendingTickets = Array.from(latest.values()).filter(action => action === 'exit').length;
+              } else {
+                // Fallback: sem validações visíveis (RLS ou delay). Usar status do ticket.
+                scannedTickets = tickets?.filter(t => 
+                  t.status === 'used' || t.status === 'temporarily_valid'
+                ).length || 0;
+                insideNow = tickets?.filter(t => t.status === 'used').length || 0;
+                pendingTickets = 0; // sem histórico de saída, não há como inferir "en attente"
+              }
             }
           }
 
