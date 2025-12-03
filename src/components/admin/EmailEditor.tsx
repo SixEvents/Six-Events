@@ -330,12 +330,12 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(95vh-140px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(95vh-140px)] min-h-0">
       {/* Editor (Esquerda) */}
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         <h3 className="text-lg font-semibold pb-3 border-b">Éditeur d'Email</h3>
         {/* Conteúdo rolável */}
-        <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4 scrollbar-auto">
+        <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4">
             {/* Botão Templates Sauvegardés */}
             <div>
               <Button
