@@ -89,16 +89,19 @@ export default function SelectEventToScan() {
               const { data: validations } = await supabase
                 .from('qr_code_validations')
                 .select('ticket_id, action, created_at')
-                .in('ticket_id', ticketIds);
+                  .in('ticket_id', ticketIds)
+                  .order('created_at', { ascending: true });
 
-              const latest = new Map<string, { action: string; created_at: string }>();
+                // Usar apenas a última validação de cada ticket
+                const latest = new Map<string, string>();
               (validations || []).forEach(v => {
-                const prev = latest.get(v.ticket_id);
-                if (!prev || new Date(v.created_at) > new Date(prev.created_at)) {
-                  latest.set(v.ticket_id, { action: v.action, created_at: v.created_at });
-                }
+                  latest.set(v.ticket_id, v.action);
               });
-              insideNow = Array.from(latest.values()).filter(v => v.action === 'entry' || v.action === 'reentry').length;
+              
+                // Contar: entry e reentry = dentro, exit = fora
+                insideNow = Array.from(latest.values()).filter(action => 
+                  action === 'entry' || action === 'reentry'
+                ).length;
             }
           }
 

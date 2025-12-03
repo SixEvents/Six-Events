@@ -151,7 +151,7 @@ export default function ModernQRScanner() {
       }
 
       // Pequeno delay para garantir que a câmera foi liberada
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // PASSO 1: Primeiro pedir permissão explicitamente
       let stream: MediaStream;
@@ -183,7 +183,7 @@ export default function ModernQRScanner() {
       stream.getTracks().forEach(track => track.stop());
       
       // Pequeno delay após parar o stream
-      await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       
       // PASSO 2: Agora iniciar o html5-qrcode (já tem permissão)
       if (!scannerRef.current && !scannerInitialized.current) {
@@ -384,7 +384,7 @@ export default function ModernQRScanner() {
   const resetScanner = async () => {
     setResult(null);
     // Delay antes de reiniciar para garantir limpeza
-    await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 150));
     await startScanning();
   };
 
