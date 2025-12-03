@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
+import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import { 
   Image as ImageIcon, 
@@ -13,7 +14,8 @@ import {
   Save,
   X,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,9 +34,11 @@ export default function GalleryManagement() {
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDescription, setEditDescription] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form pour nouvelle photo
-  const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
   useEffect(() => {
@@ -58,21 +62,112 @@ export default function GalleryManagement() {
       setLoading(false);
     }
   };
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Format non supporté. Utilisez JPG, PNG, GIF ou WebP');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image trop grande. Maximum 10MB');
+      return;
+    }
+
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const maxDimension = 1920;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height / width) * maxDimension;
+              width = maxDimension;
+            } else {
+              width = (width / height) * maxDimension;
+              height = maxDimension;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              }
+            },
+            'image/jpeg',
+            0.85
+          );
+        };
+      };
+    });
+  };
+
 
   const handleAddPhoto = async () => {
-    if (!newPhotoUrl.trim()) {
-      toast.error('URL de l\'image requise');
+    if (!selectedFile) {
+      toast.error('Sélectionnez une image');
       return;
     }
 
     setUploading(true);
+          const compressedFile = await compressImage(selectedFile);
+      
+          const fileExt = selectedFile.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+          const filePath = `gallery/${fileName}`;
+
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('event-images')
+            .upload(filePath, compressedFile, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('event-images')
+            .getPublicUrl(filePath);
+
     try {
       const maxOrder = photos.length > 0 ? Math.max(...photos.map(p => p.display_order)) : 0;
       
       const { error } = await supabase
         .from('gallery_photos')
         .insert({
-          image_url: newPhotoUrl,
+          image_url: publicUrl,
           description: newDescription.trim() || null,
           display_order: maxOrder + 1
         });
@@ -80,8 +175,12 @@ export default function GalleryManagement() {
       if (error) throw error;
 
       toast.success('Photo ajoutée avec succès');
-      setNewPhotoUrl('');
+      setSelectedFile(null);
+      setPreviewUrl(null);
       setNewDescription('');
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
       await loadPhotos();
     } catch (error) {
       console.error('Error adding photo:', error);
@@ -196,25 +295,58 @@ export default function GalleryManagement() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  URL de l'image *
-                </label>
-                <Input
-                  type="url"
-                  placeholder="https://exemple.com/photo.jpg"
-                  value={newPhotoUrl}
-                  onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  disabled={uploading}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Copiez l'URL directe de votre image (depuis Imgur, Cloudinary, etc.)
+                <Label className="block text-sm font-medium mb-2">
+                  Sélectionner une image *
+                </Label>
+                
+                {previewUrl ? (
+                  <div className="relative w-full h-64 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setPreviewUrl(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                      disabled={uploading}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative w-full h-64 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-primary transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploading}
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                      <Upload className="w-12 h-12 mb-4" />
+                      <p className="text-lg font-medium">Cliquez pour sélectionner une image</p>
+                      <p className="text-sm mt-2">JPG, PNG, GIF ou WebP (max 10MB)</p>
+                    </div>
+                  </div>
+                )}
+                
+                <p className="text-xs text-muted-foreground mt-2">
+                  L'image sera automatiquement compressée et optimisée
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <Label className="block text-sm font-medium mb-2">
                   Description (optionnelle)
-                </label>
+                </Label>
                 <Textarea
                   placeholder="Décrivez la photo..."
                   value={newDescription}
@@ -226,11 +358,18 @@ export default function GalleryManagement() {
 
               <Button
                 onClick={handleAddPhoto}
-                disabled={uploading || !newPhotoUrl.trim()}
+                disabled={uploading || !selectedFile}
                 className="w-full"
                 size="lg"
               >
-                {uploading ? 'Ajout en cours...' : 'Ajouter la Photo'}
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Upload en cours...
+                  </>
+                ) : (
+                  'Ajouter la Photo'
+                )}
               </Button>
             </div>
           </CardContent>
