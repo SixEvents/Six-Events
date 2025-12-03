@@ -518,15 +518,3 @@ const PartyBuilder = () => {
 };
 
 export default PartyBuilder;
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default PartyBuilder;
