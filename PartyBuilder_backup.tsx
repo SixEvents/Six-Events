@@ -122,7 +122,7 @@ const PartyBuilder = () => {
 
   const handleAddToCart = async () => {
     if (!customTheme.trim()) {
-      toast.error("Le thème personnalisé est obligatoire");
+      toast.error("Veuillez décrire la décoration souhaitée");
       return;
     }
 
@@ -134,7 +134,6 @@ const PartyBuilder = () => {
     setSubmitting(true);
     
     try {
-      // Sauvegarder dans la table party_builder_requests
       const total = calculateTotal();
       
       // Construir lista de opções selecionadas
@@ -147,6 +146,7 @@ const PartyBuilder = () => {
           total: option.price * selectedOptions[option.id]
         }));
       
+      // Salvar na tabela party_builder_requests
       const requestData = {
         client_name: clientName,
         client_email: clientEmail,
@@ -179,7 +179,6 @@ const PartyBuilder = () => {
         requestId: savedRequest.id
       };
       
-      // Email para equipe (staff)
       const { error: emailError } = await supabase
         .from('email_queue')
         .insert({
@@ -190,18 +189,6 @@ const PartyBuilder = () => {
         });
       
       if (emailError) console.error('Email queue error:', emailError);
-
-      // Email de confirmação para o cliente
-      const { error: clientEmailError } = await supabase
-        .from('email_queue')
-        .insert({
-          type: 'party_builder_client_confirmation',
-          recipient_email: clientEmail,
-          data: JSON.stringify(emailData),
-          status: 'pending',
-        });
-      
-      if (clientEmailError) console.error('Client email queue error:', clientEmailError);
       
       toast.success("Votre demande a été envoyée avec succès! Notre équipe vous contactera bientôt.");
       
@@ -335,60 +322,52 @@ const PartyBuilder = () => {
             </div>
 
             {/* Animations */}
-            {animations.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  2. Ajoutez des animations
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {animations.map(animation => (
-                    <OptionCard key={animation.id} option={animation} category="animation" />
-                  ))}
-                </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                2. Ajoutez des animations
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {animations.map(animation => (
+                  <OptionCard key={animation.id} option={animation} category="animation" />
+                ))}
               </div>
-            )}
+            </div>
 
             {/* Decorations */}
-            {decorations.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  3. Décorations supplémentaires
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {decorations.map(decoration => (
-                    <OptionCard key={decoration.id} option={decoration} category="decoration" />
-                  ))}
-                </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                3. Décorations supplémentaires
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {decorations.map(decoration => (
+                  <OptionCard key={decoration.id} option={decoration} category="decoration" />
+                ))}
               </div>
-            )}
+            </div>
 
             {/* Cakes */}
-            {cakes.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  4. Choisissez votre gâteau
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {cakes.map(cake => (
-                    <OptionCard key={cake.id} option={cake} category="cake" />
-                  ))}
-                </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                4. Choisissez votre gâteau
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {cakes.map(cake => (
+                  <OptionCard key={cake.id} option={cake} category="cake" />
+                ))}
               </div>
-            )}
+            </div>
 
             {/* Extras */}
-            {extras.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  5. Extras & Goodies
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {extras.map(extra => (
-                    <OptionCard key={extra.id} option={extra} category="extra" />
-                  ))}
-                </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                5. Extras & Goodies
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {extras.map(extra => (
+                  <OptionCard key={extra.id} option={extra} category="extra" />
+                ))}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Summary Sidebar */}
@@ -398,7 +377,7 @@ const PartyBuilder = () => {
                 <h3 className="text-2xl font-bold text-foreground mb-4">Récapitulatif</h3>
                 
                 <div className="space-y-3 mb-4">
-                  {/* Thème totalmente personnalisé (prix à définir par le staff) */}
+                  {/* Thème totalement personnalisé (prix à définir par le staff) */}
                   <div className="flex justify-between items-start">
                     <span className="text-sm max-w-[60%]">
                       Thème personnalisé: {customTheme ? customTheme.substring(0, 80) + (customTheme.length > 80 ? '…' : '') : '—'}
@@ -511,18 +490,6 @@ const PartyBuilder = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default PartyBuilder;
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
