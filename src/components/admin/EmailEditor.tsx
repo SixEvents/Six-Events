@@ -330,12 +330,12 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(95vh-140px)]">
       {/* Editor (Esquerda) */}
       <div className="flex flex-col h-full">
         <h3 className="text-lg font-semibold pb-3 border-b">Éditeur d'Email</h3>
         {/* Conteúdo rolável */}
-        <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4 scrollbar-auto">
             {/* Botão Templates Sauvegardés */}
             <div>
               <Button
@@ -520,7 +520,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
       <div className="border-l pl-6 overflow-hidden">
         <div className="h-full flex flex-col">
             <h3 className="text-lg font-semibold mb-4 flex-shrink-0 pb-3 border-b">Preview en Temps Réel</h3>
-            <div className="border rounded-lg overflow-auto shadow-lg flex-1 scrollbar-hide">
+            <div className="border rounded-lg overflow-auto shadow-lg flex-1">
             {emailPreview()}
           </div>
         </div>
