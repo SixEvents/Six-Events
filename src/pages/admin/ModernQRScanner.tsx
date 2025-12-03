@@ -43,6 +43,7 @@ export default function ModernQRScanner() {
   const scannerInitialized = useRef(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [waitingForAction, setWaitingForAction] = useState(false);
+  const [scanAction, setScanAction] = useState<ScanAction>('entry');
 
   useEffect(() => {
     // Récupérer l'événement sélectionné
