@@ -574,9 +574,9 @@ function generatePartyBuilderStatusUpdateHTML(data: any): string {
 
           <!-- Footer -->
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; font-size: 12px; color: #666;">
-            <p>Se tiver alguma dúvida, não hesite em contactar-nos.</p>
+            <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
             <p style="margin: 10px 0;">
-              © ${new Date().getFullYear()} ${companyName || 'Six Events'}. Todos os direitos reservados.
+              © ${new Date().getFullYear()} ${companyName || 'Six Events'}. Tous droits réservés.
             </p>
           </div>
         </div>

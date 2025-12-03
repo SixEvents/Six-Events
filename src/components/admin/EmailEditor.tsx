@@ -276,10 +276,10 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full overflow-hidden">
       {/* Editor (Esquerda) */}
-      <div className="space-y-4 overflow-y-auto pr-4">
-        <h3 className="text-lg font-semibold">Editor de Email</h3>
+      <div className="space-y-4 overflow-y-auto pr-4 pb-4 max-h-[calc(90vh-120px)]">
+        <h3 className="text-lg font-semibold sticky top-0 bg-background pb-2 z-10">Éditeur d'Email</h3>
 
         {/* Status */}
         <div>
@@ -377,7 +377,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
         </div>
 
         {/* Ações */}
-        <div className="flex gap-2 pt-4">
+        <div className="flex gap-2 pt-4 sticky bottom-0 bg-background pb-2">
           <Button
             variant="outline"
             onClick={handleSaveTemplate}
@@ -389,7 +389,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            Salvar Template
+            Sauvegarder Template
           </Button>
 
           <Button
@@ -408,10 +408,10 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
       </div>
 
       {/* Preview (Direita) */}
-      <div className="border-l pl-6">
-        <div className="sticky top-0">
-          <h3 className="text-lg font-semibold mb-4">Preview em Tempo Real</h3>
-          <div className="border rounded-lg overflow-hidden shadow-lg">
+      <div className="border-l pl-6 overflow-hidden">
+        <div className="h-full flex flex-col">
+          <h3 className="text-lg font-semibold mb-4 flex-shrink-0">Preview en Temps Réel</h3>
+          <div className="border rounded-lg overflow-auto shadow-lg flex-1 max-h-[calc(90vh-120px)]">
             {emailPreview()}
           </div>
         </div>
