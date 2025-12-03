@@ -86,35 +86,27 @@ export default function SelectEventToScan() {
                   .in('ticket_id', ticketIds)
                   .order('created_at', { ascending: true });
 
-              // Usar apenas a última validação de cada ticket
+              // Mapa de última ação por ticket, inicializado pelo status
               const latest = new Map<string, string>();
-              const seen = new Set<string>();
-              (validations || []).forEach(v => {
-                // como está ordenado crescente, cada set sobrescreve e mantém o último
-                latest.set(v.ticket_id, v.action);
-                seen.add(v.ticket_id);
+              const hasAnyRecord = new Set<string>();
+              (tickets || []).forEach(t => {
+                if (t.status === 'used' || t.status === 'temporarily_valid') {
+                  latest.set(t.id, 'entry'); // status indica que já entrou ao menos uma vez
+                  hasAnyRecord.add(t.id);
+                }
               });
 
-              if ((validations || []).length > 0) {
-                // Scanned: qualquer ticket que tenha ao menos uma validação
-                scannedTickets = seen.size;
+              // Sobrescrever com validações reais quando disponíveis
+              (validations || []).forEach(v => {
+                latest.set(v.ticket_id, v.action);
+                hasAnyRecord.add(v.ticket_id);
+              });
 
-                // Dentro agora: última ação é entry ou reentry
-                insideNow = Array.from(latest.values()).filter(action => 
-                  action === 'entry' || action === 'reentry'
-                ).length;
-
-                // Em espera: última ação é exit, mas já teve uma entrada antes em algum momento
-                // Para simplificar, consideramos "exit" como aguardando reentrada
-                pendingTickets = Array.from(latest.values()).filter(action => action === 'exit').length;
-              } else {
-                // Fallback: sem validações visíveis (RLS ou delay). Usar status do ticket.
-                scannedTickets = tickets?.filter(t => 
-                  t.status === 'used' || t.status === 'temporarily_valid'
-                ).length || 0;
-                insideNow = tickets?.filter(t => t.status === 'used').length || 0;
-                pendingTickets = 0; // sem histórico de saída, não há como inferir "en attente"
-              }
+              // Contagens finais a partir do mapa mesclado
+              const actions = Array.from(latest.values());
+              scannedTickets = hasAnyRecord.size;
+              insideNow = actions.filter(a => a === 'entry' || a === 'reentry').length;
+              pendingTickets = actions.filter(a => a === 'exit').length;
             }
           }
 
