@@ -305,14 +305,6 @@ export default function AdminPartyBuilderRequests() {
                         <Send className="w-4 h-4 mr-2" />
                         Envoyer Email
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openRequestDialog(request)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Gérer
-                      </Button>
                     </div>
                   </div>
                 </CardContent>

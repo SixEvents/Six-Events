@@ -241,16 +241,32 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
               fontSize: "14px",
             }}
           >
+            <h3 style={{ margin: "0 0 10px 0", fontSize: "16px", fontWeight: "bold" }}>
+              📋 Détails de votre demande
+            </h3>
+            <p style={{ margin: "5px 0" }}>
+              <strong>🎨 Thème:</strong> {request.custom_theme}
+            </p>
             <p style={{ margin: "5px 0" }}>
               <strong>📧 Email:</strong> {request.client_email}
             </p>
             <p style={{ margin: "5px 0" }}>
               <strong>📱 Téléphone:</strong> {request.client_phone}
             </p>
-            {request.estimated_price && (
+            {request.estimated_price && request.estimated_price > 0 && (
               <p style={{ margin: "5px 0" }}>
                 <strong>💰 Prix Estimé:</strong> {request.estimated_price}€
               </p>
+            )}
+            {request.selected_options && request.selected_options.length > 0 && (
+              <div style={{ marginTop: "10px" }}>
+                <strong>🎁 Options sélectionnées:</strong>
+                <ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
+                  {request.selected_options.map((opt: any, idx: number) => (
+                    <li key={idx}>{opt.name} x{opt.quantity} ({opt.total}€)</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 
