@@ -312,12 +312,12 @@ const PartyBuilder = () => {
             {/* Thème Personnalisé */}
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">
-                1. Décrivez votre décoration personnalisée *
+                1. Décrivez votre thème personnalisé *
               </h2>
               <Card className="border-2 border-primary/20">
                 <CardContent className="p-6">
                   <Label htmlFor="customTheme" className="text-base mb-2 block">
-                    Décrivez le thème et la décoration que vous souhaitez
+                    Décrivez le thème de votre fête et vos envies
                   </Label>
                   <Textarea
                     id="customTheme"

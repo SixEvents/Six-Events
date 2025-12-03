@@ -8,10 +8,11 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Loader2, Mail, Phone, MessageSquare, Euro, Calendar, Eye } from 'lucide-react';
+import { Loader2, Mail, Phone, MessageSquare, Euro, Calendar, Eye, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { EmailEditor } from '../../components/admin/EmailEditor';
 
 interface PartyBuilderRequest {
   id: string;
@@ -43,6 +44,7 @@ export default function AdminPartyBuilderRequests() {
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<PartyBuilderRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEmailEditorOpen, setIsEmailEditorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [updating, setUpdating] = useState(false);
@@ -291,14 +293,27 @@ export default function AdminPartyBuilderRequests() {
                       )}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openRequestDialog(request)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Gérer
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setIsEmailEditorOpen(true);
+                        }}
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Envoyer Email
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openRequestDialog(request)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Gérer
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -389,6 +404,26 @@ export default function AdminPartyBuilderRequests() {
                   </Button>
                 </div>
               </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Email Editor Dialog */}
+        <Dialog open={isEmailEditorOpen} onOpenChange={setIsEmailEditorOpen}>
+          <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle>
+                Éditeur d'Email - {selectedRequest?.client_name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedRequest && (
+              <EmailEditor
+                request={selectedRequest}
+                onClose={() => {
+                  setIsEmailEditorOpen(false);
+                  fetchRequests();
+                }}
+              />
             )}
           </DialogContent>
         </Dialog>

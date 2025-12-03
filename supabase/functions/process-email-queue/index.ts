@@ -135,6 +135,10 @@ serve(async (req) => {
           // Confirmação enviada ao cliente
           subject = `✅ Demande Party Builder reçue - Six Events`
           html = generatePartyBuilderClientConfirmationEmailHTML(emailData)
+        } else if (email.type === 'party_builder_status_update') {
+          // Atualização de status do Party Builder (email personalizado do admin)
+          subject = emailData.subject || 'Atualização Party Builder - Six Events'
+          html = generatePartyBuilderStatusUpdateHTML(emailData)
         } else if (email.type === 'party_builder_demand') {
           subject = 'Nova Solicitação de Party Builder'
           html = generatePartyBuilderDemandHTML(emailData)
@@ -501,6 +505,78 @@ function generatePartyBuilderClientConfirmationEmailHTML(data: any): string {
             </p>
             <p style="color: #999; font-size: 12px; margin: 15px 0 5px 0;">
               <a href="https://sixevents.be" style="color: #667eea; text-decoration: none;">sixevents.be</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template para Party Builder Status Update (Email Personalizado do Admin)
+function generatePartyBuilderStatusUpdateHTML(data: any): string {
+  const { 
+    clientName, 
+    message, 
+    companyName, 
+    statusLabel, 
+    statusColor,
+    backgroundColor, 
+    accentColor, 
+    textColor,
+    fontFamily,
+    customTheme,
+    clientEmail,
+    clientPhone,
+    estimatedPrice
+  } = data
+
+  const fontFamilyValue = fontFamily === 'Serif' ? 'Georgia, serif' : 'Arial, sans-serif'
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: ${fontFamilyValue}; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: ${backgroundColor || '#F8FAFC'};">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, ${accentColor || '#2563EB'} 0%, ${accentColor || '#2563EB'}dd 100%); color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">${companyName || 'Six Events'}</h1>
+        </div>
+        
+        <!-- Status Badge -->
+        <div style="text-align: center; padding: 20px 20px 0;">
+          <span style="display: inline-block; background-color: ${statusColor || '#F59E0B'}; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+            ${statusLabel || 'Atualização'}
+          </span>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 20px; color: ${textColor || '#1E293B'};">
+          <h2 style="margin-bottom: 20px;">Olá, ${clientName}!</h2>
+
+          <!-- Mensagem Principal -->
+          <div style="background-color: rgba(255,255,255,0.7); padding: 20px; border-radius: 8px; margin-bottom: 20px; white-space: pre-wrap; line-height: 1.6;">
+            ${message}
+          </div>
+
+          <!-- Detalhes do Pedido -->
+          <div style="background-color: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px;">
+            ${customTheme ? `<p style="margin: 5px 0;"><strong>🎨 Tema:</strong> ${customTheme}</p>` : ''}
+            <p style="margin: 5px 0;"><strong>📧 Email:</strong> ${clientEmail}</p>
+            <p style="margin: 5px 0;"><strong>📱 Telefone:</strong> ${clientPhone || 'N/A'}</p>
+            ${estimatedPrice ? `<p style="margin: 5px 0;"><strong>💰 Preço Estimado:</strong> €${estimatedPrice}</p>` : ''}
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; font-size: 12px; color: #666;">
+            <p>Se tiver alguma dúvida, não hesite em contactar-nos.</p>
+            <p style="margin: 10px 0;">
+              © ${new Date().getFullYear()} ${companyName || 'Six Events'}. Todos os direitos reservados.
             </p>
           </div>
         </div>
