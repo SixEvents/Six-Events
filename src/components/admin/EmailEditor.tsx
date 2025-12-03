@@ -328,11 +328,12 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full overflow-hidden">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       {/* Editor (Esquerda) */}
-        <div className="flex flex-col h-full">
-          <h3 className="text-lg font-semibold pb-3 border-b">Éditeur d'Email</h3>
-          <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4 scrollbar-hide">
+      <div className="flex flex-col h-full">
+        <h3 className="text-lg font-semibold pb-3 border-b">Éditeur d'Email</h3>
+        {/* Conteúdo rolável */}
+        <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-4">
             {/* Botão Templates Sauvegardés */}
             <div>
               <Button
@@ -466,10 +467,12 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
             </div>
           </div>
         </div>
-          </div>
 
-        {/* Ações */}
-          <div className="flex flex-col gap-2 pt-3 border-t bg-background">
+        {/* Fechar conteúdo rolável antes das ações */}
+        </div>
+
+        {/* Ações (fixas e clicáveis) */}
+        <div className="flex flex-col gap-2 pt-3 border-t bg-background sticky bottom-0">
             <div>
               <Label>Nom du Template</Label>
               <Input
@@ -496,7 +499,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
           <Button
             onClick={handleSendEmail}
             disabled={sending}
-            className="flex-1"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
           >
             {sending ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

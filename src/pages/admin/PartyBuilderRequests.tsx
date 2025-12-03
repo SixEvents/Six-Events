@@ -309,10 +309,25 @@ export default function AdminPartyBuilderRequests() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => openRequestDialog(request)}
+                          onClick={async () => {
+                            const confirmed = confirm('Supprimer cette demande ?');
+                            if (!confirmed) return;
+                            const { error } = await supabase
+                              .from('party_builder_requests')
+                              .delete()
+                              .eq('id', request.id);
+                            if (error) {
+                              console.error('Erreur lors de la suppression:', error);
+                              toast.error("Erreur lors de la suppression");
+                            } else {
+                              toast.success("Demande supprimée");
+                              fetchRequests();
+                            }
+                          }}
                         >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Gérer
+                          {/* Trash icon */}
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 mr-2"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M9 6V4h6v2m1 0v14a2 2 0 01-2 2H8a2 2 0 01-2-2V6h10z"/></svg>
+                          Supprimer
                         </Button>
                     </div>
                   </div>
