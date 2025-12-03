@@ -66,9 +66,9 @@ export default function SelectEventToScan() {
 
           // Depois buscar tickets dessas reservations
           let totalTickets = 0;
-          let scannedTickets = 0;
-          let pendingTickets = 0;
-          let insideNow = 0;
+          let scannedTickets = 0; // tickets with any validation
+          let pendingTickets = 0; // tickets that exited after entering (awaiting re-entry)
+          let insideNow = 0;      // tickets whose latest action is entry/reentry
 
           if (reservationIds.length > 0) {
             const { data: tickets } = await supabase
@@ -77,13 +77,7 @@ export default function SelectEventToScan() {
               .in('reservation_id', reservationIds);
 
             totalTickets = tickets?.length || 0;
-            scannedTickets = tickets?.filter(t => 
-              t.status === 'used' || t.status === 'temporarily_valid'
-            ).length || 0;
-            pendingTickets = tickets?.filter(t => 
-              t.status === 'valid'
-            ).length || 0;
-            // Calcular quem está dentro agora via últimas validações
+            // Calcular métricas via últimas validações por ticket
             const ticketIds = (tickets || []).map(t => t.id);
             if (ticketIds.length > 0) {
               const { data: validations } = await supabase
@@ -92,16 +86,26 @@ export default function SelectEventToScan() {
                   .in('ticket_id', ticketIds)
                   .order('created_at', { ascending: true });
 
-                // Usar apenas a última validação de cada ticket
-                const latest = new Map<string, string>();
+              // Usar apenas a última validação de cada ticket
+              const latest = new Map<string, string>();
+              const seen = new Set<string>();
               (validations || []).forEach(v => {
-                  latest.set(v.ticket_id, v.action);
+                // como está ordenado crescente, cada set sobrescreve e mantém o último
+                latest.set(v.ticket_id, v.action);
+                seen.add(v.ticket_id);
               });
-              
-                // Contar: entry e reentry = dentro, exit = fora
-                insideNow = Array.from(latest.values()).filter(action => 
-                  action === 'entry' || action === 'reentry'
-                ).length;
+
+              // Scanned: qualquer ticket que tenha ao menos uma validação
+              scannedTickets = seen.size;
+
+              // Dentro agora: última ação é entry ou reentry
+              insideNow = Array.from(latest.values()).filter(action => 
+                action === 'entry' || action === 'reentry'
+              ).length;
+
+              // Em espera: última ação é exit, mas já teve uma entrada antes em algum momento
+              // Para simplificar, consideramos "exit" como aguardando reentrada
+              pendingTickets = Array.from(latest.values()).filter(action => action === 'exit').length;
             }
           }
 
@@ -192,8 +196,8 @@ export default function SelectEventToScan() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event, index) => {
-              const progress = getProgressPercentage(event.scanned_tickets, event.total_tickets);
-              const statusColor = getStatusColor(event.scanned_tickets, event.total_tickets);
+              const progress = getProgressPercentage(event.inside_now || 0, event.total_tickets);
+              const statusColor = getStatusColor(event.inside_now || 0, event.total_tickets);
 
               return (
                 <motion.div
