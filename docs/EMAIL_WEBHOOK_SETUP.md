@@ -1,34 +1,37 @@
 # Configuração de Email Automático
 
-## Problema
-Os emails não são enviados automaticamente quando adicionados à fila `email_queue`.
+## ⚠️ PROBLEMA ATUAL
 
-## Solução: Database Webhook
+Quando envia email pelo dashboard, a função `process-email-queue` processa **TODOS** os emails pendentes na fila, não apenas o novo. Isso causa envio de emails duplicados ou antigos.
 
-### Passo 1: Criar Webhook no Supabase Dashboard
+## ✅ SOLUÇÃO: Configurar Database Webhook no Supabase
+
+### Passo 1: Remover chamadas manuais (JÁ FEITO no próximo commit)
+
+O código não deve chamar `fetch('/process-email-queue')` manualmente. Isso será substituído por webhook automático.
+
+### Passo 2: Configurar Webhook no Supabase Dashboard
 
 1. Acesse: https://supabase.com/dashboard/project/rzcdcwwdlnczojmslhax/database/hooks
-2. Clique em "Create a new hook"
+2. Clique em **"Create a new hook"**
 3. Configure:
    - **Name**: `process-email-queue-on-insert`
    - **Table**: `email_queue`
-   - **Events**: `INSERT`
+   - **Events**: Marque apenas **INSERT**
    - **Type**: `HTTP Request`
    - **Method**: `POST`
    - **URL**: `https://rzcdcwwdlnczojmslhax.supabase.co/functions/v1/process-email-queue`
-   - **Headers**:
-     ```json
-     {
-       "Content-Type": "application/json",
-       "Authorization": "Bearer <SERVICE_ROLE_KEY>"
-     }
-     ```
+   - **Headers**: Deixe vazio (não precisa Authorization para trigger interno)
    - **Timeout**: 5000ms
-   - **HTTP Parameters**: None needed
 
-4. Clique em "Create hook"
+4. Clique em **"Create hook"**
 
-### Alternativa: Usar Supabase Cron Jobs (se disponível no plano)
+### Passo 3: Testar
+
+1. Submeter Party Builder request → Staff deve receber email automaticamente
+2. Enviar email pelo dashboard → Cliente recebe apenas 1 email, não duplicados
+
+## Alternativa: Usar Supabase Cron (Plano Pro)
 
 Se tiver acesso a Cron Jobs (plano Pro):
 

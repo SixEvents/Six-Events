@@ -154,20 +154,6 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
 
       if (emailError) throw emailError;
 
-      // Trigger processamento imediato da fila de emails
-      try {
-        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-email-queue`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        });
-      } catch (err) {
-        console.error('Erreur lors du déclenchement du traitement des emails:', err);
-        // Não bloqueia o sucesso, os emails serão processados eventualmente
-      }
-
       toast.success("Email envoyé avec succès !");
       onClose();
     } catch (error) {
