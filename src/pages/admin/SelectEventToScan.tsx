@@ -66,9 +66,9 @@ export default function SelectEventToScan() {
 
           // Depois buscar tickets dessas reservations
           let totalTickets = 0;
-          let scannedTickets = 0; // tickets with any validation
-          let pendingTickets = 0; // tickets that exited after entering (awaiting re-entry)
-          let insideNow = 0;      // tickets whose latest action is entry/reentry
+          let scannedTickets = 0; // tickets scanned (status used or temporarily_valid)
+          let pendingTickets = 0; // always 0 (no exit tracking)
+          let insideNow = 0;      // same as scanned (all scanned tickets are inside)
 
           if (reservationIds.length > 0) {
             const { data: tickets } = await supabase
@@ -77,37 +77,13 @@ export default function SelectEventToScan() {
               .in('reservation_id', reservationIds);
 
             totalTickets = tickets?.length || 0;
-            // Calcular métricas via últimas validações por ticket
-            const ticketIds = (tickets || []).map(t => t.id);
-            if (ticketIds.length > 0) {
-              const { data: validations } = await supabase
-                .from('qr_code_validations')
-                .select('ticket_id, action, created_at')
-                  .in('ticket_id', ticketIds)
-                  .order('created_at', { ascending: true });
-
-              // Mapa de última ação por ticket, inicializado pelo status
-              const latest = new Map<string, string>();
-              const hasAnyRecord = new Set<string>();
-              (tickets || []).forEach(t => {
-                if (t.status === 'used' || t.status === 'temporarily_valid') {
-                  latest.set(t.id, 'entry'); // status indica que já entrou ao menos uma vez
-                  hasAnyRecord.add(t.id);
-                }
-              });
-
-              // Sobrescrever com validações reais quando disponíveis
-              (validations || []).forEach(v => {
-                latest.set(v.ticket_id, v.action);
-                hasAnyRecord.add(v.ticket_id);
-              });
-
-              // Contagens finais a partir do mapa mesclado
-              const actions = Array.from(latest.values());
-              scannedTickets = hasAnyRecord.size;
-              insideNow = actions.filter(a => a === 'entry' || a === 'reentry').length;
-              pendingTickets = actions.filter(a => a === 'exit').length;
-            }
+            
+            // Entry-only: scanned = inside = tickets with status used/temporarily_valid
+            scannedTickets = tickets?.filter(t => 
+              t.status === 'used' || t.status === 'temporarily_valid'
+            ).length || 0;
+            insideNow = scannedTickets;
+            pendingTickets = 0; // no exit tracking
           }
 
           return {

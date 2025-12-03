@@ -3,7 +3,6 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
-import { ScanActionSelect, ScanAction } from '../../components/ui/scan-action-select';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -43,7 +42,6 @@ export default function ModernQRScanner() {
   const scannerInitialized = useRef(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [waitingForAction, setWaitingForAction] = useState(false);
-  const [scanAction, setScanAction] = useState<ScanAction>('entry');
 
   useEffect(() => {
     // Récupérer l'événement sélectionné
@@ -76,7 +74,7 @@ export default function ModernQRScanner() {
     if (data) setEventName(data.title || data.name);
   };
 
-  const playSound = (type: 'entry' | 'exit' | 'reentry' | 'error') => {
+  const playSound = (type: 'success' | 'error') => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -85,31 +83,11 @@ export default function ModernQRScanner() {
       gainNode.connect(audioContext.destination);
       gainNode.gain.value = 0.3;
 
-      if (type === 'entry') {
-        // Bip court et aigu (succès positif)
+      if (type === 'success') {
+        // Bip court et aigu (succès)
         oscillator.frequency.value = 880;
         oscillator.start();
         oscillator.stop(audioContext.currentTime + 0.15);
-      } else if (type === 'exit') {
-        // Bip moyen et grave (confirmation neutre)
-        oscillator.frequency.value = 440;
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.2);
-      } else if (type === 'reentry') {
-        // Double bip rapide (action spéciale)
-        oscillator.frequency.value = 660;
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.1);
-        setTimeout(() => {
-          const osc2 = audioContext.createOscillator();
-          const gain2 = audioContext.createGain();
-          osc2.connect(gain2);
-          gain2.connect(audioContext.destination);
-          gain2.gain.value = 0.3;
-          osc2.frequency.value = 660;
-          osc2.start();
-          osc2.stop(audioContext.currentTime + 0.1);
-        }, 120);
       } else {
         // Bip long et grave (erreur)
         oscillator.frequency.value = 220;
@@ -316,10 +294,9 @@ export default function ModernQRScanner() {
         return;
       }
       
-      // PERMITIR scan para exit e reentry mesmo se já foi escaneado
-      // Apenas para 'entry', bloquear se já estava marcado como used
-      if (scanAction === 'entry' && ticket.status === 'used') {
-        playSound('warning');
+      // Bloquear se já foi escaneado
+      if (ticket.status === 'used') {
+        playSound('error');
         const validatedDate = new Date(ticket.validated_at).toLocaleString('fr-FR', {
           day: '2-digit',
           month: '2-digit',
@@ -327,43 +304,39 @@ export default function ModernQRScanner() {
           hour: '2-digit',
           minute: '2-digit'
         });
-        // Permitir o scan de exit/reentry mesmo se já foi entrada
-        console.log('Ação permitida: já foi escaneado como entrada em', validatedDate);
+        setResult({
+          success: false,
+          message: `⚠️ Billet déjà scanné\nValidé le ${validatedDate}`,
+          ticket
+        });
+        return;
       }
 
-      // Marquer como usado na entrada (para rastrear que entrou)
-      if (scanAction === 'entry' && ticket.status !== 'used') {
-        const { error: updateError } = await supabase
-          .from('tickets')
-          .update({
-            status: 'used',
-            validated_at: new Date().toISOString(),
-            validated_by: user?.id
-          })
-          .eq('id', ticket.id);
+      // Marquer comme utilisé
+      const { error: updateError } = await supabase
+        .from('tickets')
+        .update({
+          status: 'used',
+          validated_at: new Date().toISOString(),
+          validated_by: user?.id
+        })
+        .eq('id', ticket.id);
 
-        if (updateError) {
-          throw updateError;
-        }
+      if (updateError) {
+        throw updateError;
       }
-      
-      // Para exit e reentry, NÃO mudar o status (apenas registrar no qr_code_validations)
-      // Isso permite múltiplos scans
-
 
       // Enregistrer la validation
       await supabase.from('qr_code_validations').insert({
         ticket_id: ticket.id,
-        action: scanAction,
+        action: 'entry',
         validated_by: user?.id || 'unknown',
         success: true
       });
 
       playSound('success');
 
-      let msg = '✅ ENTRÉE VALIDÉE';
-      if (scanAction === 'exit') msg = '✅ SORTIE VALIDÉE';
-      if (scanAction === 'reentry') msg = '✅ RE-ENTRÉE VALIDÉE';
+      const msg = '✅ ENTRÉE VALIDÉE';
       setResult({
         success: true,
         message: msg,
@@ -434,9 +407,8 @@ export default function ModernQRScanner() {
                     Prêt à scanner
                   </h2>
                   <p className="text-muted-foreground mb-8">
-                    Sélectionnez l'action puis appuyez sur le bouton pour activer la caméra et scanner les billets
+                    Appuyez sur le bouton pour activer la caméra et scanner les billets d'entrée
                   </p>
-                  <ScanActionSelect value={scanAction} onChange={setScanAction} />
                   <Button
                     onClick={startScanning}
                     size="lg"
