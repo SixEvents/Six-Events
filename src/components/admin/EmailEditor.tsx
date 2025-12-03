@@ -54,6 +54,7 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
   const [saving, setSaving] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [showTemplateNameInput, setShowTemplateNameInput] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
 
   // Carregar templates salvos
@@ -86,7 +87,8 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
 
   const handleSaveTemplate = async () => {
       if (!templateName.trim()) {
-        toast.error("Veuillez donner un nom au template");
+        setShowTemplateNameInput(true);
+        toast.error("Digite o nome do template antes de salvar");
         return;
       }
 
@@ -473,14 +475,16 @@ export const EmailEditor = ({ request, onClose }: EmailEditorProps) => {
 
         {/* Ações (fixas e clicáveis) */}
         <div className="flex flex-col gap-2 pt-3 border-t bg-background sticky bottom-0">
-            <div>
-              <Label>Nom du Template</Label>
-              <Input
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Ex: Template Acceptation Moderne"
-              />
-            </div>
+            {showTemplateNameInput && (
+              <div>
+                <Label>Nom du Template</Label>
+                <Input
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Ex: Template Acceptation Moderne"
+                />
+              </div>
+            )}
             <div className="flex gap-2">
           <Button
             variant="outline"
