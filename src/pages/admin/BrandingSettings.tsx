@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Switch } from '../components/ui/switch';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
-import { useToast } from '../components/ui/use-toast';
+import { supabase } from '../../lib/supabase';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Switch } from '../../components/ui/switch';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
+import { useToast } from '../../components/ui/use-toast';
 import { Loader2, Upload, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 

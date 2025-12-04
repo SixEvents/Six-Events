@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
-import { Label } from '../../components/ui/label';
-import { Badge } from '../../components/ui/badge';
 import { 
   Image as ImageIcon, 
-  Upload, 
   Trash2, 
   Edit, 
   Save,
@@ -24,7 +20,7 @@ import ImageUpload from '../../components/ImageUpload';
 interface GalleryPhoto {
   id: string;
   image_url: string;
-  description?: string;
+  description: string | null;
   display_order: number;
   created_at: string;
 }
@@ -35,9 +31,7 @@ export default function GalleryManagement() {
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDescription, setEditDescription] = useState('');
-    const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-  
-  // Form pour nouvelle photo
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [newDescription, setNewDescription] = useState('');
 
   useEffect(() => {
@@ -49,49 +43,43 @@ export default function GalleryManagement() {
       const { data, error } = await supabase
         .from('gallery_photos')
         .select('*')
-        .order('display_order', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       setPhotos(data || []);
     } catch (error) {
       console.error('Error loading photos:', error);
-      toast.error('Erreur lors du chargement des photos');
+      toast.error('Erro ao carregar fotos');
     } finally {
       setLoading(false);
     }
   };
-  // Usamos o componente reutilizável ImageUpload (mesmo do criador de eventos)
-  // Ele já faz compressão, preview e upload para o bucket 'event-images'
-
 
   const handleAddPhoto = async () => {
-    if (!selectedFile) {
-      toast.error('Sélectionnez une image');
-      if (!uploadedUrl) {
-        toast.error('Selecione e envie uma imagem');
+    if (!uploadedUrl) {
+      toast.error('Selecione e envie uma imagem primeiro');
+      return;
+    }
 
-    setUploading(true);
-          const compressedFile = await compressImage(selectedFile);
-      
-          const fileExt = selectedFile.name.split('.').pop();
+    try {
+      setUploading(true);
+
       const { error } = await supabase
         .from('gallery_photos')
         .insert({
-          image_url: publicUrl,
+          image_url: uploadedUrl,
           description: newDescription.trim() || null,
-            image_url: uploadedUrl,
         });
 
       if (error) throw error;
 
-      toast.success('Photo ajoutée avec succès');
-      setSelectedFile(null);
-      setPreviewUrl(null);
-        setUploadedUrl(null);
-              fileInputRef.current.value = '';
+      toast.success('Foto adicionada com sucesso');
+      setNewDescription('');
+      setUploadedUrl(null);
+      await loadPhotos();
+    } catch (error) {
       console.error('Error adding photo:', error);
-      toast.error('Erreur lors de l\'ajout de la photo');
+      toast.error('Erro ao adicionar foto');
     } finally {
       setUploading(false);
     }
@@ -106,17 +94,17 @@ export default function GalleryManagement() {
 
       if (error) throw error;
 
-      toast.success('Description mise à jour');
+      toast.success('Descrição atualizada');
       setEditingId(null);
       await loadPhotos();
     } catch (error) {
       console.error('Error updating description:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erro ao atualizar descrição');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) return;
+    if (!confirm('Tem certeza que deseja deletar esta foto?')) return;
 
     try {
       const { error } = await supabase
@@ -126,129 +114,145 @@ export default function GalleryManagement() {
 
       if (error) throw error;
 
-      toast.success('Photo supprimée');
+      toast.success('Foto deletada');
       await loadPhotos();
     } catch (error) {
       console.error('Error deleting photo:', error);
-      toast.error('Erreur lors de la suppression');
+      toast.error('Erro ao deletar foto');
     }
   };
 
   const handleReorder = async (id: string, direction: 'up' | 'down') => {
-    const currentIndex = photos.findIndex(p => p.id === id);
-    if (currentIndex === -1) return;
-    
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= photos.length) return;
+    const index = photos.findIndex(p => p.id === id);
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === photos.length - 1)) {
+      return;
+    }
+
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    const newPhotos = [...photos];
+    [newPhotos[index], newPhotos[swapIndex]] = [newPhotos[swapIndex], newPhotos[index]];
 
     try {
-      const currentPhoto = photos[currentIndex];
-      const targetPhoto = photos[targetIndex];
+      const updates = [
+        { id: newPhotos[index].id, display_order: index },
+        { id: newPhotos[swapIndex].id, display_order: swapIndex },
+      ];
 
-      // Échanger les display_order
-      await supabase
-        .from('gallery_photos')
-        .update({ display_order: targetPhoto.display_order })
-        .eq('id', currentPhoto.id);
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('gallery_photos')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
 
-      await supabase
-        .from('gallery_photos')
-        .update({ display_order: currentPhoto.display_order })
-        .eq('id', targetPhoto.id);
+        if (error) throw error;
+      }
 
-      await loadPhotos();
+      setPhotos(newPhotos);
     } catch (error) {
-      console.error('Error reordering:', error);
-      toast.error('Erreur lors du réordonnancement');
+      console.error('Error reordering photos:', error);
+      toast.error('Erro ao reordenar fotos');
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-pink-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
-      <div className="container mx-auto max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          transition={{ duration: 0.4 }}
+          className="mb-8"
         >
-          <div className="flex items-center justify-center mb-4">
-            <ImageIcon className="w-12 h-12 text-primary mr-3" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Gestion de la Galerie
-            </h1>
-          </div>
-          <p className="text-xl text-muted-foreground">
-            Ajoutez et gérez les photos de vos événements
-          </p>
+          <h1 className="text-4xl font-bold gradient-text mb-2">Gerenciar Galeria</h1>
+          <p className="text-gray-600">Adicione e organize fotos da sua galeria</p>
         </motion.div>
 
-        {/* Add Photo Form */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Upload className="w-5 h-5 mr-2" />
-              Ajouter une Photo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+        {/* Upload Section */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mb-8"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Adicionar Nova Foto</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Image Upload Component */}
               <div>
-                <Label className="block text-sm font-medium mb-2">Imagem *</Label>
+                <label className="text-sm font-semibold mb-2 block">Selecione a Imagem</label>
                 <ImageUpload
-                  currentImage={undefined}
-                  onImageUploaded={(url) => setUploadedUrl(url)}
-                  onImageRemoved={() => setUploadedUrl(null)}
+                  onUploadComplete={(url) => setUploadedUrl(url)}
+                  bucket="event-images"
+                  folder="gallery"
                 />
               </div>
-              
+
+              {/* Preview */}
+              {uploadedUrl && (
+                <div className="border-2 border-pink-200 rounded-lg p-4">
+                  <img
+                    src={uploadedUrl}
+                    alt="Preview"
+                    className="w-full h-48 object-cover rounded-lg mb-3"
+                  />
+                  <p className="text-sm text-green-600 font-medium">✓ Imagem carregada</p>
+                </div>
+              )}
+
+              {/* Description */}
               <div>
-                <Label className="block text-sm font-medium mb-2">
-                  Description (optionnelle)
-                </Label>
+                <label className="text-sm font-semibold mb-2 block">Descrição (opcional)</label>
                 <Textarea
-                  placeholder="Décrivez la photo..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   disabled={uploading}
                   rows={3}
+                  placeholder="Descreva a foto..."
                 />
               </div>
 
-              <Button onClick={handleAddPhoto} disabled={uploading || !uploadedUrl} className="w-full" size="lg">
+              <Button
+                onClick={handleAddPhoto}
+                disabled={uploading || !uploadedUrl}
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
+                size="lg"
+              >
                 {uploading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Upload en cours...
+                    Adicionando...
                   </>
                 ) : (
-                  'Ajouter la Photo'
+                  'Adicionar Foto'
                 )}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Photos Grid */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Photos ({photos.length})</h2>
+          <h2 className="text-2xl font-bold">Fotos ({photos.length})</h2>
         </div>
 
         {photos.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <ImageIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">Aucune photo</h3>
+              <h3 className="text-xl font-semibold mb-2">Nenhuma foto</h3>
               <p className="text-muted-foreground">
-                Commencez par ajouter des photos à votre galerie
+                Comece adicionando fotos à sua galeria
               </p>
             </CardContent>
           </Card>
@@ -267,10 +271,10 @@ export default function GalleryManagement() {
                     <div className="relative aspect-video bg-gray-100 dark:bg-gray-800">
                       <img
                         src={photo.image_url}
-                        alt={photo.description || 'Photo de galerie'}
+                        alt={photo.description || 'Foto da galeria'}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image+non+disponible';
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Imagem+indisponível';
                         }}
                       />
                       <div className="absolute top-2 right-2 flex gap-2">
@@ -292,7 +296,7 @@ export default function GalleryManagement() {
                         </Button>
                       </div>
                     </div>
-                    
+
                     <CardContent className="flex-1 p-4 flex flex-col">
                       {editingId === photo.id ? (
                         <div className="space-y-2 flex-1 flex flex-col">
@@ -309,7 +313,7 @@ export default function GalleryManagement() {
                               className="flex-1"
                             >
                               <Save className="w-4 h-4 mr-1" />
-                              Enregistrer
+                              Salvar
                             </Button>
                             <Button
                               size="sm"
@@ -323,7 +327,7 @@ export default function GalleryManagement() {
                       ) : (
                         <>
                           <p className="text-sm text-muted-foreground flex-1 mb-3">
-                            {photo.description || 'Aucune description'}
+                            {photo.description || 'Sem descrição'}
                           </p>
                           <div className="flex gap-2">
                             <Button
@@ -336,7 +340,7 @@ export default function GalleryManagement() {
                               className="flex-1"
                             >
                               <Edit className="w-4 h-4 mr-1" />
-                              Modifier
+                              Editar
                             </Button>
                             <Button
                               size="sm"
@@ -348,9 +352,9 @@ export default function GalleryManagement() {
                           </div>
                         </>
                       )}
-                      
+
                       <div className="mt-2 text-xs text-muted-foreground">
-                        {new Date(photo.created_at).toLocaleDateString('fr-FR')}
+                        {new Date(photo.created_at).toLocaleDateString('pt-BR')}
                       </div>
                     </CardContent>
                   </Card>

@@ -18,12 +18,6 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 
-interface BrandingConfig {
-  logo_url: string;
-  show_name: boolean;
-  site_name: string;
-}
-
 interface BrandingSettings {
   logo_url: string;
   show_name: boolean;
@@ -86,57 +80,6 @@ const Navbar = () => {
       }
     } catch (error) {
       console.error('Error fetching branding settings:', error);
-    }
-  };
-  const [branding, setBranding] = useState<BrandingConfig>({
-    logo_url: '/six-events-logo.svg',
-    show_name: true,
-    site_name: 'Six Events',
-  });
-
-  useEffect(() => {
-    fetchBrandingConfig();
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('admin_settings')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'admin_settings' }, (payload) => {
-        if (payload.new) {
-          setBranding({
-            logo_url: payload.new.logo_url || '/six-events-logo.svg',
-            show_name: payload.new.show_name ?? true,
-            site_name: payload.new.site_name || 'Six Events',
-          });
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchBrandingConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('logo_url, show_name, site_name')
-        .eq('setting_key', 'branding')
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao carregar branding:', error);
-        return;
-      }
-
-      if (data) {
-        setBranding({
-          logo_url: data.logo_url || '/six-events-logo.svg',
-          show_name: data.show_name ?? true,
-          site_name: data.site_name || 'Six Events',
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao buscar configurações de branding:', error);
     }
   };
 
