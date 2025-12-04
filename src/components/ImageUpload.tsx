@@ -115,11 +115,11 @@ export default function ImageUpload({
       if (error) throw error;
 
       // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('event-images')
         .getPublicUrl(filePath);
 
-      onImageUploaded(publicUrl);
+      onImageUploaded(urlData.publicUrl);
       toast.success('Image uploadée avec succès!');
     } catch (error: any) {
       console.error('Error uploading image:', error);
