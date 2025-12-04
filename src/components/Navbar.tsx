@@ -39,22 +39,26 @@ const Navbar = () => {
   useEffect(() => {
     fetchBrandingSettings();
     
-    // Subscribe to real-time updates
-    const subscription = supabase
-      .from('admin_settings')
-      .on('*', (payload) => {
-        if (payload.new && 'logo_url' in payload.new) {
-          setBranding({
-            logo_url: payload.new.logo_url || '/six-events-logo.svg',
-            show_name: payload.new.show_name ?? true,
-            site_name: payload.new.site_name || 'Six Events',
-          });
+    // Subscribe to real-time updates using the correct API
+    const channel = supabase
+      .channel('admin_settings')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'admin_settings', filter: "setting_key=eq.branding" },
+        (payload) => {
+          if (payload.new && 'logo_url' in payload.new) {
+            setBranding({
+              logo_url: payload.new.logo_url || '/six-events-logo.svg',
+              show_name: payload.new.show_name ?? true,
+              site_name: payload.new.site_name || 'Six Events',
+            });
+          }
         }
-      })
+      )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, []);
 
