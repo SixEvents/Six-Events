@@ -38,7 +38,7 @@ const Navbar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
-    { path: '/', label: 'Accueil', icon: Sparkles },
+    { path: '/', label: 'Accueil', icon: Calendar },
     { path: '/events', label: 'Événements', icon: Calendar },
     { path: '/party-builder', label: 'Party Builder', icon: PartyPopper },
     { path: '/gallery', label: 'Galerie', icon: ImageIcon },
