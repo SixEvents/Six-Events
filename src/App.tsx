@@ -33,7 +33,6 @@ import ModernQRScanner from './pages/admin/ModernQRScanner';
 import SelectEventToScan from './pages/admin/SelectEventToScan';
 import RecoverReservation from './pages/admin/RecoverReservation';
 import GalleryManagement from './pages/admin/GalleryManagement';
-import BrandingSettings from './pages/admin/BrandingSettings';
 import UserManagement from './pages/UserManagement';
 import Gallery from './pages/Gallery';
 import NotFound from './pages/NotFound';
@@ -186,14 +185,6 @@ const App = () => (
               element={
                 <AdminRoute>
                   <UserManagement />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/branding"
-              element={
-                <AdminRoute>
-                  <BrandingSettings />
                 </AdminRoute>
               }
             />

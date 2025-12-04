@@ -1,10 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 import { 
-  Sparkles, 
   Calendar, 
   PartyPopper, 
   User, 
@@ -30,62 +28,6 @@ const Navbar = () => {
   const { user, profile, signOut, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [branding, setBranding] = useState<BrandingSettings>({
-    logo_url: '/six-events-logo.svg',
-    show_name: true,
-    site_name: 'Six Events',
-  });
-
-  useEffect(() => {
-    fetchBrandingSettings();
-    
-    // Subscribe to real-time updates using the correct API
-    const channel = supabase
-      .channel('admin_settings')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'admin_settings', filter: "setting_key=eq.branding" },
-        (payload) => {
-          if (payload.new && 'logo_url' in payload.new) {
-            setBranding({
-              logo_url: payload.new.logo_url || '/six-events-logo.svg',
-              show_name: payload.new.show_name ?? true,
-              site_name: payload.new.site_name || 'Six Events',
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchBrandingSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('logo_url, show_name, site_name')
-        .eq('setting_key', 'branding')
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching branding settings:', error);
-        return;
-      }
-
-      if (data) {
-        setBranding({
-          logo_url: data.logo_url || '/six-events-logo.svg',
-          show_name: data.show_name ?? true,
-          site_name: data.site_name || 'Six Events',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching branding settings:', error);
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -109,18 +51,14 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <img
-              src={branding.logo_url}
-              alt="Logo"
+              src="/logo/logo.png"
+              alt="Six Events"
               className="h-10 w-auto object-contain"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/six-events-logo.svg';
+                (e.target as HTMLImageElement).src = '/logo/logobarra/logobarra.png';
               }}
             />
-            {branding.show_name && (
-              <span className="text-2xl font-bold hidden sm:block text-pink-600">
-                {branding.site_name}
-              </span>
-            )}
+            <span className="text-2xl font-bold hidden sm:block text-pink-600">Six Events</span>
           </Link>
 
           {/* Desktop Navigation */}
