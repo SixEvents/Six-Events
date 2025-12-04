@@ -20,8 +20,8 @@ export default function ImageUpload({
   const [preview, setPreview] = useState<string | null>(currentImage || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const compressImage = async (file: File): Promise<File> => {
-    return new Promise((resolve) => {
+  const compressImage = async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       
@@ -55,17 +55,23 @@ export default function ImageUpload({
           canvas.toBlob(
             (blob) => {
               if (blob) {
-                const compressedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now(),
-                });
-                resolve(compressedFile);
+                resolve(blob);
+              } else {
+                reject(new Error('Failed to compress image'));
               }
             },
             'image/jpeg',
             0.8 // Qualidade 80%
           );
         };
+        
+        img.onerror = () => {
+          reject(new Error('Failed to load image'));
+        };
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
       };
     });
   };
@@ -98,7 +104,7 @@ export default function ImageUpload({
       reader.readAsDataURL(file);
 
       // Comprimir imagem
-      const compressedFile = await compressImage(file);
+      const compressedBlob = await compressImage(file);
       
       // Upload para Supabase Storage
       const fileExt = file.name.split('.').pop();
@@ -107,7 +113,7 @@ export default function ImageUpload({
 
       const { data, error } = await supabase.storage
         .from('event-images')
-        .upload(filePath, compressedFile, {
+        .upload(filePath, compressedBlob, {
           cacheControl: '3600',
           upsert: false
         });
