@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import { 
   Sparkles, 
   Calendar, 
@@ -17,12 +18,127 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 
+interface BrandingConfig {
+  logo_url: string;
+  show_name: boolean;
+  site_name: string;
+}
+
+interface BrandingSettings {
+  logo_url: string;
+  show_name: boolean;
+  site_name: string;
+}
+
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [branding, setBranding] = useState<BrandingSettings>({
+    logo_url: '/six-events-logo.svg',
+    show_name: true,
+    site_name: 'Six Events',
+  });
+
+  useEffect(() => {
+    fetchBrandingSettings();
+    
+    // Subscribe to real-time updates
+    const subscription = supabase
+      .from('admin_settings')
+      .on('*', (payload) => {
+        if (payload.new && 'logo_url' in payload.new) {
+          setBranding({
+            logo_url: payload.new.logo_url || '/six-events-logo.svg',
+            show_name: payload.new.show_name ?? true,
+            site_name: payload.new.site_name || 'Six Events',
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchBrandingSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('logo_url, show_name, site_name')
+        .eq('setting_key', 'branding')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching branding settings:', error);
+        return;
+      }
+
+      if (data) {
+        setBranding({
+          logo_url: data.logo_url || '/six-events-logo.svg',
+          show_name: data.show_name ?? true,
+          site_name: data.site_name || 'Six Events',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching branding settings:', error);
+    }
+  };
+  const [branding, setBranding] = useState<BrandingConfig>({
+    logo_url: '/six-events-logo.svg',
+    show_name: true,
+    site_name: 'Six Events',
+  });
+
+  useEffect(() => {
+    fetchBrandingConfig();
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('admin_settings')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'admin_settings' }, (payload) => {
+        if (payload.new) {
+          setBranding({
+            logo_url: payload.new.logo_url || '/six-events-logo.svg',
+            show_name: payload.new.show_name ?? true,
+            site_name: payload.new.site_name || 'Six Events',
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchBrandingConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('logo_url, show_name, site_name')
+        .eq('setting_key', 'branding')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao carregar branding:', error);
+        return;
+      }
+
+      if (data) {
+        setBranding({
+          logo_url: data.logo_url || '/six-events-logo.svg',
+          show_name: data.show_name ?? true,
+          site_name: data.site_name || 'Six Events',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar configurações de branding:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,15 +160,20 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
-              className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"
-            >
-              <Sparkles className="w-6 h-6 text-white" />
-            </motion.div>
-            <span className="text-2xl font-bold gradient-text hidden sm:block">Six Events</span>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <img
+              src={branding.logo_url}
+              alt="Logo"
+              className="h-10 w-auto object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/six-events-logo.svg';
+              }}
+            />
+            {branding.show_name && (
+              <span className="text-2xl font-bold hidden sm:block text-pink-600">
+                {branding.site_name}
+              </span>
+            )}
           </Link>
 
           {/* Desktop Navigation */}
