@@ -53,7 +53,7 @@ const Navbar = () => {
             <img
               src="/logo/logo.png"
               alt="Six Events"
-              className="h-25 w-auto object-contain" 
+              className="h-22 w-auto object-contain" 
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/logo/logobarra/logobarra.png';
               }}
