@@ -53,12 +53,11 @@ const Navbar = () => {
             <img
               src="/logo/logo.png"
               alt="Six Events"
-              className="h-10 w-auto object-contain"
+              className="h-16 w-auto object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/logo/logobarra/logobarra.png';
               }}
             />
-            <span className="text-2xl font-bold hidden sm:block text-pink-600">Six Events</span>
           </Link>
 
           {/* Desktop Navigation */}
