@@ -7,14 +7,20 @@ import { toast } from 'sonner';
 
 interface ImageUploadProps {
   currentImage?: string;
-  onImageUploaded: (url: string) => void;
+  onImageUploaded?: (url: string) => void;
+  onUploadComplete?: (url: string) => void;
   onImageRemoved?: () => void;
+  bucket?: string;
+  folder?: string;
 }
 
 export default function ImageUpload({ 
   currentImage, 
   onImageUploaded, 
-  onImageRemoved 
+  onUploadComplete,
+  onImageRemoved,
+  bucket = 'event-images',
+  folder = 'events'
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
@@ -109,10 +115,10 @@ export default function ImageUpload({
       // Upload para Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `events/${fileName}`;
+      const filePath = `${folder}/${fileName}`;
 
       const { data, error } = await supabase.storage
-        .from('event-images')
+        .from(bucket)
         .upload(filePath, compressedBlob, {
           cacheControl: '3600',
           upsert: false
@@ -122,11 +128,16 @@ export default function ImageUpload({
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
-        .from('event-images')
+        .from(bucket)
         .getPublicUrl(filePath);
 
-      onImageUploaded(urlData.publicUrl);
-      toast.success('Image uploadée avec succès!');
+      // Chamar o callback apropriado
+      if (onImageUploaded) {
+        onImageUploaded(urlData.publicUrl);
+      } else if (onUploadComplete) {
+        onUploadComplete(urlData.publicUrl);
+      }
+      toast.success('Image uploadée com sucesso!');
     } catch (error: any) {
       console.error('Error uploading image:', error);
       toast.error('Erreur upload: ' + error.message);
