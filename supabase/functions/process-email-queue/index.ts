@@ -148,7 +148,7 @@ serve(async (req) => {
         }
 
         const emailPayload: any = {
-          from: 'Six Events <noreply@sixevents.be>',
+          from: `Six Events <${Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@sixevents.be'}>`,
           to: [email.recipient_email],
           subject: subject,
           html: html
