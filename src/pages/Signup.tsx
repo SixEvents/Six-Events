@@ -92,19 +92,19 @@ export default function Signup() {
       </motion.div>
 
       {/* Right Side - Signup Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="w-full max-w-md"
         >
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Créer un compte 🎉</h1>
-            <p className="text-gray-600">Commencez à organiser des moments magiques</p>
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Créer un compte 🎉</h1>
+            <p className="text-sm md:text-base text-gray-600">Commencez à organiser des moments magiques</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -116,48 +116,48 @@ export default function Signup() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-gray-700">Nom complet</Label>
+              <Label htmlFor="fullName" className="text-sm md:text-base text-gray-700">Nom complet</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-5 h-4 md:h-5" />
                 <Input
                   id="fullName"
                   type="text"
                   placeholder="Jean Dupont"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500"
+                  className="pl-10 h-10 md:h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500 text-sm"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700">Email</Label>
+              <Label htmlFor="email" className="text-sm md:text-base text-gray-700">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-5 h-4 md:h-5" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="votre@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500"
+                  className="pl-10 h-10 md:h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500 text-sm"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700">Mot de passe</Label>
+              <Label htmlFor="password" className="text-sm md:text-base text-gray-700">Mot de passe</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-5 h-4 md:h-5" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500"
+                  className="pl-10 h-10 md:h-12 border-gray-200 focus:border-pink-500 focus:ring-pink-500 text-sm"
                   required
                 />
               </div>
