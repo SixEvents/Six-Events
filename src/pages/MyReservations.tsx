@@ -169,9 +169,9 @@ export default function MyReservations() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 transition-colors duration-200">
+    <div className="min-h-screen bg-background py-6 md:py-12 px-3 md:px-4 transition-colors duration-200">
       <div className="container mx-auto max-w-6xl">
-        <h1 className="text-4xl font-bold mb-8 dark:text-white">Mes Réservations</h1>
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 md:mb-8 dark:text-white">Mes Réservations</h1>
 
         <div className="space-y-6">
           {reservations.map((reservation, index) => (
@@ -182,10 +182,10 @@ export default function MyReservations() {
               transition={{ delay: index * 0.1 }}
             >
               <Card className="transition-all duration-200 hover:shadow-lg dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-2xl mb-2 dark:text-white">
+                <CardHeader className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                    <div className="flex-1 w-full">
+                      <CardTitle className="text-lg md:text-xl lg:text-2xl mb-2 dark:text-white">
                         {reservation.event?.title || 'Événement'}
                       </CardTitle>
                       <div className="flex flex-wrap gap-2">
@@ -207,24 +207,24 @@ export default function MyReservations() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-primary">
+                      <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary">
                         {reservation.total_price?.toFixed(2)}€
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs md:text-sm text-muted-foreground">
                         {reservation.number_of_places} place{(reservation.number_of_places || 0) > 1 ? 's' : ''}
                       </div>
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-4 md:p-6">
                   {/* Event Info */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-primary" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <Calendar className="w-4 md:w-5 h-4 md:h-5 text-primary flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Date</p>
-                        <p className="font-semibold dark:text-white">
+                        <p className="text-xs md:text-sm text-muted-foreground">Date</p>
+                        <p className="text-sm md:text-base font-semibold dark:text-white">
                           {reservation.event?.date 
                             ? format(new Date(reservation.event.date), 'EEEE d MMMM yyyy', { locale: fr })
                             : 'Date non définie'}
@@ -233,11 +233,11 @@ export default function MyReservations() {
                     </div>
                     
                     {reservation.event?.location && (
-                      <div className="flex items-center gap-3">
-                        <MapPin className="w-5 h-5 text-primary" />
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <MapPin className="w-4 md:w-5 h-4 md:h-5 text-primary flex-shrink-0" />
                         <div>
-                          <p className="text-sm text-muted-foreground">Lieu</p>
-                          <p className="font-semibold dark:text-white">{reservation.event.location}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">Lieu</p>
+                          <p className="text-sm md:text-base font-semibold dark:text-white">{reservation.event.location}</p>
                         </div>
                       </div>
                     )}
@@ -247,18 +247,19 @@ export default function MyReservations() {
 
                   {/* Tickets */}
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold flex items-center gap-2 dark:text-white">
-                        <QrCode className="w-5 h-5 text-primary" />
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 md:mb-4 gap-3">
+                      <h4 className="font-semibold flex items-center gap-2 dark:text-white text-sm md:text-base">
+                        <QrCode className="w-4 md:w-5 h-4 md:h-5 text-primary flex-shrink-0" />
                         Billets ({reservation.tickets?.length || 0})
                       </h4>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full sm:w-auto">
                         <Button
                           onClick={() => setExpandedReservation(
                             expandedReservation === reservation.id ? null : reservation.id
                           )}
                           variant="outline"
                           size="sm"
+                          className="flex-1 sm:flex-none text-xs md:text-sm h-9"
                         >
                           {expandedReservation === reservation.id ? 'Masquer' : 'Voir les QR Codes'}
                         </Button>
@@ -267,36 +268,38 @@ export default function MyReservations() {
                             onClick={() => downloadAllQRCodes(reservation)}
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-none text-xs md:text-sm h-9"
                           >
-                            <Download className="w-4 h-4 mr-2" />
-                            Tout télécharger
+                            <Download className="w-3 md:w-4 h-3 md:h-4 mr-1 md:mr-2" />
+                            <span className="hidden sm:inline">Tout télécharger</span>
+                            <span className="sm:hidden">Téléch.</span>
                           </Button>
                         )}
                       </div>
                     </div>
 
                     {expandedReservation === reservation.id && reservation.tickets && (
-                      <div className="grid md:grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
                         {reservation.tickets.map((ticket) => (
                           <Card
                             key={ticket.id}
-                            className="p-4 transition-colors duration-200 dark:bg-gray-700"
+                            className="p-3 md:p-4 transition-colors duration-200 dark:bg-gray-700"
                           >
-                            <div className="flex flex-col items-center gap-3">
-                              <div className="bg-white p-4 rounded-lg">
+                            <div className="flex flex-col items-center gap-2 md:gap-3">
+                              <div className="bg-white p-2 md:p-4 rounded-lg">
                                 <QRCodeSVG
                                   id={`qr-${ticket.id}`}
                                   value={ticket.qr_code_data}
-                                  size={180}
+                                  size={140}
                                   level="H"
                                   includeMargin
                                 />
                               </div>
                               <div className="text-center w-full">
-                                <p className="font-semibold dark:text-white">
+                                <p className="text-sm md:text-base font-semibold dark:text-white">
                                   {ticket.participant_name}
                                 </p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-xs md:text-sm text-muted-foreground">
                                   Billet #{ticket.ticket_number}
                                 </p>
                                 <Badge
@@ -332,8 +335,8 @@ export default function MyReservations() {
 
                   {/* Buyer Info */}
                   <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="text-xs md:text-sm text-muted-foreground">
                       <p>Réservation effectuée le {format(new Date(reservation.created_at!), 'dd MMMM yyyy à HH:mm', { locale: fr })}</p>
                       <p>ID: {reservation.id.substring(0, 8)}</p>
                     </div>
@@ -345,6 +348,7 @@ export default function MyReservations() {
                             variant="destructive"
                             size="sm"
                             disabled={cancellingId === reservation.id}
+                            className="w-full sm:w-auto text-xs md:text-sm h-9"
                           >
                             {cancellingId === reservation.id ? (
                               <>

@@ -654,12 +654,12 @@ export default function CheckoutEvent() {
                         </div>
                       )}
 
-                      <div className="flex gap-3">
+                      <div className="flex gap-2 md:gap-3">
                         <Button
                           type="button"
                           onClick={() => setCurrentStep(quantity === 1 ? 1 : 2)}
                           variant="outline"
-                          className="flex-1"
+                          className="flex-1 h-10 md:h-11 text-sm md:text-base"
                         >
                           Retour
                         </Button>
@@ -667,24 +667,27 @@ export default function CheckoutEvent() {
                           type="submit"
                           disabled={loading}
                           variant="hero"
-                          className="flex-1"
+                          className="flex-1 h-10 md:h-11 text-sm md:text-base"
                         >
                           {loading ? (
                             <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              {formData.paymentMethod === 'stripe' ? 'Redirection vers Stripe...' : 'Traitement...'}
+                              <Loader2 className="w-3 md:w-4 h-3 md:h-4 mr-1 md:mr-2 animate-spin" />
+                              <span className="hidden sm:inline">{formData.paymentMethod === 'stripe' ? 'Redirection vers Stripe...' : 'Traitement...'}</span>
+                              <span className="sm:hidden">{formData.paymentMethod === 'stripe' ? 'Redirection...' : 'Envoi...'}</span>
                             </>
                           ) : (
                             <>
                               {formData.paymentMethod === 'stripe' ? (
                                 <>
-                                  <CreditCard className="w-4 h-4 mr-2" />
-                                  Procéder au paiement Stripe
+                                  <CreditCard className="w-3 md:w-4 h-3 md:h-4 mr-1 md:mr-2" />
+                                  <span className="hidden sm:inline">Procéder au paiement Stripe</span>
+                                  <span className="sm:hidden">Procéder au paiement</span>
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                                  Confirmer la réservation
+                                  <CheckCircle2 className="w-3 md:w-4 h-3 md:h-4 mr-1 md:mr-2" />
+                                  <span className="hidden sm:inline">Confirmer la réservation</span>
+                                  <span className="sm:hidden">Confirmer</span>
                                 </>
                               )}
                             </>
