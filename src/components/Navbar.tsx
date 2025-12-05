@@ -46,14 +46,14 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-20">
+      <div className="container mx-auto px-3 md:px-4 md:px-6">
+        <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
+          <Link to="/" className="flex items-center space-x-2 md:space-x-3 group flex-shrink-0">
             <img
               src="/logo/logo.png"
               alt="Six Events"
-              className="h-20 w-auto object-contain" 
+              className="h-14 md:h-20 w-auto object-contain" 
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/logo/logobarra/logobarra.png';
               }}

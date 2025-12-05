@@ -390,22 +390,22 @@ export default function CheckoutEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 transition-colors duration-200">
+    <div className="min-h-screen bg-background py-8 md:py-12 px-3 md:px-4 transition-colors duration-200">
       <div className="container mx-auto max-w-6xl">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 md:mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
 
-        <h1 className="text-4xl font-bold mb-2 dark:text-white">Réservation</h1>
-        <p className="text-muted-foreground mb-8">Complétez votre réservation en 3 étapes</p>
+        <h1 className="text-2xl md:text-4xl font-bold mb-2 dark:text-white">Réservation</h1>
+        <p className="text-xs md:text-base text-muted-foreground mb-6 md:mb-8">Complétez votre réservation em 3 étapes</p>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-12 gap-4">
+        <div className="flex items-center justify-center mb-8 md:mb-12 gap-2 md:gap-4">
           {[1, 2, 3].map((step) => (
             <div key={step} className="flex items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
+                className={`w-8 md:w-10 h-8 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-base transition-colors ${
                   currentStep >= step
                     ? 'bg-primary text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
@@ -415,7 +415,7 @@ export default function CheckoutEvent() {
               </div>
               {step < 3 && (
                 <div
-                  className={`w-16 h-1 mx-2 transition-colors ${
+                  className={`w-8 md:w-16 h-1 mx-1 md:mx-2 transition-colors ${
                     currentStep > step ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
                   }`}
                 />
@@ -424,13 +424,13 @@ export default function CheckoutEvent() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Form */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-2 lg:order-1">
             <form onSubmit={handleSubmit}>
               <Card className="transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle>
+                <CardHeader className="pb-3 md:pb-4">
+                  <CardTitle className="text-lg md:text-xl">
                     {currentStep === 1 && '1. Vos informations'}
                     {currentStep === 2 && '2. Participants'}
                     {currentStep === 3 && '3. Paiement'}

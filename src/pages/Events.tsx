@@ -85,18 +85,18 @@ const Events = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white py-8 md:py-12">
+      <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
             Découvrez nos <span className="gradient-text">événements</span> 🎪
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
             Des moments magiques et inoubliables pour vos enfants
           </p>
         </motion.div>
@@ -106,11 +106,11 @@ const Events = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl shadow-lg p-6 mb-8"
+          className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6 md:mb-8"
         >
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {/* Search */}
-            <div className="md:col-span-2">
+            <div className="col-span-1 md:col-span-2 lg:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
@@ -151,12 +151,12 @@ const Events = () => {
             </Select>
           </div>
 
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0 mt-4 pt-4 border-t border-gray-100">
             <div className="text-sm text-gray-600">
               <strong>{filteredEvents.length}</strong> événement{filteredEvents.length > 1 ? 's' : ''} trouvé{filteredEvents.length > 1 ? 's' : ''}
             </div>
             <Select value={priceSort} onValueChange={setPriceSort}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Trier par prix" />
               </SelectTrigger>
               <SelectContent>
@@ -176,7 +176,7 @@ const Events = () => {
             <p className="text-gray-600">Essayez de modifier vos filtres de recherche</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             {filteredEvents.map((event, index) => (
               <motion.div
                 key={event.id}
