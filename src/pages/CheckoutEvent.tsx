@@ -441,19 +441,19 @@ export default function CheckoutEvent() {
                   {currentStep === 1 && (
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="buyerName">Nom complet *</Label>
+                        <Label htmlFor="buyerName" className="text-sm">Nom complet *</Label>
                         <Input
                           id="buyerName"
                           value={formData.buyerName}
                           onChange={(e) => handleInputChange('buyerName', e.target.value)}
                           placeholder="Jean Dupont"
                           required
-                          className="transition-colors dark:bg-gray-700 dark:border-gray-600"
+                          className="h-10 text-sm transition-colors dark:bg-gray-700 dark:border-gray-600"
                         />
                       </div>
                       
                       <div>
-                        <Label htmlFor="buyerEmail">Email *</Label>
+                        <Label htmlFor="buyerEmail" className="text-sm">Email *</Label>
                         <Input
                           id="buyerEmail"
                           type="email"
@@ -461,12 +461,12 @@ export default function CheckoutEvent() {
                           onChange={(e) => handleInputChange('buyerEmail', e.target.value)}
                           placeholder="jean.dupont@email.com"
                           required
-                          className="transition-colors dark:bg-gray-700 dark:border-gray-600"
+                          className="h-10 text-sm transition-colors dark:bg-gray-700 dark:border-gray-600"
                         />
                       </div>
                       
                       <div>
-                        <Label htmlFor="buyerPhone">Téléphone *</Label>
+                        <Label htmlFor="buyerPhone" className="text-sm">Téléphone *</Label>
                         <Input
                           id="buyerPhone"
                           type="tel"
@@ -474,11 +474,11 @@ export default function CheckoutEvent() {
                           onChange={(e) => handleInputChange('buyerPhone', e.target.value)}
                           placeholder="+33 6 12 34 56 78"
                           required
-                          className="transition-colors dark:bg-gray-700 dark:border-gray-600"
+                          className="h-10 text-sm transition-colors dark:bg-gray-700 dark:border-gray-600"
                         />
                       </div>
 
-                      <Button type="button" onClick={handleNextStep} className="w-full" variant="hero">
+                      <Button type="button" onClick={handleNextStep} className="w-full h-11 text-sm md:text-base" variant="hero">
                         Continuer
                       </Button>
                     </div>
@@ -590,44 +590,44 @@ export default function CheckoutEvent() {
 
                       {/* Informações do Stripe */}
                       {formData.paymentMethod === 'stripe' && (
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                          <div className="flex items-start gap-3 mb-4">
-                            <CreditCard className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 md:p-6">
+                          <div className="flex items-start gap-2 md:gap-3 mb-3 md:mb-4">
+                            <CreditCard className="w-5 md:w-6 h-5 md:h-6 text-blue-600 flex-shrink-0 mt-1" />
                             <div>
-                              <h4 className="font-bold text-lg text-blue-900 dark:text-blue-100 mb-2">
+                              <h4 className="font-bold text-base md:text-lg text-blue-900 dark:text-blue-100 mb-1 md:mb-2">
                                 🔒 Paiement Sécurisé par Stripe
                               </h4>
-                              <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                              <p className="text-xs md:text-sm text-blue-800 dark:text-blue-200 mb-2 md:mb-3">
                                 Vous serez redirigé vers la page de paiement sécurisée Stripe
                               </p>
                             </div>
                           </div>
 
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3 border border-blue-200 dark:border-blue-700">
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 space-y-2 md:space-y-3 border border-blue-200 dark:border-blue-700">
                             <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 text-green-600" />
-                              <p className="text-sm text-gray-700 dark:text-gray-300">Paiement instantané et sécurisé</p>
+                              <CheckCircle2 className="w-4 md:w-5 h-4 md:h-5 text-green-600 flex-shrink-0" />
+                              <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300">Paiement instantané et sécurisé</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 text-green-600" />
-                              <p className="text-sm text-gray-700 dark:text-gray-300">Confirmation immédiate par email</p>
+                              <CheckCircle2 className="w-4 md:w-5 h-4 md:h-5 text-green-600 flex-shrink-0" />
+                              <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300">Confirmation immédiate par email</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 text-green-600" />
-                              <p className="text-sm text-gray-700 dark:text-gray-300">QR codes envoyés automatiquement</p>
+                              <CheckCircle2 className="w-4 md:w-5 h-4 md:h-5 text-green-600 flex-shrink-0" />
+                              <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300">QR codes envoyés automatiquement</p>
                             </div>
                             
                             <Separator />
 
                             <div>
                               <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Montant total</p>
-                              <p className="font-bold text-2xl text-blue-600">{totalPrice.toFixed(2)}€</p>
+                              <p className="font-bold text-xl md:text-2xl text-blue-600">{totalPrice.toFixed(2)}€</p>
                             </div>
                           </div>
 
-                          <div className="mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-300 dark:border-indigo-700 rounded-lg p-4">
-                            <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2 mb-2">
-                              <CheckCircle2 className="w-5 h-5" />
+                          <div className="mt-3 md:mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-300 dark:border-indigo-700 rounded-lg p-3 md:p-4">
+                            <p className="text-xs md:text-sm font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2 mb-1 md:mb-2">
+                              <CheckCircle2 className="w-4 md:w-5 h-4 md:h-5 flex-shrink-0" />
                               🔄 Prochaine étape
                             </p>
                             <p className="text-xs text-indigo-800 dark:text-indigo-200">
@@ -639,12 +639,12 @@ export default function CheckoutEvent() {
 
                       {/* Detalhes do dinheiro */}
                       {formData.paymentMethod === 'cash' && (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-6">
-                          <p className="text-sm font-bold text-yellow-900 dark:text-yellow-100 mb-3">
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 md:p-6">
+                          <p className="text-xs md:text-sm font-bold text-yellow-900 dark:text-yellow-100 mb-2 md:mb-3">
                             💵 Paiement en Espèces sur Place
                           </p>
-                          <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-4">
-                            Vous devrez payer <strong className="text-lg">{totalPrice.toFixed(2)}€</strong> en espèces le jour de l'événement à l'entrée.
+                          <p className="text-xs md:text-sm text-yellow-800 dark:text-yellow-200 mb-3 md:mb-4">
+                            Vous devrez payer <strong className="text-base md:text-lg">{totalPrice.toFixed(2)}€</strong> en espèces le jour de l'événement à l'entrée.
                           </p>
                           <ul className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1 ml-4">
                             <li>• Votre réservation sera enregistrée mais <strong>non confirmée</strong></li>

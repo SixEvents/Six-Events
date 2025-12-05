@@ -179,13 +179,13 @@ export default function AdminEvents() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-gray-900 dark:to-gray-800 py-12">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-gray-900 dark:to-gray-800 py-6 md:py-12">
+      <div className="container mx-auto px-3 md:px-4 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 md:mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2 dark:text-white">Gestion des Événements</h1>
-            <p className="text-gray-600 dark:text-gray-400">Créer et gérer les événements Six Events</p>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1 md:mb-2 dark:text-white">Gestion des Événements</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">Créer et gérer les événements Six Events</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open);
@@ -195,8 +195,8 @@ export default function AdminEvents() {
             }
           }}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
-                <Plus className="w-5 h-5 mr-2" />
+              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 w-full sm:w-auto h-10 md:h-11 text-sm md:text-base">
+                <Plus className="w-4 md:w-5 h-4 md:h-5 mr-2" />
                 Nouvel Événement
               </Button>
             </DialogTrigger>
@@ -354,45 +354,48 @@ export default function AdminEvents() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="p-6 hover:shadow-xl transition-shadow dark:bg-gray-800">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-2xl font-bold dark:text-white">{event.title}</h3>
-                        <Badge variant={event.is_visible ? "default" : "secondary"}>
-                          {event.is_visible ? 'Visible' : 'Masqué'}
-                        </Badge>
-                        <Badge>{event.category}</Badge>
+                <Card className="p-4 md:p-6 hover:shadow-xl transition-shadow dark:bg-gray-800">
+                  <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                    <div className="flex-1 w-full">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 mb-3">
+                        <h3 className="text-lg md:text-xl lg:text-2xl font-bold dark:text-white">{event.title}</h3>
+                        <div className="flex gap-2 flex-wrap">
+                          <Badge variant={event.is_visible ? "default" : "secondary"}>
+                            {event.is_visible ? 'Visible' : 'Masqué'}
+                          </Badge>
+                          <Badge>{event.category}</Badge>
+                        </div>
                       </div>
                       
-                      <p className="text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-line">{event.description}</p>
+                      <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-line">{event.description}</p>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 text-xs md:text-sm">
                         <div className="flex items-center text-gray-700 dark:text-gray-300">
-                          <Calendar className="w-4 h-4 mr-2 text-pink-500" />
-                          {format(new Date(event.date), 'dd MMM yyyy', { locale: fr })}
+                          <Calendar className="w-3 md:w-4 h-3 md:h-4 mr-2 text-pink-500 flex-shrink-0" />
+                          <span className="truncate">{format(new Date(event.date), 'dd MMM yyyy', { locale: fr })}</span>
                         </div>
                         {event.location && (
                           <div className="flex items-center text-gray-700 dark:text-gray-300">
-                            <MapPin className="w-4 h-4 mr-2 text-pink-500" />
-                            {event.location}
+                            <MapPin className="w-3 md:w-4 h-3 md:h-4 mr-2 text-pink-500 flex-shrink-0" />
+                            <span className="truncate">{event.location}</span>
                           </div>
                         )}
                         <div className="flex items-center text-gray-700 dark:text-gray-300">
-                          <Users className="w-4 h-4 mr-2 text-pink-500" />
+                          <Users className="w-3 md:w-4 h-3 md:h-4 mr-2 text-pink-500 flex-shrink-0" />
                           {event.available_places || 0} places
                         </div>
-                        <div className="text-2xl font-bold gradient-text">
+                        <div className="text-lg md:text-xl lg:text-2xl font-bold gradient-text">
                           {event.price ? `${event.price}€` : 'Gratuit'}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 w-full md:w-auto md:ml-4">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => toggleVisibility(event)}
+                        className="flex-1 md:flex-none"
                       >
                         {event.is_visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
@@ -400,6 +403,7 @@ export default function AdminEvents() {
                         size="sm"
                         variant="outline"
                         onClick={() => openEditDialog(event)}
+                        className="flex-1 md:flex-none"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -407,7 +411,7 @@ export default function AdminEvents() {
                         size="sm"
                         variant="outline"
                         onClick={() => openDeleteDialog(event.id)}
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-red-600 hover:bg-red-50 flex-1 md:flex-none"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
