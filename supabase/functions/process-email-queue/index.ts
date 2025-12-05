@@ -155,6 +155,9 @@ serve(async (req) => {
         }
 
         console.log(`📬 Sending email via Resend API...`)
+        console.log(`📧 Email to: ${email.recipient_email}`)
+        console.log(`📧 Subject: ${subject}`)
+        console.log(`📧 From: ${emailPayload.from}`)
         
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -168,7 +171,8 @@ serve(async (req) => {
         const responseData = await res.text()
         
         if (!res.ok) {
-          console.error('❌ Resend API error:', responseData)
+          console.error('❌ Resend API error (Status:', res.status, '):', responseData)
+          console.error('❌ Email payload:', JSON.stringify(emailPayload, null, 2).substring(0, 500))
           throw new Error(`Resend error: ${responseData}`)
         }
         
