@@ -390,31 +390,32 @@ export default function ModernQRScanner() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 py-4 md:py-8 max-w-2xl">
         <AnimatePresence mode="wait">
           {!scanning && !result && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
+              className="flex items-center justify-center min-h-[60vh]"
             >
-              <Card className="overflow-hidden border-4 border-purple-200 dark:border-purple-800">
-                <CardContent className="p-12 text-center">
-                  <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <Camera className="w-16 h-16 text-white" />
+              <Card className="overflow-hidden border-4 border-purple-200 dark:border-purple-800 w-full">
+                <CardContent className="p-6 md:p-12 text-center">
+                  <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-4 md:mb-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <Camera className="w-12 h-12 md:w-16 md:h-16 text-white" />
                   </div>
-                  <h2 className="text-3xl font-bold mb-4">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
                     Prêt à scanner
                   </h2>
-                  <p className="text-muted-foreground mb-8">
+                  <p className="text-muted-foreground mb-6 md:mb-8 text-sm md:text-base px-4">
                     Appuyez sur le bouton pour activer la caméra et scanner les billets d'entrée
                   </p>
                   <Button
                     onClick={startScanning}
                     size="lg"
-                    className="w-full h-16 text-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="w-full h-14 md:h-16 text-lg md:text-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   >
-                    <Zap className="w-6 h-6 mr-3" />
+                    <Zap className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3" />
                     Activer le Scanner
                   </Button>
                 </CardContent>
@@ -427,28 +428,29 @@ export default function ModernQRScanner() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="flex items-center justify-center"
             >
-              <Card className="overflow-hidden border-4 border-green-400 shadow-2xl">
+              <Card className="overflow-hidden border-4 border-green-400 shadow-2xl w-full">
                 <CardContent className="p-0">
-                  <div className="relative">
+                  <div className="relative flex items-center justify-center">
                     {/* Zone de scan */}
                     <div 
                       id="qr-reader" 
-                      className="w-full"
-                      style={{ minHeight: '400px' }}
+                      className="w-full mx-auto"
+                      style={{ minHeight: '300px', maxWidth: '100%' }}
                     />
                     
                     {/* Indicateur de scan */}
                     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-                      <Badge className="bg-green-500 text-white px-6 py-2 text-lg animate-pulse">
-                        <Camera className="w-5 h-5 mr-2" />
+                      <Badge className="bg-green-500 text-white px-4 md:px-6 py-2 text-base md:text-lg animate-pulse">
+                        <Camera className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                         Scan en cours...
                       </Badge>
                     </div>
                   </div>
                   
-                  <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-                    <p className="text-center text-lg font-semibold mb-4">
+                  <div className="p-4 md:p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+                    <p className="text-center text-base md:text-lg font-semibold mb-3 md:mb-4">
                       📱 Présentez le QR code devant la caméra
                     </p>
                     <Button

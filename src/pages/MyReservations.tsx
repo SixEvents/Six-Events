@@ -150,16 +150,16 @@ export default function MyReservations() {
 
   if (reservations.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-12 px-4 transition-colors duration-200">
+      <div className="min-h-screen bg-background py-8 md:py-12 px-4 transition-colors duration-200">
         <div className="container mx-auto max-w-4xl">
-          <h1 className="text-4xl font-bold mb-8 dark:text-white">Mes Réservations</h1>
-          <Card className="p-12 text-center transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
-            <div className="text-6xl mb-4">🎟️</div>
-            <h3 className="text-2xl font-bold mb-2 dark:text-white">Aucune réservation</h3>
-            <p className="text-muted-foreground mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 md:mb-8 dark:text-white">Mes Réservations</h1>
+          <Card className="p-8 md:p-12 text-center transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
+            <div className="text-5xl md:text-6xl mb-4">🎟️</div>
+            <h3 className="text-xl md:text-2xl font-bold mb-2 dark:text-white">Aucune réservation</h3>
+            <p className="text-muted-foreground mb-6 text-sm md:text-base">
               Vous n'avez pas encore réservé d'événements
             </p>
-            <Button onClick={() => window.location.href = '/events'} variant="hero">
+            <Button onClick={() => window.location.href = '/events'} variant="hero" className="w-full md:w-auto">
               Découvrir les événements
             </Button>
           </Card>
@@ -171,9 +171,11 @@ export default function MyReservations() {
   return (
     <div className="min-h-screen bg-background py-6 md:py-12 px-3 md:px-4 transition-colors duration-200">
       <div className="container mx-auto max-w-6xl">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 md:mb-8 dark:text-white">Mes Réservations</h1>
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 md:mb-8 dark:text-white text-center md:text-left">
+          Mes Réservations 🎫
+        </h1>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {reservations.map((reservation, index) => (
             <motion.div
               key={reservation.id}
@@ -286,13 +288,14 @@ export default function MyReservations() {
                             className="p-3 md:p-4 transition-colors duration-200 dark:bg-gray-700"
                           >
                             <div className="flex flex-col items-center gap-2 md:gap-3">
-                              <div className="bg-white p-2 md:p-4 rounded-lg">
+                              <div className="bg-white p-3 md:p-4 rounded-lg w-full max-w-[200px] mx-auto flex items-center justify-center">
                                 <QRCodeSVG
                                   id={`qr-${ticket.id}`}
                                   value={ticket.qr_code_data}
-                                  size={140}
+                                  size={160}
                                   level="H"
                                   includeMargin
+                                  className="w-full h-auto"
                                 />
                               </div>
                               <div className="text-center w-full">

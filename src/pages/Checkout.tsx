@@ -123,16 +123,16 @@ export default function Checkout() {
           Retour
         </Button>
 
-        <h1 className="text-4xl font-bold mb-8">Finaliser la commande</h1>
+        <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8 text-center px-4">Finaliser la commande</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
           {/* Formulaire */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             <Card className="transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle>Informations personnelles</CardTitle>
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-lg md:text-xl">Informations personnelles</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
                 <div>
                   <Label htmlFor="fullName">Nom complet *</Label>
                   <Input
@@ -166,13 +166,13 @@ export default function Checkout() {
             </Card>
 
             <Card className="transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                   <CreditCard className="w-5 h-5" />
                   Paiement sécurisé
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
                 <div>
                   <Label htmlFor="cardNumber">Numéro de carte</Label>
                   <Input
@@ -214,11 +214,11 @@ export default function Checkout() {
 
           {/* Récapitulatif */}
           <div>
-            <Card className="sticky top-24 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle>Récapitulatif</CardTitle>
+            <Card className="lg:sticky lg:top-24 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-lg md:text-xl">Récapitulatif</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <div className="flex-1">

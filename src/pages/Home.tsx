@@ -578,11 +578,11 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 }}
               >
-                <div className="flex items-center mb-8">
-                  <Sparkles className="w-8 h-8 mr-3" />
-                  <h3 className="text-3xl font-bold">Suivez-nous</h3>
+                <div className="flex items-center mb-4 md:mb-8">
+                  <Sparkles className="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" />
+                  <h3 className="text-2xl md:text-3xl font-bold">Suivez-nous</h3>
                 </div>
-                <div className="grid gap-4">
+                <div className="grid gap-3 md:gap-4">
                   <a 
                     href="https://www.instagram.com/_6.events_" 
                     target="_blank"
