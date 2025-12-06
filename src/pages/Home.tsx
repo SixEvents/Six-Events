@@ -220,12 +220,18 @@ export default function Home() {
                 >
                   <Link to={`/events/${event.id}`}>
                     <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group border-2 border-transparent hover:border-pink-200">
-                      <div className="relative h-64 overflow-hidden">
-                        <img
-                          src={event.image_url || '/placeholder.svg'}
-                          alt={event.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
+                      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-pink-400 to-purple-600">
+                        {event.images && event.images[0] ? (
+                          <img
+                            src={event.images[0]}
+                            alt={event.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white text-8xl">
+                            🎉
+                          </div>
+                        )}
                         <div className="absolute top-4 right-4 bg-pink-600 text-white px-4 py-2 rounded-full font-bold shadow-lg">
                           {event.price}€
                         </div>
