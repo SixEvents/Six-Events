@@ -8,6 +8,11 @@ import {
   Star,
   ArrowRight,
   Cake,
+  Mail,
+  Phone,
+  MapPin,
+  Instagram,
+  Facebook,
   Users,
   Shield,
   Zap
@@ -360,30 +365,138 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Contact Section */}
       <section className="py-20 bg-gradient-to-br from-pink-500 to-purple-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
         
-        <div className="container mx-auto px-4 relative z-10 text-center">
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Prêt à créer des souvenirs inoubliables ? 🎊
+            <h2 className="text-5xl md:text-6xl font-bold mb-6">
+              Contactez-nous ! 💬
             </h2>
-            <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">
-              Rejoignez des milliers de parents qui font confiance à Six Events pour les moments spéciaux de leurs enfants
+            <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto opacity-90">
+              Une question ? Un projet d'événement ? Notre équipe est là pour vous aider !
             </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+            {/* Contact Info */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="space-y-8"
+            >
+              <div>
+                <h3 className="text-3xl font-bold mb-6 flex items-center">
+                  <Heart className="w-8 h-8 mr-3" /> Informations de contact
+                </h3>
+                <div className="space-y-6">
+                  <a 
+                    href="mailto:6events.mjt@gmail.com" 
+                    className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                  >
+                    <Mail className="w-8 h-8 mt-1 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-semibold text-lg mb-1">Email</p>
+                      <p className="text-white/90 text-xl">6events.mjt@gmail.com</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="tel:+32123456789" 
+                    className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                  >
+                    <Phone className="w-8 h-8 mt-1 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-semibold text-lg mb-1">Téléphone</p>
+                      <p className="text-white/90 text-xl">+32 123 456 789</p>
+                    </div>
+                  </a>
+
+                  <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                    <MapPin className="w-8 h-8 mt-1" />
+                    <div>
+                      <p className="font-semibold text-lg mb-1">Localisation</p>
+                      <p className="text-white/90 text-xl">Bruxelles, Belgique</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Social Media */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="space-y-8"
+            >
+              <div>
+                <h3 className="text-3xl font-bold mb-6 flex items-center">
+                  <Sparkles className="w-8 h-8 mr-3" /> Suivez-nous
+                </h3>
+                <div className="space-y-6">
+                  <a 
+                    href="https://www.instagram.com/sixevents.be" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                  >
+                    <Instagram className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-semibold text-lg mb-1">Instagram</p>
+                      <p className="text-white/90 text-xl">@sixevents.be</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="https://www.facebook.com/sixevents" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                  >
+                    <Facebook className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-semibold text-lg mb-1">Facebook</p>
+                      <p className="text-white/90 text-xl">Six Events</p>
+                    </div>
+                  </a>
+
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center">
+                    <p className="text-2xl font-bold mb-4">🎉 Rejoignez notre communauté !</p>
+                    <p className="text-white/90 text-lg">
+                      Découvrez nos dernières créations, conseils et inspirations pour des fêtes inoubliables
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-16"
+          >
             <Button
               size="lg"
-              className="bg-white text-pink-600 hover:bg-gray-100 text-lg px-8 py-6 shadow-xl"
+              className="bg-white text-pink-600 hover:bg-gray-100 text-xl px-12 py-8 shadow-2xl transform hover:scale-105 transition-all"
               asChild
             >
               <Link to="/signup">
                 Créer mon compte gratuitement
-                <ArrowRight className="ml-2 w-5 h-5" />
+                <ArrowRight className="ml-3 w-6 h-6" />
               </Link>
             </Button>
           </motion.div>
