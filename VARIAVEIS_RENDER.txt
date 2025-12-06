@@ -1,0 +1,58 @@
+# 🔑 VARIÁVEIS DE AMBIENTE - COPIAR E COLAR
+
+## NO RENDER, ADICIONE ESTAS VARIÁVEIS:
+
+### Variável 1:
+Key: VITE_SUPABASE_URL
+Value: https://rzcdcwwdlnczojmslhax.supabase.co
+
+### Variável 2:
+Key: SUPABASE_SERVICE_ROLE_KEY  
+Value: [VOU TE AJUDAR A PEGAR - AGUARDE]
+
+### Variável 3:
+Key: GMAIL_USER
+Value: 6events.mjt@gmail.com
+
+### Variável 4:
+Key: oiry jgal kifk zyvz
+Value: [PRECISA CONFIGURAR PRIMEIRO - VOU TE AJUDAR]
+
+### Variável 5:
+Key: EMAIL_FROM
+Value: 6events.mjt@gmail.com
+
+### Variável 6:
+Key: EMAIL_FROM_NAME
+Value: Six Events
+
+### Variável 7:
+Key: EMAIL_SERVICE_PORT
+Value: 3001
+
+### Variável 8:
+Key: NODE_ENV
+Value: production
+
+---
+
+## 📸 COMO ADICIONAR NO RENDER:
+
+Você está vendo na tela:
+- Na seção "Advanced"
+- Tem "Secret Files" 
+- Click "+ Add Secret File"
+
+**MAS NÃO É AÍ!** 
+
+Você precisa procurar por **"Environment Variables"** que está:
+- ACIMA de "Secret Files"
+- Deve ter campos: "Key" e "Value"
+- Click em "+ Add Environment Variable"
+
+---
+
+## ⚠️ ANTES DE ADICIONAR, VAMOS PEGAR AS QUE FALTAM:
+
+1. **GMAIL_APP_PASSWORD** - Vou te ajudar a configurar
+2. **SUPABASE_SERVICE_ROLE_KEY** - Vou te ajudar a pegar

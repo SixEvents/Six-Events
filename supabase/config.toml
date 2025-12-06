@@ -1,0 +1,14 @@
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.test-resend]
+verify_jwt = false

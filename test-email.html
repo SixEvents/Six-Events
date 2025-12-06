@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teste Email Six Events</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px 0;
+      display: block;
+      width: 100%;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Teste de Email - Six Events</h1>
+  <p>Click no botão para processar os emails na fila:</p>
+  
+  <button onclick="processQueue()">📧 Processar Fila de Emails</button>
+  <button onclick="sendTestEmail()">🧪 Enviar Email de Teste Direto</button>
+  
+  <div id="result"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://rzcdcwwdlnczojmslhax.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Y2Rjd3dkbG5jem9qbXNsaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxMDYzNTMsImV4cCI6MjA0NzY4MjM1M30.zVIcm6LF30fRAhI3WC7cRe-M25qp_X5v2kp9y_JZhx0'
+    
+    async function processQueue() {
+      const result = document.getElementById('result')
+      result.style.display = 'block'
+      result.className = ''
+      result.innerHTML = '⏳ Processando...'
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/process-email-queue`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        const data = await response.json()
+        
+        if (response.ok) {
+          result.className = 'success'
+          result.innerHTML = `✅ Sucesso!<br><pre>${JSON.stringify(data, null, 2)}</pre>`
+        } else {
+          result.className = 'error'
+          result.innerHTML = `❌ Erro: ${JSON.stringify(data, null, 2)}`
+        }
+      } catch (error) {
+        result.className = 'error'
+        result.innerHTML = `❌ Erro: ${error.message}`
+      }
+    }
+    
+    async function sendTestEmail() {
+      const result = document.getElementById('result')
+      result.style.display = 'block'
+      result.className = ''
+      result.innerHTML = '⏳ Enviando email de teste...'
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            to: 'ls8528950@gmail.com',
+            subject: '🎉 Teste Six Events - Funcionou!',
+            html: '<h1>Sucesso!</h1><p>O sistema de email está funcionando perfeitamente! 🚀</p>'
+          })
+        })
+        
+        const data = await response.json()
+        
+        if (response.ok) {
+          result.className = 'success'
+          result.innerHTML = `✅ Email enviado com sucesso!<br>Verifique sua caixa de entrada: ls8528950@gmail.com<br><pre>${JSON.stringify(data, null, 2)}</pre>`
+        } else {
+          result.className = 'error'
+          result.innerHTML = `❌ Erro: ${JSON.stringify(data, null, 2)}`
+        }
+      } catch (error) {
+        result.className = 'error'
+        result.innerHTML = `❌ Erro: ${error.message}`
+      }
+    }
+  </script>
+</body>
+</html>

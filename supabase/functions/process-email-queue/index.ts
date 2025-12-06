@@ -1,0 +1,739 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://rzcdcwwdlnczojmslhax.supabase.co'
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const resendApiKey = Deno.env.get('RESEND_API_KEY')!
+
+console.log('🚀 Email Queue Processor initialized')
+console.log('📍 Supabase URL:', supabaseUrl)
+console.log('🔑 Resend API Key:', resendApiKey ? 'Configured ✅' : 'Missing ❌')
+
+serve(async (req) => {
+  // CORS headers
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      }
+    })
+  }
+
+  try {
+    console.log('🔍 Processing email queue...')
+
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Buscar emails pendentes (max 10)
+    const { data: emails, error: fetchError } = await supabase
+      .from('email_queue')
+      .select('*')
+      .eq('status', 'pending')
+      .lt('attempts', 3)
+      .order('created_at', { ascending: true })
+      .limit(10)
+
+    if (fetchError) {
+      console.error('Error fetching emails:', fetchError)
+      throw fetchError
+    }
+
+    if (!emails || emails.length === 0) {
+      console.log('✅ No emails in queue')
+      return new Response(
+        JSON.stringify({ success: true, processed: 0 }),
+        { headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        } }
+      )
+    }
+
+    console.log(`📧 Processing ${emails.length} emails...`)
+
+    let successCount = 0
+    let failCount = 0
+
+    for (const email of emails) {
+      try {
+        // Incrementar tentativas
+        await supabase
+          .from('email_queue')
+          .update({ attempts: email.attempts + 1 })
+          .eq('id', email.id)
+
+        // 🔥 CRITICAL FIX: Parse data se for string (emails antigos com JSON.stringify)
+        let emailData = email.data
+        if (typeof emailData === 'string') {
+          console.log('⚠️ Data is string, parsing...', emailData.substring(0, 100))
+          try {
+            emailData = JSON.parse(emailData)
+          } catch (parseError) {
+            console.error('❌ Failed to parse data:', parseError)
+            throw new Error('Invalid email data format')
+          }
+        }
+
+        console.log(`📤 Sending ${email.type} to ${email.recipient_email}...`)
+
+        // Upload QR codes para Supabase Storage e obter URLs públicas
+        if (email.type === 'reservation_confirmation' && emailData.qrCodes && emailData.qrCodes.length > 0) {
+          console.log(`🔍 Uploading ${emailData.qrCodes.length} QR codes to Storage...`)
+          
+          for (let i = 0; i < emailData.qrCodes.length; i++) {
+            const qr = emailData.qrCodes[i]
+            if (qr.dataUrl && qr.dataUrl.startsWith('data:image/png;base64,')) {
+              const base64Content = qr.dataUrl.replace('data:image/png;base64,', '')
+              const fileName = `${email.id}-qrcode-${i + 1}.png`
+              
+              // Converter base64 para Uint8Array
+              const binaryString = atob(base64Content)
+              const bytes = new Uint8Array(binaryString.length)
+              for (let j = 0; j < binaryString.length; j++) {
+                bytes[j] = binaryString.charCodeAt(j)
+              }
+              
+              // Upload para Supabase Storage
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('qr-codes')
+                .upload(fileName, bytes, {
+                  contentType: 'image/png',
+                  upsert: true
+                })
+              
+              if (uploadError) {
+                console.error(`❌ Error uploading QR code ${i + 1}:`, uploadError)
+              } else {
+                // Obter URL pública
+                const { data: publicData } = supabase.storage
+                  .from('qr-codes')
+                  .getPublicUrl(fileName)
+                
+                // Substituir dataUrl pela URL pública
+                emailData.qrCodes[i].dataUrl = publicData.publicUrl
+                console.log(`✅ QR code ${i + 1} uploaded: ${publicData.publicUrl}`)
+              }
+            }
+          }
+        }
+
+        // Gerar HTML DEPOIS do upload (com URLs públicas)
+        let html = ''
+        let subject = ''
+
+        // Gerar HTML baseado no tipo
+        if (email.type === 'reservation_confirmation') {
+          subject = `Confirmação de Reserva - ${emailData.eventName || 'Evento'}`
+          html = generateReservationEmailHTML(emailData)
+        } else if (email.type === 'party_builder_request') {
+          // Nova solicitação do cliente
+          subject = `🎉 Nova Solicitação Party Builder - ${emailData.clientName}`
+          html = generatePartyBuilderRequestHTML(emailData)
+        } else if (email.type === 'party_builder_client_confirmation') {
+          // Confirmação enviada ao cliente
+          subject = `✅ Demande Party Builder reçue - Six Events`
+          html = generatePartyBuilderClientConfirmationEmailHTML(emailData)
+        } else if (email.type === 'party_builder_status_update') {
+          // Atualização de status do Party Builder (email personalizado do admin)
+          subject = emailData.subject || 'Atualização Party Builder - Six Events'
+          html = generatePartyBuilderStatusUpdateHTML(emailData)
+        } else if (email.type === 'party_builder_demand') {
+          subject = 'Nova Solicitação de Party Builder'
+          html = generatePartyBuilderDemandHTML(emailData)
+        } else if (email.type === 'party_builder_confirmation') {
+          subject = 'Confirmação de Solicitação - Party Builder'
+          html = generatePartyBuilderClientConfirmationHTML(emailData)
+        }
+
+        const emailPayload: any = {
+          from: `Six Events <${Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@sixevents.be'}>`,
+          to: [email.recipient_email],
+          subject: subject,
+          html: html
+        }
+
+        console.log(`📬 Sending email via Resend API...`)
+        console.log(`📧 Email to: ${email.recipient_email}`)
+        console.log(`📧 Subject: ${subject}`)
+        console.log(`📧 From: ${emailPayload.from}`)
+        
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey}`
+          },
+          body: JSON.stringify(emailPayload)
+        })
+
+        const responseData = await res.text()
+        
+        if (!res.ok) {
+          console.error('❌ Resend API error (Status:', res.status, '):', responseData)
+          console.error('❌ Email payload:', JSON.stringify(emailPayload, null, 2).substring(0, 500))
+          throw new Error(`Resend error: ${responseData}`)
+        }
+        
+        console.log(`✅ Resend API response:`, responseData)
+
+        // Marcar como enviado
+        await supabase
+          .from('email_queue')
+          .update({
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+            error_message: null
+          })
+          .eq('id', email.id)
+
+        console.log(`✅ Email sent to ${email.recipient_email}`)
+        successCount++
+
+      } catch (error) {
+        console.error(`Error sending email ${email.id}:`, error)
+        failCount++
+
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+        // Se falhou 3 vezes, marcar como failed
+        if (email.attempts + 1 >= 3) {
+          await supabase
+            .from('email_queue')
+            .update({
+              status: 'failed',
+              error_message: errorMessage
+            })
+            .eq('id', email.id)
+          console.log(`❌ Email ${email.id} failed after 3 attempts`)
+        } else {
+          // Guardar erro mas deixar tentar novamente
+          await supabase
+            .from('email_queue')
+            .update({ error_message: errorMessage })
+            .eq('id', email.id)
+        }
+      }
+    }
+
+    console.log(`✅ Processed: ${successCount} sent, ${failCount} failed`)
+
+    return new Response(
+      JSON.stringify({ success: true, processed: successCount, failed: failCount }),
+      { headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      } }
+    )
+
+  } catch (error) {
+    console.error('Error processing queue:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        } 
+      }
+    )
+  }
+})
+
+// Template para email de reserva
+function generateReservationEmailHTML(data: any): string {
+  const { eventName, eventDate, eventLocation, ticketCount, participants, totalAmount, qrCodes } = data
+  
+  const safeQrCodes = qrCodes || []
+  const safeParticipants = participants || []
+  const safeTotalAmount = totalAmount || 0
+
+  const formattedDate = new Date(eventDate).toLocaleString('pt-PT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+
+  let qrCodesHTML = ''
+  safeQrCodes.forEach((qr: any, index: number) => {
+    qrCodesHTML += `
+      <div style="margin: 30px 0; padding: 30px; background: white; border: 2px solid #e0e0e0; border-radius: 12px; text-align: center;">
+        <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px; font-weight: 600;">Présentez-vous à l'entrée</h2>
+        <div style="background: white; padding: 20px; display: inline-block; border-radius: 8px;">
+          <img src="${qr.dataUrl}" alt="QR Code ${qr.name}" style="width: 250px; height: 250px; display: block;" />
+        </div>
+        <p style="font-size: 16px; color: #666; margin: 20px 0 0 0; line-height: 1.5;">
+          Scannez ce QR code à l'entrée de l'événement.
+        </p>
+        <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+          <p style="margin: 0; color: #333; font-size: 14px;"><strong>PARTICIPANT :</strong> ${qr.name}</p>
+        </div>
+      </div>
+    `
+  })
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Six Events</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333; margin-top: 0;">Reserva Confirmada!</h2>
+          
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Sua reserva para <strong>${eventName}</strong> foi confirmada com sucesso!
+          </p>
+
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">📋 Detalhes do Evento</h3>
+            <p style="margin: 8px 0; color: #666;"><strong>Evento:</strong> ${eventName}</p>
+            <p style="margin: 8px 0; color: #666;"><strong>Data:</strong> ${formattedDate}</p>
+            <p style="margin: 8px 0; color: #666;"><strong>Local:</strong> ${eventLocation}</p>
+            <p style="margin: 8px 0; color: #666;"><strong>Bilhetes:</strong> ${ticketCount}</p>
+            <p style="margin: 8px 0; color: #666;"><strong>Total Pago:</strong> €${safeTotalAmount.toFixed(2)}</p>
+          </div>
+
+          ${safeParticipants.length > 0 ? `
+          <div style="margin: 20px 0;">
+            <h3 style="color: #333; margin-bottom: 10px;">👥 Participantes</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              ${safeParticipants.map((p: string) => `
+                <li style="padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px;">
+                  ${p}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          ${qrCodesHTML}
+
+          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #856404; font-size: 14px;">
+              <strong>⚠️ Importante:</strong> Salve este email ou tire screenshots dos QR codes. 
+              Você precisará deles para entrar no evento!
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Qualquer dúvida, entre em contato conosco
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Six Events - Seus eventos inesquecíveis
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template para Party Builder Request (email para equipe)
+function generatePartyBuilderRequestHTML(data: any): string {
+  const { clientName, clientEmail, clientPhone, clientMessage, customTheme, options, estimatedPrice, requestDate } = data
+
+  const formattedDate = requestDate ? new Date(requestDate).toLocaleString('fr-BE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : 'N/A'
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎨 Nova Solicitação Party Builder</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Uma nova solicitação de Party Builder foi recebida em <strong>${formattedDate}</strong>
+          </p>
+
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">👤 Informações do Cliente</h3>
+            <p style="margin: 8px 0; color: #666;"><strong>Nome:</strong> ${clientName}</p>
+            <p style="margin: 8px 0; color: #666;"><strong>Email:</strong> <a href="mailto:${clientEmail}" style="color: #667eea;">${clientEmail}</a></p>
+            <p style="margin: 8px 0; color: #666;"><strong>Téléphone:</strong> <a href="tel:${clientPhone}" style="color: #667eea;">${clientPhone}</a></p>
+          </div>
+
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #856404;">🎨 Thème Personnalisé</h3>
+            <p style="margin: 0; color: #856404; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${customTheme}</p>
+          </div>
+
+          ${clientMessage ? `
+          <div style="margin: 20px 0;">
+            <h3 style="color: #333;">💬 Message Complémentaire</h3>
+            <p style="background: #f9f9f9; padding: 15px; border-radius: 4px; font-style: italic; color: #666; line-height: 1.6; white-space: pre-wrap;">
+              ${clientMessage}
+            </p>
+          </div>
+          ` : ''}
+
+          ${estimatedPrice ? `
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 10px 0; color: #155724;">💰 Prix Estimé</h3>
+            <p style="font-size: 24px; font-weight: bold; color: #155724; margin: 0;">
+              €${estimatedPrice.toFixed(2)}
+            </p>
+          </div>
+          ` : `
+          <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #004085; font-size: 15px;">
+              <strong>💡 Prix sur devis</strong> - Le client a demandé un thème totalement personnalisé
+            </p>
+          </div>
+          `}
+
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+              <strong>📋 Prochaines étapes :</strong><br>
+              1. Analyser la demande du client<br>
+              2. Préparer un devis détaillé<br>
+              3. Contacter le client pour confirmer les détails<br>
+              4. Finaliser la réservation
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Six Events - Admin Dashboard
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              <a href="https://sixevents.be/admin" style="color: #667eea;">Gérer cette demande</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template de confirmação para o cliente (Party Builder)
+function generatePartyBuilderClientConfirmationEmailHTML(data: any): string {
+  const { clientName, customTheme, clientMessage, requestDate } = data
+
+  const formattedDate = requestDate ? new Date(requestDate).toLocaleString('fr-BE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : 'N/A'
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Six Events</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333; margin-top: 0;">Demande reçue avec succès !</h2>
+          
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Bonjour <strong>${clientName}</strong>,
+          </p>
+
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Nous avons bien reçu votre demande pour le <strong>Party Builder</strong> le <strong>${formattedDate}</strong>. 
+            Notre équipe est ravie de créer avec vous un événement unique et personnalisé !
+          </p>
+
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">🎨 Votre thème personnalisé</h3>
+            <p style="margin: 0; color: #666; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${customTheme}</p>
+          </div>
+
+          ${clientMessage ? `
+          <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">💬 Vos informations complémentaires</h3>
+            <p style="margin: 0; color: #666; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">${clientMessage}</p>
+          </div>
+          ` : ''}
+
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 10px 0; color: #155724;">✅ Prochaines étapes</h3>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #155724;">
+              <li style="margin: 8px 0;">Notre équipe va analyser votre demande en détail</li>
+              <li style="margin: 8px 0;">Nous vous contacterons dans les <strong>24-48 heures</strong></li>
+              <li style="margin: 8px 0;">Nous vous enverrons un devis personnalisé</li>
+              <li style="margin: 8px 0;">Nous finaliserons ensemble tous les détails de votre événement</li>
+            </ul>
+          </div>
+
+          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #856404; font-size: 14px;">
+              <strong>💡 Conseil :</strong> Gardez votre téléphone à portée de main ! 
+              Nous vous appellerons bientôt pour discuter de votre projet.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Une question ? Contactez-nous directement
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 5px 0;">
+              Six Events - Créer des moments inoubliables
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 15px 0 5px 0;">
+              <a href="https://sixevents.be" style="color: #667eea; text-decoration: none;">sixevents.be</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template para Party Builder Status Update (Email Personalizado do Admin)
+function generatePartyBuilderStatusUpdateHTML(data: any): string {
+  const { 
+    clientName, 
+    message, 
+    companyName, 
+    statusLabel, 
+    statusColor,
+    backgroundColor, 
+    accentColor, 
+    textColor,
+    fontFamily,
+    customTheme,
+    clientEmail,
+    clientPhone,
+    estimatedPrice
+  } = data
+
+  const fontFamilyValue = fontFamily === 'Serif' ? 'Georgia, serif' : 'Arial, sans-serif'
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: ${fontFamilyValue}; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: ${backgroundColor || '#F8FAFC'};">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, ${accentColor || '#2563EB'} 0%, ${accentColor || '#2563EB'}dd 100%); color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">${companyName || 'Six Events'}</h1>
+        </div>
+        
+        <!-- Status Badge -->
+        <div style="text-align: center; padding: 20px 20px 0;">
+          <span style="display: inline-block; background-color: ${statusColor || '#F59E0B'}; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+            ${statusLabel || 'Atualização'}
+          </span>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 20px; color: ${textColor || '#1E293B'};">
+          <h2 style="margin-bottom: 20px;">Olá, ${clientName}!</h2>
+
+          <!-- Mensagem Principal -->
+          <div style="background-color: rgba(255,255,255,0.7); padding: 20px; border-radius: 8px; margin-bottom: 20px; white-space: pre-wrap; line-height: 1.6;">
+            ${message}
+          </div>
+
+          <!-- Detalhes do Pedido -->
+          <div style="background-color: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px;">
+            ${customTheme ? `<p style="margin: 5px 0;"><strong>🎨 Tema:</strong> ${customTheme}</p>` : ''}
+            <p style="margin: 5px 0;"><strong>📧 Email:</strong> ${clientEmail}</p>
+            <p style="margin: 5px 0;"><strong>📱 Telefone:</strong> ${clientPhone || 'N/A'}</p>
+            ${estimatedPrice ? `<p style="margin: 5px 0;"><strong>💰 Preço Estimado:</strong> €${estimatedPrice}</p>` : ''}
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; font-size: 12px; color: #666;">
+            <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+            <p style="margin: 10px 0;">
+              © ${new Date().getFullYear()} ${companyName || 'Six Events'}. Tous droits réservés.
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template para Party Builder - Email Admin
+function generatePartyBuilderDemandHTML(data: any): string {
+  const safeAnimations = data.animations || []
+  const safeDecorations = data.decorations || []
+  const safeExtras = data.extras || []
+  const safeEstimatedPrice = data.estimatedPrice || 0
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0;">🎨 Nova Solicitação Party Builder</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333;">Detalhes da Solicitação</h2>
+          
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0;">📋 Informações do Cliente</h3>
+            <p><strong>Nome:</strong> ${data.clientName}</p>
+            <p><strong>Email:</strong> ${data.clientEmail}</p>
+            <p><strong>Telefone:</strong> ${data.clientPhone}</p>
+          </div>
+
+          <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0;">🎉 Detalhes do Evento</h3>
+            <p><strong>Tipo:</strong> ${data.eventType}</p>
+            <p><strong>Data:</strong> ${new Date(data.eventDate).toLocaleDateString('pt-PT')}</p>
+            <p><strong>Horário:</strong> ${data.eventTime}</p>
+            <p><strong>Participantes:</strong> ${data.guestCount}</p>
+            <p><strong>Orçamento:</strong> €${data.budget}</p>
+          </div>
+
+          ${safeAnimations.length > 0 ? `
+          <div style="margin: 20px 0;">
+            <h3>🎭 Animações Selecionadas</h3>
+            <ul>
+              ${safeAnimations.map((a: any) => `<li>${a.name} - €${a.price}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          ${safeDecorations.length > 0 ? `
+          <div style="margin: 20px 0;">
+            <h3>🎨 Decorações Selecionadas</h3>
+            <ul>
+              ${safeDecorations.map((d: any) => `<li>${d.name} - €${d.price}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          ${safeExtras.length > 0 ? `
+          <div style="margin: 20px 0;">
+            <h3>➕ Extras Selecionados</h3>
+            <ul>
+              ${safeExtras.map((e: any) => `<li>${e.name} - €${e.price}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0; color: #155724;">💰 Preço Estimado Total</h3>
+            <p style="font-size: 24px; font-weight: bold; color: #155724; margin: 10px 0;">
+              €${safeEstimatedPrice.toFixed(2)}
+            </p>
+          </div>
+
+          ${data.message ? `
+          <div style="margin: 20px 0;">
+            <h3>💬 Mensagem do Cliente</h3>
+            <p style="background: #f9f9f9; padding: 15px; border-radius: 4px; font-style: italic;">
+              "${data.message}"
+            </p>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Template para Party Builder - Email Cliente
+function generatePartyBuilderClientConfirmationHTML(data: any): string {
+  const safeEstimatedPrice = data.estimatedPrice || 0
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0;">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px;">
+        <div style="text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h1 style="color: white; margin: 0;">🎉 Six Events</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333;">Solicitação Recebida!</h2>
+          
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Olá <strong>${data.clientName}</strong>,
+          </p>
+
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">
+            Recebemos sua solicitação para o <strong>Party Builder</strong> e estamos muito animados 
+            em ajudar a criar seu evento perfeito!
+          </p>
+
+          <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px 0;">📋 Resumo da Solicitação</h3>
+            <p><strong>Tipo de Evento:</strong> ${data.eventType}</p>
+            <p><strong>Data:</strong> ${new Date(data.eventDate).toLocaleDateString('pt-PT')}</p>
+            <p><strong>Participantes:</strong> ${data.guestCount}</p>
+            <p><strong>Preço Estimado:</strong> €${safeEstimatedPrice.toFixed(2)}</p>
+          </div>
+
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #155724; font-size: 14px;">
+              <strong>✅ Próximos Passos:</strong><br>
+              Nossa equipe irá analisar sua solicitação e entrar em contato em até 24-48 horas 
+              para confirmar os detalhes e finalizar o orçamento.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #999; font-size: 12px;">
+              Qualquer dúvida, entre em contato conosco
+            </p>
+            <p style="color: #999; font-size: 12px;">
+              Six Events - Criando momentos inesquecíveis
+            </p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
