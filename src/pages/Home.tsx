@@ -87,8 +87,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-flex items-center space-x-2 px-3 md:px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-pink-600 font-semibold mb-4 md:mb-6 shadow-lg text-xs md:text-sm">
-                <Sparkles className="w-4 md:w-5 h-4 md:h-5" />
+              <span className="inline-flex items-center px-3 md:px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-pink-600 font-semibold mb-4 md:mb-6 shadow-lg text-xs md:text-sm">
                 <span>La plateforme #1 pour les événements enfants</span>
               </span>
             </motion.div>
@@ -101,7 +100,7 @@ export default function Home() {
             >
               <span className="inline-block">
                 <span className="gradient-text animate-gradient-x">Créons l'impossible</span>
-                <span>, </span>
+                <span className="gradient-text animate-gradient-x">, </span>
                 <span className="gradient-text-secondary animate-pulse">vivons l'inoubliable!</span>
               </span>
             </motion.h1>
@@ -284,7 +283,7 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Ce que disent les parents ❤️
+              À propos de nous
             </h2>
             <p className="text-xl text-gray-600">Des milliers de familles satisfaites</p>
           </motion.div>
