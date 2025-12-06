@@ -99,7 +99,11 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-3xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 leading-tight"
             >
-              Créons l'impossible, vivons l'inoubliable!
+              <span className="inline-block">
+                <span className="gradient-text animate-gradient-x">Créons l'impossible</span>
+                <span>, </span>
+                <span className="gradient-text-secondary animate-pulse">vivons l'inoubliable!</span>
+              </span>
             </motion.h1>
 
             <motion.p
