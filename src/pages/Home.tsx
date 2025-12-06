@@ -167,27 +167,56 @@ export default function Home() {
               </Button>
             </motion.div>
 
-            {/* Floating Elements */}
+            {/* Floating Geometric Shapes */}
             <motion.div
-              animate={{ y: [0, -20, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-20 left-10 text-6xl hidden lg:block"
+              animate={{ 
+                y: [0, -30, 0],
+                rotate: [0, 180, 360]
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-20 left-10 hidden lg:block"
             >
-              🎈
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 opacity-20 blur-sm"></div>
             </motion.div>
             <motion.div
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              className="absolute top-40 right-20 text-6xl hidden lg:block"
+              animate={{ 
+                y: [0, -40, 0],
+                rotate: [0, -180, -360]
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute top-40 right-20 hidden lg:block"
             >
-              🎂
+              <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-400 to-pink-400 opacity-20 blur-sm rotate-45"></div>
             </motion.div>
             <motion.div
-              animate={{ y: [0, -25, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute bottom-20 left-1/4 text-6xl hidden lg:block"
+              animate={{ 
+                y: [0, -35, 0],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              className="absolute bottom-20 left-1/4 hidden lg:block"
             >
-              🎁
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 opacity-25 blur-md"></div>
+            </motion.div>
+            <motion.div
+              animate={{ 
+                y: [0, -25, 0],
+                x: [0, 20, 0]
+              }}
+              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              className="absolute bottom-32 right-16 hidden lg:block"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-300 to-pink-300 opacity-20 blur-sm" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}></div>
+            </motion.div>
+            <motion.div
+              animate={{ 
+                y: [0, -20, 0],
+                rotate: [0, 90, 180, 270, 360]
+              }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              className="absolute top-1/2 right-10 hidden lg:block"
+            >
+              <div className="w-10 h-10 rounded-sm bg-gradient-to-br from-pink-200 to-purple-200 opacity-30 blur-sm"></div>
             </motion.div>
           </div>
         </div>
