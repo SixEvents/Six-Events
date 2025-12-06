@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   Calendar, 
@@ -15,12 +16,37 @@ import {
   Facebook,
   Users,
   Shield,
-  Zap
+  Zap,
+  Clock,
+  MapPin as Location
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import { supabase } from '../lib/supabase';
 
 export default function Home() {
+  const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchFeaturedEvents();
+  }, []);
+
+  const fetchFeaturedEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('is_visible', true)
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      if (error) throw error;
+      setFeaturedEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
   const features = [
     {
       icon: Calendar,
@@ -46,13 +72,6 @@ export default function Home() {
       description: 'Confirmez en quelques clics avec vos tickets digitaux',
       gradient: 'from-cyan-500 to-teal-600'
     }
-  ];
-
-  const stats = [
-    { value: '10,000+', label: 'Enfants Heureux', icon: '😊' },
-    { value: '5,000+', label: 'Événements', icon: '🎉' },
-    { value: '2,000+', label: 'Fêtes Organisées', icon: '🎂' },
-    { value: '98%', label: 'Parents Satisfaits', icon: '⭐' }
   ];
 
   const testimonials = [
@@ -174,25 +193,104 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-white">
+      {/* Featured Events Section */}
+      <section className="py-20 bg-gradient-to-b from-white to-pink-50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-5xl mb-3">{stat.icon}</div>
-                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">{stat.value}</div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Événements <span className="gradient-text">en Vedette</span> 🌟
+            </h2>
+            <p className="text-xl text-gray-600">Découvrez nos dernières créations</p>
+          </motion.div>
+
+          {featuredEvents.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {featuredEvents.map((event, index) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                >
+                  <Link to={`/events/${event.id}`}>
+                    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group border-2 border-transparent hover:border-pink-200">
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={event.image_url || '/placeholder.svg'}
+                          alt={event.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-4 right-4 bg-pink-600 text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                          {event.price}€
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-2xl font-bold mb-3 group-hover:text-pink-600 transition-colors">
+                          {event.title}
+                        </h3>
+                        <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
+                        <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 mr-1.5 text-pink-600" />
+                            {new Date(event.date).toLocaleDateString('fr-FR', { 
+                              day: 'numeric', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 mr-1.5 text-pink-600" />
+                            {event.time}
+                          </div>
+                          <div className="flex items-center">
+                            <Location className="w-4 h-4 mr-1.5 text-pink-600" />
+                            {event.location}
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className="text-sm font-medium text-pink-600 bg-pink-50 px-3 py-1 rounded-full">
+                            {event.category}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {event.spots_available} places disponibles
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-xl text-gray-500">Aucun événement disponible pour le moment</p>
+            </div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-12"
+          >
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-lg px-8 py-6 shadow-xl"
+              asChild
+            >
+              <Link to="/events">
+                Voir tous les événements
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
 
