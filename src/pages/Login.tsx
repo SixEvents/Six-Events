@@ -49,7 +49,7 @@ export default function Login() {
 
         <div className="relative z-10 text-white">
           <h2 className="text-4xl font-bold mb-4">
-            Créez des moments magiques pour natan.
+            Créez des moments magiques pour vos enfants 🎉
           </h2>
           <p className="text-xl opacity-90">
             Réservez des événements inoubliables et personnalisez chaque détail de leur fête d'anniversaire.
