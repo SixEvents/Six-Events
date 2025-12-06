@@ -99,9 +99,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-3xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 leading-tight"
             >
-              Créez des{' '}
-              <span className="gradient-text">moments magiques</span>
-              {' '}pour natan 🎉
+              Créons l'impossible, vivons l'inoubliable!
             </motion.h1>
 
             <motion.p
