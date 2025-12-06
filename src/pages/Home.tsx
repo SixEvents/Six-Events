@@ -366,7 +366,7 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 bg-gradient-to-br from-pink-500 to-purple-600 text-white relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-pink-500 to-purple-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
         
         <div className="container mx-auto px-4 relative z-10">
@@ -374,67 +374,67 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-20"
           >
             <h2 className="text-5xl md:text-6xl font-bold mb-6">
               Contactez-nous ! 💬
             </h2>
-            <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto opacity-90">
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-95">
               Une question ? Un projet d'événement ? Notre équipe est là pour vous aider !
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            {/* Contact Info */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="space-y-8"
-            >
-              <div>
-                <h3 className="text-3xl font-bold mb-6 flex items-center">
-                  <Heart className="w-8 h-8 mr-3" /> Informations de contact
-                </h3>
-                <div className="space-y-6">
-                  <a 
-                    href="mailto:6events.mjt@gmail.com" 
-                    className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
-                  >
-                    <Mail className="w-8 h-8 mt-1 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="font-semibold text-lg mb-1">Email</p>
-                      <p className="text-white/90 text-xl">6events.mjt@gmail.com</p>
-                    </div>
-                  </a>
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12">
+              {/* Contact Info */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="flex items-center mb-8">
+                  <Heart className="w-8 h-8 mr-3" />
+                  <h3 className="text-3xl font-bold">Informations de contact</h3>
                 </div>
-              </div>
-            </motion.div>
+                <a 
+                  href="mailto:6events.mjt@gmail.com" 
+                  className="flex items-center space-x-4 bg-white/15 backdrop-blur-md rounded-2xl p-8 hover:bg-white/25 transition-all duration-300 group border border-white/20 shadow-xl"
+                >
+                  <div className="bg-white/20 p-4 rounded-xl group-hover:scale-110 transition-transform">
+                    <Mail className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg mb-1 opacity-90">Email</p>
+                    <p className="text-white text-2xl font-medium">6events.mjt@gmail.com</p>
+                  </div>
+                </a>
+              </motion.div>
 
-            {/* Social Media */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="space-y-8"
-            >
-              <div>
-                <h3 className="text-3xl font-bold mb-6 flex items-center">
-                  <Sparkles className="w-8 h-8 mr-3" /> Suivez-nous
-                </h3>
-                <div className="space-y-6">
+              {/* Social Media */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="flex items-center mb-8">
+                  <Sparkles className="w-8 h-8 mr-3" />
+                  <h3 className="text-3xl font-bold">Suivez-nous</h3>
+                </div>
+                <div className="grid gap-4">
                   <a 
                     href="https://www.instagram.com/_6.events_" 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                    className="flex items-center space-x-4 bg-white/15 backdrop-blur-md rounded-xl p-5 hover:bg-white/25 transition-all duration-300 group border border-white/20 shadow-lg"
                   >
-                    <Instagram className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                    <div className="bg-white/20 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <Instagram className="w-7 h-7" />
+                    </div>
                     <div>
-                      <p className="font-semibold text-lg mb-1">Instagram</p>
-                      <p className="text-white/90 text-xl">@_6.events_</p>
+                      <p className="font-semibold text-base mb-0.5">Instagram</p>
+                      <p className="text-white/95 text-lg font-medium">@_6.events_</p>
                     </div>
                   </a>
 
@@ -442,14 +442,16 @@ export default function Home() {
                     href="https://www.tiktok.com/@sixevents" 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                    className="flex items-center space-x-4 bg-white/15 backdrop-blur-md rounded-xl p-5 hover:bg-white/25 transition-all duration-300 group border border-white/20 shadow-lg"
                   >
-                    <svg className="w-10 h-10 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                    </svg>
+                    <div className="bg-white/20 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                      </svg>
+                    </div>
                     <div>
-                      <p className="font-semibold text-lg mb-1">TikTok</p>
-                      <p className="text-white/90 text-xl">@six'events</p>
+                      <p className="font-semibold text-base mb-0.5">TikTok</p>
+                      <p className="text-white/95 text-lg font-medium">@six'events</p>
                     </div>
                   </a>
 
@@ -457,17 +459,19 @@ export default function Home() {
                     href="https://www.facebook.com/sixevents" 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                    className="flex items-center space-x-4 bg-white/15 backdrop-blur-md rounded-xl p-5 hover:bg-white/25 transition-all duration-300 group border border-white/20 shadow-lg"
                   >
-                    <Facebook className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                    <div className="bg-white/20 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <Facebook className="w-7 h-7" />
+                    </div>
                     <div>
-                      <p className="font-semibold text-lg mb-1">Facebook</p>
-                      <p className="text-white/90 text-xl">Six'events</p>
+                      <p className="font-semibold text-base mb-0.5">Facebook</p>
+                      <p className="text-white/95 text-lg font-medium">Six'events</p>
                     </div>
                   </a>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
 
           {/* CTA Button */}
@@ -475,12 +479,12 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            className="text-center mt-16"
+            transition={{ delay: 0.5 }}
+            className="text-center mt-20"
           >
             <Button
               size="lg"
-              className="bg-white text-pink-600 hover:bg-gray-100 text-xl px-12 py-8 shadow-2xl transform hover:scale-105 transition-all"
+              className="bg-white text-pink-600 hover:bg-gray-50 text-xl px-12 py-8 shadow-2xl transform hover:scale-105 transition-all font-semibold rounded-2xl"
               asChild
             >
               <Link to="/signup">
