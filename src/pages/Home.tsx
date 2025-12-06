@@ -101,7 +101,7 @@ export default function Home() {
             >
               Créez des{' '}
               <span className="gradient-text">moments magiques</span>
-              {' '}pour vos enfants 🎉
+              {' '}pour natan 🎉
             </motion.h1>
 
             <motion.p
