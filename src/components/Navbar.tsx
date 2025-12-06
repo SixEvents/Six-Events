@@ -51,12 +51,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 md:space-x-3 group flex-shrink-0">
             <img
-              src="/logo/logo.png"
+              src="/logo/logobarra/logobarra.png"
               alt="Six Events"
               className="h-14 md:h-20 w-auto object-contain" 
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/logo/logobarra/logobarra.png';
-              }}
             />
           </Link>
 

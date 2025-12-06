@@ -408,25 +408,6 @@ export default function Home() {
                       <p className="text-white/90 text-xl">6events.mjt@gmail.com</p>
                     </div>
                   </a>
-
-                  <a 
-                    href="tel:+32123456789" 
-                    className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
-                  >
-                    <Phone className="w-8 h-8 mt-1 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="font-semibold text-lg mb-1">Téléphone</p>
-                      <p className="text-white/90 text-xl">+32 123 456 789</p>
-                    </div>
-                  </a>
-
-                  <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-                    <MapPin className="w-8 h-8 mt-1" />
-                    <div>
-                      <p className="font-semibold text-lg mb-1">Localisation</p>
-                      <p className="text-white/90 text-xl">Bruxelles, Belgique</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -445,7 +426,7 @@ export default function Home() {
                 </h3>
                 <div className="space-y-6">
                   <a 
-                    href="https://www.instagram.com/sixevents.be" 
+                    href="https://www.instagram.com/_6.events_" 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
@@ -453,7 +434,22 @@ export default function Home() {
                     <Instagram className="w-10 h-10 group-hover:scale-110 transition-transform" />
                     <div>
                       <p className="font-semibold text-lg mb-1">Instagram</p>
-                      <p className="text-white/90 text-xl">@sixevents.be</p>
+                      <p className="text-white/90 text-xl">@_6.events_</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="https://www.tiktok.com/@sixevents" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all group"
+                  >
+                    <svg className="w-10 h-10 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-lg mb-1">TikTok</p>
+                      <p className="text-white/90 text-xl">@six'events</p>
                     </div>
                   </a>
 
@@ -466,16 +462,9 @@ export default function Home() {
                     <Facebook className="w-10 h-10 group-hover:scale-110 transition-transform" />
                     <div>
                       <p className="font-semibold text-lg mb-1">Facebook</p>
-                      <p className="text-white/90 text-xl">Six Events</p>
+                      <p className="text-white/90 text-xl">Six'events</p>
                     </div>
                   </a>
-
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center">
-                    <p className="text-2xl font-bold mb-4">🎉 Rejoignez notre communauté !</p>
-                    <p className="text-white/90 text-lg">
-                      Découvrez nos dernières créations, conseils et inspirations pour des fêtes inoubliables
-                    </p>
-                  </div>
                 </div>
               </div>
             </motion.div>
