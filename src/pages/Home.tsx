@@ -357,35 +357,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="p-6 h-full bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-2xl mr-3">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <div className="font-semibold">{testimonial.name}</div>
-                      <div className="flex items-center text-yellow-500">
-                        {Array.from({ length: testimonial.rating }).map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-current" />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-3 italic">"{testimonial.text}"</p>
-                  <div className="text-sm text-pink-600 font-medium">📍 {testimonial.event}</div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
