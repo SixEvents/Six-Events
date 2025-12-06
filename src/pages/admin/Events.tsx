@@ -292,10 +292,10 @@ export default function AdminEvents() {
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
                       className="w-full px-3 py-2 border rounded-md"
                     >
-                      <option value="atelier">Atelier</option>
+                      <option value="projection">Projection</option>
                       <option value="spectacle">Spectacle</option>
                       <option value="fete">Fête thématique</option>
-                      <option value="sport">Sport</option>
+                      <option value="autre">Autre</option>
                     </select>
                   </div>
                   <div>
@@ -306,10 +306,10 @@ export default function AdminEvents() {
                       onChange={(e) => setFormData({...formData, age_range: e.target.value})}
                       className="w-full px-3 py-2 border rounded-md"
                     >
-                      <option value="3-5">3-5 ans</option>
-                      <option value="6-8">6-8 ans</option>
-                      <option value="9-12">9-12 ans</option>
-                      <option value="13+">13+ ans</option>
+                      <option value="3+">3 ans +</option>
+                      <option value="7+">7 ans +</option>
+                      <option value="12+">12 ans +</option>
+                      <option value="15+">15 ans +</option>
                     </select>
                   </div>
                 </div>

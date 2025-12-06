@@ -129,10 +129,10 @@ const Events = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les catégories</SelectItem>
-                <SelectItem value="atelier">Atelier</SelectItem>
+                <SelectItem value="projection">Projection</SelectItem>
                 <SelectItem value="spectacle">Spectacle</SelectItem>
                 <SelectItem value="fete">Fête thématique</SelectItem>
-                <SelectItem value="sport">Sport</SelectItem>
+                <SelectItem value="autre">Autre</SelectItem>
               </SelectContent>
             </Select>
 
@@ -143,10 +143,10 @@ const Events = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les âges</SelectItem>
-                <SelectItem value="3-5">3-5 ans</SelectItem>
-                <SelectItem value="6-8">6-8 ans</SelectItem>
-                <SelectItem value="9-12">9-12 ans</SelectItem>
-                <SelectItem value="13+">13+ ans</SelectItem>
+                <SelectItem value="3+">3 ans +</SelectItem>
+                <SelectItem value="7+">7 ans +</SelectItem>
+                <SelectItem value="12+">12 ans +</SelectItem>
+                <SelectItem value="15+">15 ans +</SelectItem>
               </SelectContent>
             </Select>
           </div>
