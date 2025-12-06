@@ -167,56 +167,83 @@ export default function Home() {
               </Button>
             </motion.div>
 
-            {/* Subtle Particles */}
+            {/* Playful Confetti Animation */}
             <motion.div
               animate={{ 
-                y: [0, -100, -200],
-                opacity: [0, 1, 0]
+                y: [0, -400],
+                rotate: [0, 360],
+                opacity: [1, 0]
               }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeOut" }}
-              className="absolute bottom-20 left-20 hidden lg:block"
+              transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 0 }}
+              className="absolute top-1/4 left-1/4 hidden lg:block"
             >
-              <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+              <div className="w-3 h-3 bg-pink-400 rounded-sm"></div>
             </motion.div>
             <motion.div
               animate={{ 
-                y: [0, -120, -240],
-                opacity: [0, 1, 0]
+                y: [0, -350],
+                rotate: [0, -360],
+                opacity: [1, 0]
               }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeOut", delay: 1 }}
-              className="absolute bottom-32 left-1/3 hidden lg:block"
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+              className="absolute top-1/3 right-1/3 hidden lg:block"
             >
-              <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+              <div className="w-2 h-4 bg-purple-400 rounded-sm"></div>
             </motion.div>
             <motion.div
               animate={{ 
-                y: [0, -90, -180],
-                opacity: [0, 1, 0]
+                y: [0, -420],
+                rotate: [0, 270],
+                opacity: [1, 0]
               }}
-              transition={{ duration: 4.5, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
-              className="absolute bottom-28 right-1/4 hidden lg:block"
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay: 1 }}
+              className="absolute top-1/2 left-1/3 hidden lg:block"
             >
-              <div className="w-2 h-2 rounded-full bg-pink-300"></div>
+              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
             </motion.div>
             <motion.div
               animate={{ 
-                y: [0, -110, -220],
-                opacity: [0, 1, 0]
+                y: [0, -380],
+                rotate: [0, -270],
+                opacity: [1, 0]
               }}
-              transition={{ duration: 5.5, repeat: Infinity, ease: "easeOut", delay: 2 }}
-              className="absolute bottom-24 right-20 hidden lg:block"
+              transition={{ duration: 2.9, repeat: Infinity, ease: "easeOut", delay: 1.5 }}
+              className="absolute top-1/3 left-1/2 hidden lg:block"
             >
-              <div className="w-2 h-2 rounded-full bg-purple-300"></div>
+              <div className="w-2 h-3 bg-blue-400 rounded-sm"></div>
             </motion.div>
             <motion.div
               animate={{ 
-                y: [0, -95, -190],
-                opacity: [0, 1, 0]
+                y: [0, -410],
+                rotate: [0, 180],
+                opacity: [1, 0]
               }}
-              transition={{ duration: 4.8, repeat: Infinity, ease: "easeOut", delay: 1.5 }}
-              className="absolute bottom-36 left-1/2 hidden lg:block"
+              transition={{ duration: 3.1, repeat: Infinity, ease: "easeOut", delay: 2 }}
+              className="absolute top-1/4 right-1/4 hidden lg:block"
             >
-              <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+              <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+            </motion.div>
+            <motion.div
+              animate={{ 
+                y: [0, -360],
+                rotate: [0, 450],
+                opacity: [1, 0]
+              }}
+              transition={{ duration: 2.7, repeat: Infinity, ease: "easeOut", delay: 2.5 }}
+              className="absolute top-2/5 right-1/5 hidden lg:block"
+            >
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            </motion.div>
+            <motion.div
+              animate={{ 
+                y: [0, -390],
+                rotate: [0, -180],
+                opacity: [1, 0]
+              }}
+              transition={{ duration: 3.3, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
+              className="absolute top-1/2 right-2/5 hidden lg:block"
+            >
+              <div className="w-3 h-2 bg-yellow-500 rounded-sm"></div>
             </motion.div>
           </div>
         </div>
