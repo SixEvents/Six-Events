@@ -282,49 +282,79 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              À propos de nous
-            </h2>
-            <div className="max-w-4xl mx-auto">
-              <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                <span className="font-semibold text-pink-600">Six Events</span> est une mini-entreprise passionnée par la création d'événements magiques pour les enfants. 
-                Nous croyons que chaque anniversaire mérite d'être inoubliable ! ✨
-              </p>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Notre mission est simple : transformer vos rêves en réalité. Que ce soit une fête princesse féerique, 
-                un anniversaire super-héros épique ou une célébration sur mesure, nous mettons tout notre cœur pour créer 
-                des moments magiques qui resteront gravés dans les mémoires.
-              </p>
-              <div className="grid md:grid-cols-3 gap-6 mt-10">
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-4xl mb-3">🎉</div>
-                  <h3 className="font-bold text-lg mb-2">Notre Vision</h3>
-                  <p className="text-gray-600 text-sm">Créer l'impossible et vivre l'inoubliable à chaque événement</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-4xl mb-3">❤️</div>
-                  <h3 className="font-bold text-lg mb-2">Notre Passion</h3>
-                  <p className="text-gray-600 text-sm">Faire briller les yeux des enfants et créer des souvenirs précieux</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-4xl mb-3">⭐</div>
-                  <h3 className="font-bold text-lg mb-2">Notre Engagement</h3>
-                  <p className="text-gray-600 text-sm">Des milliers de familles satisfaites et des événements réussis</p>
-                </div>
+            <motion.h2 
+              className="text-4xl md:text-6xl font-bold mb-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="gradient-text">À propos de nous</span>
+            </motion.h2>
+            
+            <div className="max-w-5xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-3xl p-8 md:p-12 mb-12 shadow-xl border border-pink-100"
+              >
+                <p className="text-2xl md:text-3xl text-gray-800 mb-6 leading-relaxed font-medium">
+                  <span className="gradient-text font-bold text-3xl md:text-4xl">Six Events</span> est une mini-entreprise passionnée par la création d'événements magiques pour les enfants. 
+                  Nous croyons que chaque anniversaire mérite d'être <span className="text-pink-600 font-semibold">inoubliable</span> ! ✨
+                </p>
+                <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
+                  Notre mission est simple : <span className="font-semibold text-purple-600">transformer vos rêves en réalité</span>. Que ce soit une fête princesse féerique, 
+                  un anniversaire super-héros épique ou une célébration sur mesure, nous mettons tout notre cœur pour créer 
+                  des moments magiques qui resteront gravés dans les mémoires. 💫
+                </p>
+              </motion.div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 }}
+                  className="group"
+                >
+                  <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-pink-200 transform hover:-translate-y-2">
+                    <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">🎉</div>
+                    <h3 className="font-bold text-2xl mb-3 gradient-text">Notre Vision</h3>
+                    <p className="text-gray-600 text-base leading-relaxed">Créer l'impossible et vivre l'inoubliable à chaque événement</p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="group"
+                >
+                  <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-pink-200 transform hover:-translate-y-2">
+                    <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">❤️</div>
+                    <h3 className="font-bold text-2xl mb-3 gradient-text">Notre Passion</h3>
+                    <p className="text-gray-600 text-base leading-relaxed">Faire briller les yeux des enfants et créer des souvenirs précieux</p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                  className="group"
+                >
+                  <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-pink-200 transform hover:-translate-y-2">
+                    <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">⭐</div>
+                    <h3 className="font-bold text-2xl mb-3 gradient-text">Notre Engagement</h3>
+                    <p className="text-gray-600 text-base leading-relaxed">Des milliers de familles satisfaites et des événements réussis</p>
+                  </div>
+                </motion.div>
               </div>
             </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 mt-20"
-          >
-            <h3 className="text-3xl font-bold mb-4">
-              Ce que disent nos clients 💬
-            </h3>
-            <p className="text-lg text-gray-600">Des témoignages qui nous inspirent chaque jour</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
